@@ -792,6 +792,342 @@ const notificationTemplate: EditorNode = {
   ],
 };
 
+// Showcase Template - demonstrates advanced components
+const showcaseTemplate: EditorNode = {
+  id: generateId(),
+  type: 'mj-body',
+  props: {
+    'background-color': '#f1f5f9',
+    width: '600px',
+  },
+  children: [
+    // Header with Navbar
+    {
+      id: generateId(),
+      type: 'mj-section',
+      props: {
+        'background-color': '#1e293b',
+        padding: '15px 20px',
+      },
+      children: [
+        {
+          id: generateId(),
+          type: 'mj-column',
+          props: {},
+          children: [
+            {
+              id: generateId(),
+              type: 'mj-navbar',
+              props: {
+                'hamburger': 'hamburger',
+                'ico-color': '#ffffff',
+              },
+              children: [
+                {
+                  id: generateId(),
+                  type: 'mj-navbar-link',
+                  props: { href: '#', color: '#ffffff', 'font-size': '14px', padding: '10px 15px' },
+                  content: 'Home',
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-navbar-link',
+                  props: { href: '#', color: '#ffffff', 'font-size': '14px', padding: '10px 15px' },
+                  content: 'Products',
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-navbar-link',
+                  props: { href: '#', color: '#ffffff', 'font-size': '14px', padding: '10px 15px' },
+                  content: 'About',
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-navbar-link',
+                  props: { href: '#', color: '#ffffff', 'font-size': '14px', padding: '10px 15px' },
+                  content: 'Contact',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    // Carousel Section
+    {
+      id: generateId(),
+      type: 'mj-section',
+      props: {
+        'background-color': '#ffffff',
+        padding: '30px 20px',
+      },
+      children: [
+        {
+          id: generateId(),
+          type: 'mj-column',
+          props: {},
+          children: [
+            {
+              id: generateId(),
+              type: 'mj-text',
+              props: {
+                'font-size': '24px',
+                'font-weight': 'bold',
+                align: 'center',
+                color: '#1e293b',
+                'padding-bottom': '20px',
+              },
+              content: 'Featured Products',
+            },
+            {
+              id: generateId(),
+              type: 'mj-carousel',
+              props: {
+                'align': 'center',
+                'border-radius': '8px',
+                'icon-width': '44px',
+                'thumbnails': 'visible',
+              },
+              children: [
+                {
+                  id: generateId(),
+                  type: 'mj-carousel-image',
+                  props: {
+                    src: 'https://placehold.co/560x280/3b82f6/ffffff?text=Product+1',
+                    alt: 'Product 1',
+                    href: '#',
+                  },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-carousel-image',
+                  props: {
+                    src: 'https://placehold.co/560x280/10b981/ffffff?text=Product+2',
+                    alt: 'Product 2',
+                    href: '#',
+                  },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-carousel-image',
+                  props: {
+                    src: 'https://placehold.co/560x280/f59e0b/ffffff?text=Product+3',
+                    alt: 'Product 3',
+                    href: '#',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    // Accordion FAQ Section
+    {
+      id: generateId(),
+      type: 'mj-section',
+      props: {
+        'background-color': '#f8fafc',
+        padding: '30px 20px',
+      },
+      children: [
+        {
+          id: generateId(),
+          type: 'mj-column',
+          props: {},
+          children: [
+            {
+              id: generateId(),
+              type: 'mj-text',
+              props: {
+                'font-size': '24px',
+                'font-weight': 'bold',
+                align: 'center',
+                color: '#1e293b',
+                'padding-bottom': '20px',
+              },
+              content: 'Frequently Asked Questions',
+            },
+            {
+              id: generateId(),
+              type: 'mj-accordion',
+              props: {
+                border: '1px solid #e2e8f0',
+                'font-family': 'Arial, sans-serif',
+              },
+              children: [
+                {
+                  id: generateId(),
+                  type: 'mj-accordion-element',
+                  props: {},
+                  children: [
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-title',
+                      props: {
+                        'background-color': '#ffffff',
+                        color: '#1e293b',
+                        'font-size': '16px',
+                        padding: '15px',
+                      },
+                      content: 'How do I get started?',
+                    },
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-text',
+                      props: {
+                        'background-color': '#f8fafc',
+                        color: '#64748b',
+                        'font-size': '14px',
+                        padding: '15px',
+                      },
+                      content: 'Getting started is easy! Simply sign up for an account and follow our step-by-step onboarding guide.',
+                    },
+                  ],
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-accordion-element',
+                  props: {},
+                  children: [
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-title',
+                      props: {
+                        'background-color': '#ffffff',
+                        color: '#1e293b',
+                        'font-size': '16px',
+                        padding: '15px',
+                      },
+                      content: 'What payment methods do you accept?',
+                    },
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-text',
+                      props: {
+                        'background-color': '#f8fafc',
+                        color: '#64748b',
+                        'font-size': '14px',
+                        padding: '15px',
+                      },
+                      content: 'We accept all major credit cards, PayPal, and bank transfers for business accounts.',
+                    },
+                  ],
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-accordion-element',
+                  props: {},
+                  children: [
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-title',
+                      props: {
+                        'background-color': '#ffffff',
+                        color: '#1e293b',
+                        'font-size': '16px',
+                        padding: '15px',
+                      },
+                      content: 'Can I cancel my subscription?',
+                    },
+                    {
+                      id: generateId(),
+                      type: 'mj-accordion-text',
+                      props: {
+                        'background-color': '#f8fafc',
+                        color: '#64748b',
+                        'font-size': '14px',
+                        padding: '15px',
+                      },
+                      content: 'Yes, you can cancel your subscription at any time. No questions asked, no hidden fees.',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    // Footer with Social Links
+    {
+      id: generateId(),
+      type: 'mj-section',
+      props: {
+        'background-color': '#1e293b',
+        padding: '30px 20px',
+      },
+      children: [
+        {
+          id: generateId(),
+          type: 'mj-column',
+          props: {},
+          children: [
+            {
+              id: generateId(),
+              type: 'mj-social',
+              props: {
+                'mode': 'horizontal',
+                'icon-size': '24px',
+                'align': 'center',
+                'padding': '0 0 20px 0',
+              },
+              children: [
+                {
+                  id: generateId(),
+                  type: 'mj-social-element',
+                  props: { name: 'facebook', href: 'https://facebook.com' },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-social-element',
+                  props: { name: 'twitter', href: 'https://twitter.com' },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-social-element',
+                  props: { name: 'instagram', href: 'https://instagram.com' },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-social-element',
+                  props: { name: 'linkedin', href: 'https://linkedin.com' },
+                },
+                {
+                  id: generateId(),
+                  type: 'mj-social-element',
+                  props: { name: 'youtube', href: 'https://youtube.com' },
+                },
+              ],
+            },
+            {
+              id: generateId(),
+              type: 'mj-text',
+              props: {
+                color: '#94a3b8',
+                'font-size': '12px',
+                align: 'center',
+              },
+              content: '© 2024 Your Company. All rights reserved.',
+            },
+            {
+              id: generateId(),
+              type: 'mj-text',
+              props: {
+                color: '#94a3b8',
+                'font-size': '12px',
+                align: 'center',
+                'padding-top': '10px',
+              },
+              content: '<a href="#" style="color: #94a3b8;">Unsubscribe</a> | <a href="#" style="color: #94a3b8;">Privacy Policy</a>',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 // Export all templates
 export const templates: Template[] = [
   {
@@ -823,6 +1159,12 @@ export const templates: Template[] = [
     name: 'Notification',
     category: 'notification',
     document: notificationTemplate,
+  },
+  {
+    id: 'showcase',
+    name: 'Showcase',
+    category: 'marketing',
+    document: showcaseTemplate,
   },
 ];
 

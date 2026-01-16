@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Editor, { OnMount, BeforeMount } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { useEditorStore } from "@/stores/editor";
@@ -10,19 +10,21 @@ import { RefreshCw, Check, AlertCircle, Loader2 } from "lucide-react";
 
 export function CodeEditor() {
   const document = useEditorStore((s) => s.document);
+  const headSettings = useEditorStore((s) => s.headSettings);
   const setDocument = useEditorStore((s) => s.setDocument);
-  const [code, setCode] = useState("");
-  const [isDirty, setIsDirty] = useState(false);
+  const [editedCode, setEditedCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  // Generate MJML from document
-  useEffect(() => {
-    if (!isDirty) {
-      const mjml = generateMjml(document);
-      setCode(mjml);
-    }
-  }, [document, isDirty]);
+  // Generate MJML from document using useMemo (derived state)
+  const generatedMjml = useMemo(
+    () => generateMjml(document, headSettings),
+    [document, headSettings]
+  );
+
+  // Use edited code if user has made changes, otherwise use generated
+  const code = editedCode ?? generatedMjml;
+  const isDirty = editedCode !== null;
 
   // Auto-sync with debounce for live preview
   useEffect(() => {
@@ -46,8 +48,7 @@ export function CodeEditor() {
 
   const handleChange = useCallback((value: string | undefined) => {
     if (value !== undefined) {
-      setCode(value);
-      setIsDirty(true);
+      setEditedCode(value);
       setError(null);
     }
   }, []);
@@ -57,7 +58,7 @@ export function CodeEditor() {
       const node = parseMjmlToNode(code);
       if (node) {
         setDocument(node);
-        setIsDirty(false);
+        setEditedCode(null);
         setError(null);
       } else {
         setError("Failed to parse MJML. Please check the syntax.");
@@ -68,11 +69,9 @@ export function CodeEditor() {
   }, [code, setDocument]);
 
   const handleReset = useCallback(() => {
-    const mjml = generateMjml(document);
-    setCode(mjml);
-    setIsDirty(false);
+    setEditedCode(null);
     setError(null);
-  }, [document]);
+  }, []);
 
   const handleEditorMount: OnMount = useCallback((editor) => {
     editorRef.current = editor;

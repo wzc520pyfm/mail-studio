@@ -1,15 +1,27 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { immer } from 'zustand/middleware/immer';
-import { EditorNode, MJMLComponentType } from '@/types/editor';
+import { EditorNode, MJMLComponentType, HeadSettings, FontDefinition } from '@/types/editor';
 import { emptyDocument, cloneDocumentWithNewIds } from '@/lib/mjml/templates';
 import { createNode, generateId } from '@/lib/mjml/schema';
+
+// Default head settings
+const defaultHeadSettings: HeadSettings = {
+  title: '',
+  preview: '',
+  fonts: [],
+  styles: '',
+  breakpoint: '',
+};
 
 interface EditorState {
   // Document state
   document: EditorNode;
   selectedId: string | null;
   hoveredId: string | null;
+  
+  // Head settings
+  headSettings: HeadSettings;
 
   // Actions
   setDocument: (document: EditorNode) => void;
@@ -18,11 +30,19 @@ interface EditorState {
 
   // Node operations
   addNode: (parentId: string, type: MJMLComponentType, index?: number) => void;
+  addChildNode: (parentId: string, node: EditorNode, index?: number) => void;
   removeNode: (nodeId: string) => void;
   updateNodeProps: (nodeId: string, props: Record<string, string | number | undefined>) => void;
   updateNodeContent: (nodeId: string, content: string) => void;
+  updateNodeChildren: (nodeId: string, children: EditorNode[]) => void;
   moveNode: (nodeId: string, newParentId: string, newIndex: number) => void;
   duplicateNode: (nodeId: string) => void;
+
+  // Head settings operations
+  updateHeadSettings: (settings: Partial<HeadSettings>) => void;
+  addFont: (font: FontDefinition) => void;
+  removeFont: (fontName: string) => void;
+  updateFont: (index: number, font: FontDefinition) => void;
 
   // Template
   loadTemplate: (document: EditorNode) => void;
@@ -76,6 +96,7 @@ export const useEditorStore = create<EditorState>()(
       document: cloneDocumentWithNewIds(emptyDocument),
       selectedId: null,
       hoveredId: null,
+      headSettings: { ...defaultHeadSettings },
 
       setDocument: (document) =>
         set((state) => {
@@ -117,6 +138,24 @@ export const useEditorStore = create<EditorState>()(
           state.selectedId = newNode.id;
         }),
 
+      addChildNode: (parentId, node, index) =>
+        set((state) => {
+          const parent = findNodeInTree(state.document, parentId);
+          if (!parent) return;
+
+          if (!parent.children) {
+            parent.children = [];
+          }
+
+          if (index !== undefined && index >= 0 && index <= parent.children.length) {
+            parent.children.splice(index, 0, node);
+          } else {
+            parent.children.push(node);
+          }
+
+          state.selectedId = node.id;
+        }),
+
       removeNode: (nodeId) =>
         set((state) => {
           const parentInfo = findParentInTree(state.document, nodeId);
@@ -148,6 +187,13 @@ export const useEditorStore = create<EditorState>()(
           const node = findNodeInTree(state.document, nodeId);
           if (!node) return;
           node.content = content;
+        }),
+
+      updateNodeChildren: (nodeId, children) =>
+        set((state) => {
+          const node = findNodeInTree(state.document, nodeId);
+          if (!node) return;
+          node.children = children;
         }),
 
       moveNode: (nodeId, newParentId, newIndex) =>
@@ -187,6 +233,36 @@ export const useEditorStore = create<EditorState>()(
           state.selectedId = clonedNode.id;
         }),
 
+      // Head settings operations
+      updateHeadSettings: (settings) =>
+        set((state) => {
+          state.headSettings = { ...state.headSettings, ...settings };
+        }),
+
+      addFont: (font) =>
+        set((state) => {
+          if (!state.headSettings.fonts) {
+            state.headSettings.fonts = [];
+          }
+          // Avoid duplicates
+          const exists = state.headSettings.fonts.some(f => f.name === font.name);
+          if (!exists) {
+            state.headSettings.fonts.push(font);
+          }
+        }),
+
+      removeFont: (fontName) =>
+        set((state) => {
+          if (!state.headSettings.fonts) return;
+          state.headSettings.fonts = state.headSettings.fonts.filter(f => f.name !== fontName);
+        }),
+
+      updateFont: (index, font) =>
+        set((state) => {
+          if (!state.headSettings.fonts || index < 0 || index >= state.headSettings.fonts.length) return;
+          state.headSettings.fonts[index] = font;
+        }),
+
       loadTemplate: (document) =>
         set((state) => {
           state.document = cloneDocumentWithNewIds(document);
@@ -200,7 +276,8 @@ export const useEditorStore = create<EditorState>()(
     {
       limit: 50, // Keep last 50 states for undo/redo
       equality: (pastState, currentState) =>
-        JSON.stringify(pastState.document) === JSON.stringify(currentState.document),
+        JSON.stringify(pastState.document) === JSON.stringify(currentState.document) &&
+        JSON.stringify(pastState.headSettings) === JSON.stringify(currentState.headSettings),
     }
   )
 );

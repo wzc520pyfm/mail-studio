@@ -27,16 +27,17 @@ import {
   FileJson,
   FileCode,
   LayoutGrid,
-  Mail,
   PenLine,
 } from "lucide-react";
 import { useEditorStore, useTemporalStore } from "@/stores/editor";
 import { useUIStore } from "@/stores/ui";
 import { compileDocument, generateMjml } from "@/lib/mjml/compiler";
 import { useCallback } from "react";
+import { HeadSettingsButton } from "./HeadSettings";
 
 export function Toolbar() {
   const document = useEditorStore((s) => s.document);
+  const headSettings = useEditorStore((s) => s.headSettings);
   const { undo, redo, pastStates, futureStates } =
     useTemporalStore().getState();
   const { editorMode, previewMode, setEditorMode, setPreviewMode } =
@@ -54,24 +55,24 @@ export function Toolbar() {
   }, [canRedo, redo]);
 
   const handleExportMjml = useCallback(() => {
-    const mjml = generateMjml(document);
+    const mjml = generateMjml(document, headSettings);
     downloadFile(mjml, "email.mjml", "text/plain");
-  }, [document]);
+  }, [document, headSettings]);
 
   const handleExportHtml = useCallback(() => {
-    const { html } = compileDocument(document);
+    const { html } = compileDocument(document, headSettings);
     downloadFile(html, "email.html", "text/html");
-  }, [document]);
+  }, [document, headSettings]);
 
   const handleCopyMjml = useCallback(async () => {
-    const mjml = generateMjml(document);
+    const mjml = generateMjml(document, headSettings);
     await navigator.clipboard.writeText(mjml);
-  }, [document]);
+  }, [document, headSettings]);
 
   const handleCopyHtml = useCallback(async () => {
-    const { html } = compileDocument(document);
+    const { html } = compileDocument(document, headSettings);
     await navigator.clipboard.writeText(html);
-  }, [document]);
+  }, [document, headSettings]);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -236,6 +237,9 @@ export function Toolbar() {
           </div>
 
           <Separator orientation="vertical" className="h-6" />
+
+          {/* Head Settings */}
+          <HeadSettingsButton />
 
           {/* Export */}
           <DropdownMenu>

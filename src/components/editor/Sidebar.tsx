@@ -40,22 +40,34 @@ export function Sidebar() {
   );
 }
 
+// Category icons mapping
+const categoryIcons: Record<string, keyof typeof Icons> = {
+  layout: 'LayoutGrid',
+  content: 'FileText',
+  interactive: 'MousePointerClick',
+  social: 'Share2',
+};
+
 function ComponentsPanel() {
   return (
     <ScrollArea className="h-full">
       <div className="p-3 space-y-4">
-        {componentCategories.map((category) => (
-          <div key={category.id}>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-              {category.name}
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {category.components.map((type) => (
-                <DraggableComponent key={type} type={type} />
-              ))}
+        {componentCategories.map((category) => {
+          const IconComponent = Icons[categoryIcons[category.id] || 'Box'] as React.ElementType;
+          return (
+            <div key={category.id}>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center gap-1.5">
+                {IconComponent && <IconComponent className="w-3.5 h-3.5" />}
+                {category.name}
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {category.components.map((type) => (
+                  <DraggableComponent key={type} type={type} />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </ScrollArea>
   );

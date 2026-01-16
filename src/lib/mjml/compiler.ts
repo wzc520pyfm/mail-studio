@@ -1,5 +1,19 @@
 import mjml2html from 'mjml-browser';
-import { EditorNode } from '@/types/editor';
+import { EditorNode, HeadSettings } from '@/types/editor';
+
+// Self-closing MJML tags (components that don't have children or text content)
+const SELF_CLOSING_TAGS = [
+  'mj-divider',
+  'mj-spacer',
+  'mj-image',
+  'mj-carousel-image',
+];
+
+// Tags that should use content as HTML (not text)
+const HTML_CONTENT_TAGS = [
+  'mj-table',
+  'mj-raw',
+];
 
 // Convert EditorNode tree to MJML string
 export function nodeToMjml(node: EditorNode, indent = 0): string {
@@ -9,7 +23,7 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   // Build attributes string
   const attrs = Object.entries(props)
     .filter(([, value]) => value !== undefined && value !== '')
-    .map(([key, value]) => `${key}="${value}"`)
+    .map(([key, value]) => `${key}="${escapeAttr(String(value))}"`)
     .join(' ');
 
   const openTag = attrs ? `<${type} ${attrs}>` : `<${type}>`;
@@ -17,7 +31,7 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
 
   // Handle self-closing tags for components without children or content
   if (!children?.length && !content) {
-    if (['mj-divider', 'mj-spacer', 'mj-image'].includes(type)) {
+    if (SELF_CLOSING_TAGS.includes(type)) {
       return `${spaces}${attrs ? `<${type} ${attrs} />` : `<${type} />`}`;
     }
   }
@@ -29,6 +43,11 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
 
   // Combine parts
   if (content && !children?.length) {
+    // For HTML content tags, preserve the content as-is (with proper indentation)
+    if (HTML_CONTENT_TAGS.includes(type)) {
+      const indentedContent = content.split('\n').map(line => `${spaces}  ${line}`).join('\n');
+      return `${spaces}${openTag}\n${indentedContent}\n${spaces}${closeTag}`;
+    }
     return `${spaces}${openTag}${content}${closeTag}`;
   }
 
@@ -39,19 +58,75 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   return `${spaces}${openTag}${closeTag}`;
 }
 
+// Escape HTML attribute values
+function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Generate head content from HeadSettings
+function generateHeadContent(headSettings?: HeadSettings): string {
+  const parts: string[] = [];
+  
+  // mj-title
+  if (headSettings?.title) {
+    parts.push(`    <mj-title>${escapeHtml(headSettings.title)}</mj-title>`);
+  }
+  
+  // mj-preview
+  if (headSettings?.preview) {
+    parts.push(`    <mj-preview>${escapeHtml(headSettings.preview)}</mj-preview>`);
+  }
+  
+  // mj-font (custom fonts)
+  if (headSettings?.fonts && headSettings.fonts.length > 0) {
+    for (const font of headSettings.fonts) {
+      parts.push(`    <mj-font name="${escapeAttr(font.name)}" href="${escapeAttr(font.href)}" />`);
+    }
+  }
+  
+  // mj-breakpoint
+  if (headSettings?.breakpoint) {
+    parts.push(`    <mj-breakpoint width="${escapeAttr(headSettings.breakpoint)}" />`);
+  }
+  
+  // Default attributes
+  parts.push(`    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" line-height="1.5" color="#333333" />
+    </mj-attributes>`);
+  
+  // mj-style (custom styles + defaults)
+  const defaultStyles = '.link-nostyle { color: inherit; text-decoration: none; }';
+  const customStyles = headSettings?.styles ? headSettings.styles : '';
+  const allStyles = [defaultStyles, customStyles].filter(Boolean).join('\n      ');
+  
+  parts.push(`    <mj-style>
+      ${allStyles}
+    </mj-style>`);
+  
+  return parts.join('\n');
+}
+
+// Escape HTML content
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // Generate full MJML document from editor document
-export function generateMjml(document: EditorNode): string {
+export function generateMjml(document: EditorNode, headSettings?: HeadSettings): string {
   const bodyContent = nodeToMjml(document, 1);
+  const headContent = generateHeadContent(headSettings);
   
   return `<mjml>
   <mj-head>
-    <mj-attributes>
-      <mj-all font-family="Arial, sans-serif" />
-      <mj-text font-size="16px" line-height="1.5" color="#333333" />
-    </mj-attributes>
-    <mj-style>
-      .link-nostyle { color: inherit; text-decoration: none; }
-    </mj-style>
+${headContent}
   </mj-head>
 ${bodyContent}
 </mjml>`;
@@ -78,8 +153,11 @@ export function compileMjml(mjmlString: string): { html: string; errors: string[
 }
 
 // Compile EditorNode document to HTML
-export function compileDocument(document: EditorNode): { html: string; mjml: string; errors: string[] } {
-  const mjml = generateMjml(document);
+export function compileDocument(
+  document: EditorNode,
+  headSettings?: HeadSettings
+): { html: string; mjml: string; errors: string[] } {
+  const mjml = generateMjml(document, headSettings);
   const { html, errors } = compileMjml(mjml);
   return { html, mjml, errors };
 }

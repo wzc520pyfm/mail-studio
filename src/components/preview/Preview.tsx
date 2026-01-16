@@ -1,26 +1,27 @@
-'use client';
+"use client";
 
-import { useMemo, useEffect, useState } from 'react';
-import { useEditorStore } from '@/stores/editor';
-import { useUIStore } from '@/stores/ui';
-import { compileDocument } from '@/lib/mjml/compiler';
-import { cn } from '@/lib/utils';
+import { useMemo } from "react";
+import { useEditorStore } from "@/stores/editor";
+import { useUIStore } from "@/stores/ui";
+import { compileDocument } from "@/lib/mjml/compiler";
+import { cn } from "@/lib/utils";
 
 export function Preview() {
   const document = useEditorStore((s) => s.document);
+  const headSettings = useEditorStore((s) => s.headSettings);
   const previewMode = useUIStore((s) => s.previewMode);
-  const [compiledHtml, setCompiledHtml] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
 
-  // Compile MJML to HTML
-  useEffect(() => {
-    const { html, errors: compileErrors } = compileDocument(document);
-    setCompiledHtml(html);
-    setErrors(compileErrors);
-  }, [document]);
+  // Compile MJML to HTML using useMemo (derived state)
+  const { compiledHtml, errors } = useMemo(() => {
+    const { html, errors: compileErrors } = compileDocument(
+      document,
+      headSettings
+    );
+    return { compiledHtml: html, errors: compileErrors };
+  }, [document, headSettings]);
 
-  const frameWidth = previewMode === 'desktop' ? '100%' : '375px';
-  const frameMaxWidth = previewMode === 'desktop' ? '800px' : '375px';
+  const frameWidth = previewMode === "desktop" ? "100%" : "375px";
+  const frameMaxWidth = previewMode === "desktop" ? "800px" : "375px";
 
   return (
     <div className="h-full bg-muted/50 flex flex-col">
@@ -28,7 +29,7 @@ export function Preview() {
       {errors.length > 0 && (
         <div className="px-4 py-2 bg-destructive/10 border-b border-destructive/20">
           <p className="text-sm text-destructive">
-            {errors.length} compilation error{errors.length > 1 ? 's' : ''}
+            {errors.length} compilation error{errors.length > 1 ? "s" : ""}
           </p>
         </div>
       )}
@@ -38,8 +39,9 @@ export function Preview() {
         <div className="min-h-full flex items-start justify-center p-8">
           <div
             className={cn(
-              'bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300',
-              previewMode === 'mobile' && 'border-8 border-gray-800 rounded-[2rem]'
+              "bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300",
+              previewMode === "mobile" &&
+                "border-8 border-gray-800 rounded-[2rem]"
             )}
             style={{
               width: frameWidth,
@@ -47,7 +49,7 @@ export function Preview() {
             }}
           >
             {/* Mobile Notch */}
-            {previewMode === 'mobile' && (
+            {previewMode === "mobile" && (
               <div className="h-6 bg-gray-800 flex items-center justify-center">
                 <div className="w-20 h-4 bg-black rounded-b-xl" />
               </div>
@@ -58,14 +60,14 @@ export function Preview() {
               srcDoc={compiledHtml}
               className="w-full border-0"
               style={{
-                height: previewMode === 'mobile' ? '600px' : '800px',
+                height: previewMode === "mobile" ? "600px" : "800px",
               }}
               title="Email Preview"
               sandbox="allow-same-origin"
             />
 
             {/* Mobile Home Indicator */}
-            {previewMode === 'mobile' && (
+            {previewMode === "mobile" && (
               <div className="h-6 bg-gray-800 flex items-center justify-center">
                 <div className="w-32 h-1 bg-white rounded-full" />
               </div>
