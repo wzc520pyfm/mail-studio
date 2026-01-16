@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useEditorStore } from "@/stores/editor";
 import { EditorNode, MJMLComponentType } from "@/types/editor";
-import { componentDefinitions, createNode } from "@/lib/mjml/schema";
+import { componentDefinitions, createNode, generateId } from "@/lib/mjml/schema";
 import { cn } from "@/lib/utils";
 import {
   Bold,
@@ -20,6 +20,17 @@ import {
   Plus,
   GripVertical,
   Trash2,
+  Table,
+  Share2,
+  Menu,
+  ChevronDown,
+  ChevronUp,
+  GalleryHorizontal,
+  LayoutTemplate,
+  Code,
+  MoveVertical,
+  ExternalLink,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,11 +86,76 @@ export function EditMode() {
 }
 
 function EditSection({ node }: { node: EditorNode }) {
+  // Handle different section types
+  if (node.type === "mj-hero") {
+    return <EditHero node={node} />;
+  }
+
+  if (node.type === "mj-wrapper") {
+    return (
+      <div className="space-y-1 p-2 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+        {node.children?.map((section) => (
+          <EditSection key={section.id} node={section} />
+        ))}
+      </div>
+    );
+  }
+
+  // Handle mj-group inside section
   return (
     <div className="space-y-1">
-      {node.children?.map((column) => (
-        <EditColumn key={column.id} node={column} parentId={node.id} />
-      ))}
+      {node.children?.map((child) => {
+        if (child.type === "mj-group") {
+          return (
+            <div key={child.id} className="flex gap-2">
+              {child.children?.map((column) => (
+                <div key={column.id} className="flex-1">
+                  <EditColumn node={column} parentId={child.id} />
+                </div>
+              ))}
+            </div>
+          );
+        }
+        return (
+          <EditColumn key={child.id} node={child} parentId={node.id} />
+        );
+      })}
+    </div>
+  );
+}
+
+function EditHero({ node }: { node: EditorNode }) {
+  const { selectedId, setSelectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const bgColor = (node.props["background-color"] as string) || "#1e293b";
+  const bgImage = node.props["background-url"] as string;
+
+  return (
+    <div
+      className={cn(
+        "relative rounded-lg overflow-hidden my-2 transition-all",
+        isSelected ? "ring-2 ring-blue-200" : ""
+      )}
+      style={{
+        backgroundColor: bgColor,
+        backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        minHeight: (node.props["height"] as string) || "300px",
+      }}
+      onClick={() => setSelectedId(node.id)}
+    >
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+        {node.children?.map((child) => (
+          <EditBlock key={child.id} node={child} parentId={node.id} />
+        ))}
+      </div>
+
+      {/* Hero label */}
+      <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 rounded text-xs text-white flex items-center gap-1">
+        <LayoutTemplate className="w-3 h-3" />
+        Hero
+      </div>
     </div>
   );
 }
@@ -153,6 +229,12 @@ function EditBlock({ node, parentId }: { node: EditorNode; parentId: string }) {
         {node.type === "mj-button" && <EditableButton node={node} />}
         {node.type === "mj-divider" && <EditableDivider node={node} />}
         {node.type === "mj-spacer" && <EditableSpacer node={node} />}
+        {node.type === "mj-table" && <EditableTable node={node} />}
+        {node.type === "mj-social" && <EditableSocial node={node} />}
+        {node.type === "mj-navbar" && <EditableNavbar node={node} />}
+        {node.type === "mj-accordion" && <EditableAccordion node={node} />}
+        {node.type === "mj-carousel" && <EditableCarousel node={node} />}
+        {node.type === "mj-raw" && <EditableRaw node={node} />}
       </div>
     </div>
   );
@@ -424,7 +506,583 @@ function EditableSpacer({ node }: { node: EditorNode }) {
       className="flex items-center justify-center text-gray-400 text-xs"
       style={{ height }}
     >
-      ↕ {height}
+      <MoveVertical className="w-3 h-3 mr-1" />
+      {height}
+    </div>
+  );
+}
+
+function EditableTable({ node }: { node: EditorNode }) {
+  const { updateNodeContent, selectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(node.content || "");
+
+  const handleSave = () => {
+    updateNodeContent(node.id, editContent);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="py-2">
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-gray-50 px-3 py-2 border-b flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-600">
+              <Table className="w-3 h-3 inline mr-1" />
+              Edit Table HTML
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-xs px-2 py-1 rounded hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="text-xs px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="w-full h-48 p-3 text-xs font-mono outline-none resize-none"
+            placeholder="<tr><td>Cell 1</td><td>Cell 2</td></tr>"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg overflow-hidden cursor-pointer transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setIsEditing(true)}
+      >
+        <div className="bg-gray-50 px-3 py-2 border-b">
+          <span className="text-xs font-medium text-gray-600">
+            <Table className="w-3 h-3 inline mr-1" />
+            Table
+          </span>
+        </div>
+        <div className="p-3">
+          {node.content ? (
+            <table
+              className="w-full text-sm"
+              dangerouslySetInnerHTML={{ __html: node.content }}
+            />
+          ) : (
+            <div className="text-gray-400 text-sm text-center py-4">
+              Click to edit table
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditableSocial({ node }: { node: EditorNode }) {
+  const { updateNodeChildren, selectedId, setSelectedId, addChildNode, removeNode } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const children = node.children || [];
+
+  const socialPlatforms = [
+    { name: "facebook", label: "Facebook", color: "#3b5998" },
+    { name: "twitter", label: "Twitter", color: "#1da1f2" },
+    { name: "linkedin", label: "LinkedIn", color: "#0077b5" },
+    { name: "instagram", label: "Instagram", color: "#e4405f" },
+    { name: "youtube", label: "YouTube", color: "#ff0000" },
+    { name: "github", label: "GitHub", color: "#333" },
+  ];
+
+  const handleAddSocial = (platformName: string) => {
+    const newElement: EditorNode = {
+      id: generateId(),
+      type: "mj-social-element",
+      props: { name: platformName, href: "#" },
+    };
+    addChildNode(node.id, newElement);
+  };
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg p-3 transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setSelectedId(node.id)}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Share2 className="w-4 h-4 text-gray-500" />
+          <span className="text-xs font-medium text-gray-600">Social Links</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {children.map((child) => {
+            const platform = socialPlatforms.find(
+              (p) => p.name === child.props.name
+            );
+            return (
+              <div
+                key={child.id}
+                className="group relative flex items-center gap-1 px-2 py-1 rounded text-xs text-white"
+                style={{ backgroundColor: platform?.color || "#666" }}
+              >
+                {platform?.label || child.props.name}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeNode(child.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 ml-1 hover:bg-white/20 rounded"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1">
+              <Plus className="w-3 h-3" />
+              Add social link
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-40 p-2" align="start">
+            {socialPlatforms.map((platform) => (
+              <button
+                key={platform.name}
+                onClick={() => handleAddSocial(platform.name)}
+                className="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100"
+              >
+                {platform.label}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+}
+
+function EditableNavbar({ node }: { node: EditorNode }) {
+  const { updateNodeContent, updateNodeProps, addChildNode, removeNode, selectedId, setSelectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const children = node.children || [];
+
+  const handleAddLink = () => {
+    const newLink: EditorNode = {
+      id: generateId(),
+      type: "mj-navbar-link",
+      props: { href: "#", color: "#333333" },
+      content: "New Link",
+    };
+    addChildNode(node.id, newLink);
+  };
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg p-3 transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setSelectedId(node.id)}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Menu className="w-4 h-4 text-gray-500" />
+          <span className="text-xs font-medium text-gray-600">Navigation Bar</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {children.map((child) => (
+            <div
+              key={child.id}
+              className="group relative flex items-center"
+            >
+              <input
+                type="text"
+                value={child.content || ""}
+                onChange={(e) => {
+                  const { updateNodeContent } = useEditorStore.getState();
+                  updateNodeContent(child.id, e.target.value);
+                }}
+                className="px-3 py-1 text-sm border rounded hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeNode(child.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 ml-1 p-1 hover:bg-gray-100 rounded"
+              >
+                <Trash2 className="w-3 h-3 text-gray-400" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddLink();
+          }}
+          className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" />
+          Add link
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EditableAccordion({ node }: { node: EditorNode }) {
+  const { addChildNode, removeNode, selectedId, setSelectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const children = node.children || [];
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleItem = (id: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const handleAddItem = () => {
+    const newItem: EditorNode = {
+      id: generateId(),
+      type: "mj-accordion-element",
+      props: {},
+      children: [
+        {
+          id: generateId(),
+          type: "mj-accordion-title",
+          props: { "background-color": "#f8fafc", padding: "15px" },
+          content: "New Accordion Title",
+        },
+        {
+          id: generateId(),
+          type: "mj-accordion-text",
+          props: { "background-color": "#ffffff", padding: "15px" },
+          content: "Accordion content goes here.",
+        },
+      ],
+    };
+    addChildNode(node.id, newItem);
+  };
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg overflow-hidden transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setSelectedId(node.id)}
+      >
+        <div className="bg-gray-50 px-3 py-2 border-b flex items-center gap-2">
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+          <span className="text-xs font-medium text-gray-600">Accordion</span>
+        </div>
+
+        <div className="divide-y">
+          {children.map((element) => {
+            const titleChild = element.children?.find(
+              (c) => c.type === "mj-accordion-title"
+            );
+            const textChild = element.children?.find(
+              (c) => c.type === "mj-accordion-text"
+            );
+            const isExpanded = expandedItems.has(element.id);
+
+            return (
+              <div key={element.id} className="group">
+                <div
+                  className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleItem(element.id);
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronRight
+                      className={cn(
+                        "w-4 h-4 text-gray-400 transition-transform",
+                        isExpanded && "rotate-90"
+                      )}
+                    />
+                    <span className="text-sm">
+                      {titleChild?.content || "Accordion Item"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeNode(element.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+                  >
+                    <Trash2 className="w-3 h-3 text-gray-400" />
+                  </button>
+                </div>
+                {isExpanded && (
+                  <div className="px-3 py-2 bg-gray-50 text-sm text-gray-600 border-t">
+                    {textChild?.content || "Content"}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="px-3 py-2 border-t">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddItem();
+            }}
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            Add accordion item
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditableCarousel({ node }: { node: EditorNode }) {
+  const { addChildNode, removeNode, updateNodeProps, selectedId, setSelectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const children = node.children || [];
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleAddSlide = () => {
+    const newSlide: EditorNode = {
+      id: generateId(),
+      type: "mj-carousel-image",
+      props: {
+        src: "https://placehold.co/600x300/e2e8f0/64748b?text=New+Slide",
+        alt: "New slide",
+      },
+    };
+    addChildNode(node.id, newSlide);
+  };
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg overflow-hidden transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setSelectedId(node.id)}
+      >
+        <div className="bg-gray-50 px-3 py-2 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GalleryHorizontal className="w-4 h-4 text-gray-500" />
+            <span className="text-xs font-medium text-gray-600">Carousel</span>
+          </div>
+          <span className="text-xs text-gray-400">
+            {children.length} slides
+          </span>
+        </div>
+
+        {children.length > 0 ? (
+          <div className="relative">
+            <div className="aspect-[2/1] bg-gray-100">
+              {children[activeIndex] && (
+                <img
+                  src={children[activeIndex].props.src as string}
+                  alt={children[activeIndex].props.alt as string || ""}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+            
+            {/* Navigation dots */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              {children.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIndex(index);
+                  }}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-colors",
+                    index === activeIndex ? "bg-white" : "bg-white/50"
+                  )}
+                />
+              ))}
+            </div>
+
+            {/* Prev/Next buttons */}
+            {children.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIndex((i) => (i > 0 ? i - 1 : children.length - 1));
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center"
+                >
+                  <ChevronRight className="w-4 h-4 rotate-180" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveIndex((i) => (i < children.length - 1 ? i + 1 : 0));
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="p-8 text-center text-gray-400">
+            No slides yet
+          </div>
+        )}
+
+        {/* Slide management */}
+        <div className="px-3 py-2 border-t bg-gray-50">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {children.map((slide, index) => (
+              <div
+                key={slide.id}
+                className={cn(
+                  "relative flex-shrink-0 w-16 h-10 rounded border cursor-pointer overflow-hidden",
+                  index === activeIndex ? "ring-2 ring-blue-400" : ""
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveIndex(index);
+                }}
+              >
+                <img
+                  src={slide.props.src as string}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeNode(slide.id);
+                    if (activeIndex >= children.length - 1) {
+                      setActiveIndex(Math.max(0, children.length - 2));
+                    }
+                  }}
+                  className="absolute top-0 right-0 p-0.5 bg-red-500 text-white opacity-0 hover:opacity-100"
+                >
+                  <Trash2 className="w-2 h-2" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddSlide();
+              }}
+              className="flex-shrink-0 w-16 h-10 rounded border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditableRaw({ node }: { node: EditorNode }) {
+  const { updateNodeContent, selectedId } = useEditorStore();
+  const isSelected = selectedId === node.id;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(node.content || "");
+
+  const handleSave = () => {
+    updateNodeContent(node.id, editContent);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="py-2">
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-gray-800 px-3 py-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-300">
+              <Code className="w-3 h-3 inline mr-1" />
+              Raw HTML
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-xs px-2 py-1 rounded text-gray-300 hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="text-xs px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="w-full h-48 p-3 text-xs font-mono bg-gray-900 text-gray-100 outline-none resize-none"
+            placeholder="<!-- Your HTML here -->"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-2">
+      <div
+        className={cn(
+          "border rounded-lg overflow-hidden cursor-pointer transition-all",
+          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+        )}
+        onClick={() => setIsEditing(true)}
+      >
+        <div className="bg-gray-800 px-3 py-2">
+          <span className="text-xs font-medium text-gray-300">
+            <Code className="w-3 h-3 inline mr-1" />
+            Raw HTML
+          </span>
+        </div>
+        <div className="p-3 bg-gray-900">
+          <pre className="text-xs font-mono text-gray-400 whitespace-pre-wrap max-h-24 overflow-hidden">
+            {node.content || "<!-- Click to edit -->"}
+          </pre>
+        </div>
+      </div>
     </div>
   );
 }
@@ -459,11 +1117,21 @@ function AddBlockButton({ parentId }: { parentId: string }) {
   };
 
   const blockTypes = [
-    { type: "mj-text" as const, icon: Type, label: "Text" },
-    { type: "mj-image" as const, icon: Image, label: "Image" },
-    { type: "mj-button" as const, icon: MousePointerClick, label: "Button" },
-    { type: "mj-divider" as const, icon: Minus, label: "Divider" },
+    { type: "mj-text" as const, icon: Type, label: "Text", category: "content" },
+    { type: "mj-image" as const, icon: Image, label: "Image", category: "content" },
+    { type: "mj-button" as const, icon: MousePointerClick, label: "Button", category: "interactive" },
+    { type: "mj-divider" as const, icon: Minus, label: "Divider", category: "content" },
+    { type: "mj-spacer" as const, icon: MoveVertical, label: "Spacer", category: "content" },
+    { type: "mj-table" as const, icon: Table, label: "Table", category: "content" },
+    { type: "mj-social" as const, icon: Share2, label: "Social", category: "interactive" },
+    { type: "mj-navbar" as const, icon: Menu, label: "Navbar", category: "interactive" },
+    { type: "mj-accordion" as const, icon: ChevronDown, label: "Accordion", category: "interactive" },
+    { type: "mj-carousel" as const, icon: GalleryHorizontal, label: "Carousel", category: "interactive" },
+    { type: "mj-raw" as const, icon: Code, label: "Raw HTML", category: "content" },
   ];
+
+  const contentBlocks = blockTypes.filter((b) => b.category === "content");
+  const interactiveBlocks = blockTypes.filter((b) => b.category === "interactive");
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -480,18 +1148,42 @@ function AddBlockButton({ parentId }: { parentId: string }) {
           <span className="text-sm">Add block</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-2" align="start">
-        <div className="space-y-1">
-          {blockTypes.map(({ type, icon: Icon, label }) => (
-            <button
-              key={type}
-              onClick={() => handleAddBlock(type)}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <Icon className="w-4 h-4 text-gray-500" />
-              {label}
-            </button>
-          ))}
+      <PopoverContent className="w-56 p-2" align="start">
+        <div className="space-y-2">
+          <div>
+            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+              Content
+            </div>
+            <div className="space-y-0.5">
+              {contentBlocks.map(({ type, icon: Icon, label }) => (
+                <button
+                  key={type}
+                  onClick={() => handleAddBlock(type)}
+                  className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-gray-500" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="border-t pt-2">
+            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+              Interactive
+            </div>
+            <div className="space-y-0.5">
+              {interactiveBlocks.map(({ type, icon: Icon, label }) => (
+                <button
+                  key={type}
+                  onClick={() => handleAddBlock(type)}
+                  className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <Icon className="w-4 h-4 text-gray-500" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
