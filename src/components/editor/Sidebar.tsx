@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useDraggable } from '@dnd-kit/core';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useUIStore } from '@/stores/ui';
-import { useEditorStore } from '@/stores/editor';
-import { componentCategories, componentDefinitions } from '@/lib/mjml/schema';
-import { templates, cloneDocumentWithNewIds } from '@/lib/mjml/templates';
-import { MJMLComponentType } from '@/types/editor';
-import * as Icons from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useDraggable } from "@dnd-kit/core";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUIStore } from "@/stores/ui";
+import { useEditorStore } from "@/stores/editor";
+import { componentCategories, componentDefinitions } from "@/lib/mjml/schema";
+import { templates, cloneDocumentWithNewIds } from "@/lib/mjml/templates";
+import { MJMLComponentType } from "@/types/editor";
+import * as Icons from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { activeTab, setActiveTab } = useUIStore();
@@ -18,13 +18,17 @@ export function Sidebar() {
     <div className="h-full bg-muted/30 flex flex-col">
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as 'components' | 'templates')}
-        className="flex-1 flex flex-col"
+        onValueChange={(v) => setActiveTab(v as "components" | "templates")}
+        className="flex-1 flex flex-col overflow-y-auto"
       >
         <div className="px-3 pt-3 pb-2">
           <TabsList className="w-full grid grid-cols-2">
-            <TabsTrigger value="components" className="text-xs">Components</TabsTrigger>
-            <TabsTrigger value="templates" className="text-xs">Templates</TabsTrigger>
+            <TabsTrigger value="components" className="text-xs">
+              Components
+            </TabsTrigger>
+            <TabsTrigger value="templates" className="text-xs">
+              Templates
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -42,10 +46,10 @@ export function Sidebar() {
 
 // Category icons mapping
 const categoryIcons: Record<string, keyof typeof Icons> = {
-  layout: 'LayoutGrid',
-  content: 'FileText',
-  interactive: 'MousePointerClick',
-  social: 'Share2',
+  layout: "LayoutGrid",
+  content: "FileText",
+  interactive: "MousePointerClick",
+  social: "Share2",
 };
 
 function ComponentsPanel() {
@@ -53,7 +57,9 @@ function ComponentsPanel() {
     <ScrollArea className="h-full">
       <div className="p-3 space-y-4">
         {componentCategories.map((category) => {
-          const IconComponent = Icons[categoryIcons[category.id] || 'Box'] as React.ElementType;
+          const IconComponent = Icons[
+            categoryIcons[category.id] || "Box"
+          ] as React.ElementType;
           return (
             <div key={category.id}>
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center gap-1.5">
@@ -75,12 +81,14 @@ function ComponentsPanel() {
 
 function DraggableComponent({ type }: { type: MJMLComponentType }) {
   const def = componentDefinitions[type];
-  const IconComponent = Icons[def.icon as keyof typeof Icons] as React.ElementType;
+  const IconComponent = Icons[
+    def.icon as keyof typeof Icons
+  ] as React.ElementType;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `new-${type}`,
     data: {
-      type: 'new-component',
+      type: "new-component",
       componentType: type,
     },
   });
@@ -91,17 +99,19 @@ function DraggableComponent({ type }: { type: MJMLComponentType }) {
       {...listeners}
       {...attributes}
       className={cn(
-        'flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border border-border bg-background',
-        'cursor-grab active:cursor-grabbing transition-all duration-200',
-        'hover:border-primary/50 hover:bg-accent/50 hover:shadow-sm',
-        'min-h-[70px]',
-        isDragging && 'opacity-50 scale-95'
+        "flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-lg border border-border bg-background",
+        "cursor-grab active:cursor-grabbing transition-all duration-200",
+        "hover:border-primary/50 hover:bg-accent/50 hover:shadow-sm",
+        "min-h-[70px]",
+        isDragging && "opacity-50 scale-95"
       )}
     >
       {IconComponent && (
         <IconComponent className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       )}
-      <span className="text-xs font-medium text-center leading-tight">{def.name}</span>
+      <span className="text-xs font-medium text-center leading-tight">
+        {def.name}
+      </span>
     </div>
   );
 }
@@ -109,7 +119,9 @@ function DraggableComponent({ type }: { type: MJMLComponentType }) {
 function TemplatesPanel() {
   const { loadTemplate } = useEditorStore();
 
-  const handleSelectTemplate = (document: typeof templates[0]['document']) => {
+  const handleSelectTemplate = (
+    document: (typeof templates)[0]["document"]
+  ) => {
     loadTemplate(cloneDocumentWithNewIds(document));
   };
 
@@ -121,9 +133,9 @@ function TemplatesPanel() {
             key={template.id}
             onClick={() => handleSelectTemplate(template.document)}
             className={cn(
-              'w-full p-3 rounded-lg border border-border bg-background text-left',
-              'hover:border-primary/50 hover:bg-accent/50 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-primary/50'
+              "w-full p-3 rounded-lg border border-border bg-background text-left",
+              "hover:border-primary/50 hover:bg-accent/50 transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-primary/50"
             )}
           >
             <div className="flex items-center gap-3">
