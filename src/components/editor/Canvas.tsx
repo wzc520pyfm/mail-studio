@@ -206,22 +206,24 @@ function DropIndicatorLine({ position }: { position: 'before' | 'after' }) {
 function CanvasBody({ node }: { node: EditorNode }) {
   const bgColor = node.props['background-color'] as string || '#f4f4f4';
 
+  const bodyAcceptTypes: MJMLComponentType[] = ['mj-section', 'mj-wrapper', 'mj-hero'];
+  
   return (
     <div
       className="min-h-[400px]"
       style={{ backgroundColor: bgColor }}
     >
-      <DroppableContainer nodeId={node.id} acceptTypes={['mj-section', 'mj-wrapper', 'mj-hero']}>
+      <DroppableContainer nodeId={node.id} acceptTypes={bodyAcceptTypes}>
         <SortableContext
           items={node.children?.map((c) => c.id) || []}
           strategy={verticalListSortingStrategy}
         >
           {node.children?.map((child, index) => (
-            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} />
+            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} parentAcceptTypes={bodyAcceptTypes} />
           ))}
         </SortableContext>
         {(!node.children || node.children.length === 0) && (
-          <EmptyDropZone nodeId={node.id} message="Drop a Section here to start" />
+          <EmptyDropZone nodeId={node.id} message="Drop a Section here to start" acceptTypes={bodyAcceptTypes} />
         )}
       </DroppableContainer>
     </div>
@@ -232,10 +234,12 @@ function CanvasNode({
   node,
   index,
   parentId,
+  parentAcceptTypes,
 }: {
   node: EditorNode;
   index: number;
   parentId: string;
+  parentAcceptTypes?: MJMLComponentType[];
 }) {
   const { selectedId, setSelectedId, hoveredId, setHoveredId, removeNode, duplicateNode } =
     useEditorStore();
@@ -256,7 +260,9 @@ function CanvasNode({
     data: {
       type: 'existing-node',
       nodeId: node.id,
+      nodeType: node.type, // Include node type for validation
       parentId,
+      parentAcceptTypes, // Include parent's accept types for validation
       index,
     },
   });
@@ -411,9 +417,10 @@ function CanvasNode({
 function SectionNode({ node }: { node: EditorNode }) {
   const bgColor = node.props['background-color'] as string;
   const padding = node.props['padding'] as string || '20px 0';
+  const sectionAcceptTypes: MJMLComponentType[] = ['mj-column'];
 
   return (
-    <DroppableContainer nodeId={node.id} acceptTypes={['mj-column']}>
+    <DroppableContainer nodeId={node.id} acceptTypes={sectionAcceptTypes}>
       <div
         className="flex flex-wrap"
         style={{
@@ -426,11 +433,11 @@ function SectionNode({ node }: { node: EditorNode }) {
           strategy={verticalListSortingStrategy}
         >
           {node.children?.map((child, index) => (
-            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} />
+            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} parentAcceptTypes={sectionAcceptTypes} />
           ))}
         </SortableContext>
         {(!node.children || node.children.length === 0) && (
-          <EmptyDropZone nodeId={node.id} message="Drop a Column here" small />
+          <EmptyDropZone nodeId={node.id} message="Drop a Column here" small acceptTypes={sectionAcceptTypes} />
         )}
       </div>
     </DroppableContainer>
@@ -441,6 +448,7 @@ function ColumnNode({ node }: { node: EditorNode }) {
   const width = node.props['width'] as string || '100%';
   const bgColor = node.props['background-color'] as string;
   const padding = node.props['padding'] as string || '10px';
+  const columnAcceptTypes: MJMLComponentType[] = ['mj-text', 'mj-image', 'mj-button', 'mj-divider', 'mj-spacer', 'mj-social', 'mj-navbar', 'mj-accordion', 'mj-carousel', 'mj-table', 'mj-raw'];
 
   // Calculate flex basis
   const flexBasis = width.includes('%') ? width : 'auto';
@@ -448,7 +456,7 @@ function ColumnNode({ node }: { node: EditorNode }) {
   return (
     <DroppableContainer
       nodeId={node.id}
-      acceptTypes={['mj-text', 'mj-image', 'mj-button', 'mj-divider', 'mj-spacer', 'mj-social']}
+      acceptTypes={columnAcceptTypes}
     >
       <div
         className="min-h-[60px]"
@@ -464,11 +472,11 @@ function ColumnNode({ node }: { node: EditorNode }) {
           strategy={verticalListSortingStrategy}
         >
           {node.children?.map((child, index) => (
-            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} />
+            <CanvasNode key={child.id} node={child} index={index} parentId={node.id} parentAcceptTypes={columnAcceptTypes} />
           ))}
         </SortableContext>
         {(!node.children || node.children.length === 0) && (
-          <EmptyDropZone nodeId={node.id} message="Drop content here" small />
+          <EmptyDropZone nodeId={node.id} message="Drop content here" small acceptTypes={columnAcceptTypes} />
         )}
       </div>
     </DroppableContainer>
@@ -677,8 +685,14 @@ function DroppableContainer({
   });
 
   // Check if the dragged type is acceptable
-  const activeType = active?.data.current?.componentType as MJMLComponentType | undefined;
+  // Handle both new components (componentType) and existing nodes (nodeType)
+  const activeData = active?.data.current;
+  const activeType = (activeData?.componentType || activeData?.nodeType) as MJMLComponentType | undefined;
   const isAcceptable = !activeType || acceptTypes.includes(activeType);
+  
+  // Show visual feedback during drag
+  const showAcceptableHighlight = dragState.isDragging && isAcceptable;
+  const showNotAcceptableHighlight = dragState.isDragging && activeType && !isAcceptable;
 
   return (
     <div
@@ -687,15 +701,17 @@ function DroppableContainer({
         'transition-all duration-200 min-h-[20px] relative',
         // Highlight when dragging over and acceptable
         isOver && isAcceptable && 'bg-blue-50/60 ring-2 ring-blue-400 ring-inset rounded-sm',
-        // Show warning when not acceptable
+        // Show warning when not acceptable (even just hovering)
         isOver && !isAcceptable && 'bg-red-50/60 ring-2 ring-red-300 ring-inset rounded-sm',
-        // Subtle highlight when dragging but not over
-        dragState.isDragging && !isOver && 'bg-gray-50/30'
+        // Subtle highlight when dragging compatible items but not over this container
+        showAcceptableHighlight && !isOver && 'bg-blue-50/20',
+        // Dim appearance when dragging incompatible items
+        showNotAcceptableHighlight && !isOver && 'opacity-50'
       )}
     >
       {children}
       
-      {/* Drop zone overlay when dragging */}
+      {/* Drop zone overlay when dragging over and acceptable */}
       {isOver && isAcceptable && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div className="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-full shadow-lg animate-in zoom-in-90 duration-150">
@@ -720,19 +736,27 @@ function EmptyDropZone({
   nodeId,
   message,
   small = false,
+  acceptTypes,
 }: {
   nodeId: string;
   message: string;
   small?: boolean;
+  acceptTypes?: MJMLComponentType[];
 }) {
   const dragState = useContext(DragStateContext);
-  const { isOver, setNodeRef } = useDroppable({
+  const { isOver, setNodeRef, active } = useDroppable({
     id: `empty-${nodeId}`,
     data: {
       nodeId,
+      acceptTypes,
       index: 0,
     },
   });
+
+  // Check if the dragged type is acceptable
+  const activeData = active?.data.current;
+  const activeType = (activeData?.componentType || activeData?.nodeType) as MJMLComponentType | undefined;
+  const isAcceptable = !acceptTypes || !activeType || acceptTypes.includes(activeType);
 
   return (
     <div
@@ -742,19 +766,29 @@ function EmptyDropZone({
         small ? 'p-4 min-h-[60px]' : 'p-8 min-h-[120px]',
         // Default state
         !dragState.isDragging && 'border-gray-300 bg-gray-50/50',
-        // Dragging state (ready to receive)
-        dragState.isDragging && !isOver && 'border-blue-300 bg-blue-50/30 animate-pulse',
-        // Hovering over
-        isOver && 'border-blue-500 bg-blue-100/50 scale-[1.02] shadow-inner'
+        // Dragging acceptable type (ready to receive)
+        dragState.isDragging && isAcceptable && !isOver && 'border-blue-300 bg-blue-50/30 animate-pulse',
+        // Dragging non-acceptable type
+        dragState.isDragging && !isAcceptable && !isOver && 'border-gray-300 bg-gray-100/50 opacity-50',
+        // Hovering over with acceptable type
+        isOver && isAcceptable && 'border-blue-500 bg-blue-100/50 scale-[1.02] shadow-inner',
+        // Hovering over with non-acceptable type
+        isOver && !isAcceptable && 'border-red-400 bg-red-100/50'
       )}
     >
       {dragState.isDragging ? (
-        <>
-          <Plus className={cn('text-blue-500 mb-1', small ? 'w-5 h-5' : 'w-8 h-8')} />
-          <span className={cn('text-blue-600 font-medium', small ? 'text-xs' : 'text-sm')}>
-            {isOver ? 'Release to drop' : message}
+        isAcceptable ? (
+          <>
+            <Plus className={cn('text-blue-500 mb-1', small ? 'w-5 h-5' : 'w-8 h-8')} />
+            <span className={cn('text-blue-600 font-medium', small ? 'text-xs' : 'text-sm')}>
+              {isOver ? 'Release to drop' : message}
+            </span>
+          </>
+        ) : (
+          <span className={cn('text-gray-400', small ? 'text-xs' : 'text-sm')}>
+            {isOver ? 'Cannot drop here' : message}
           </span>
-        </>
+        )
       ) : (
         <span className={cn('text-gray-400', small ? 'text-xs' : 'text-sm')}>
           {message}

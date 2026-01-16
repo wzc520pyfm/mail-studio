@@ -66,17 +66,34 @@ export function Editor() {
 
       if (!activeData || !overData) return;
 
+      // Helper function to check if a component type can be dropped into a target
+      const canDropInto = (
+        componentType: MJMLComponentType,
+        acceptTypes: MJMLComponentType[] | undefined
+      ): boolean => {
+        if (!acceptTypes) return true;
+        return acceptTypes.includes(componentType);
+      };
+
       // Handle new component drop
       if (activeData.type === "new-component") {
         const componentType = activeData.componentType as MJMLComponentType;
         const targetId = overData.nodeId as string;
         const index = overData.index as number | undefined;
+        const acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
+
+        // Validate that the target accepts this component type
+        if (!canDropInto(componentType, acceptTypes)) {
+          console.warn(`Cannot drop ${componentType} into this container`);
+          return;
+        }
 
         addNode(targetId, componentType, index);
       }
       // Handle existing node move
       else if (activeData.type === "existing-node") {
         const nodeId = activeData.nodeId as string;
+        const nodeType = activeData.nodeType as MJMLComponentType;
         
         // Determine the actual target parent and index
         // If dropping on a DroppableContainer (drop-* or empty-*), use that nodeId as parent
@@ -86,15 +103,18 @@ export function Editor() {
         
         let targetParentId: string;
         let targetIndex: number;
+        let acceptTypes: MJMLComponentType[] | undefined;
         
         if (isDropContainer) {
           // Dropping directly into a container
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
+          acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         } else if (overData.type === 'existing-node') {
           // Dropping onto another node - use the node's parent as the target
           targetParentId = overData.parentId as string;
           targetIndex = (overData.index as number) ?? 0;
+          acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
           
           // Don't move if trying to drop on itself
           if (nodeId === overId) return;
@@ -113,6 +133,13 @@ export function Editor() {
           // Fallback
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
+          acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
+        }
+
+        // Validate that the target accepts this node type
+        if (nodeType && !canDropInto(nodeType, acceptTypes)) {
+          console.warn(`Cannot move ${nodeType} into this container`);
+          return;
         }
 
         // Don't move if nothing changes
