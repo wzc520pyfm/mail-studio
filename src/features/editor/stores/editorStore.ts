@@ -145,6 +145,15 @@ export const useEditorStore = create<EditorStore>()(
           const parent = findNodeInTree(state.document, parentId);
           if (!parent) return;
 
+          // Validate that the parent can have children
+          const parentDef = componentDefinitions[parent.type];
+          if (!parentDef?.canHaveChildren) return;
+
+          // Validate that the parent accepts this child type
+          if (parentDef.allowedChildren && !parentDef.allowedChildren.includes(type)) {
+            return;
+          }
+
           if (!parent.children) {
             parent.children = [];
           }
@@ -169,6 +178,15 @@ export const useEditorStore = create<EditorStore>()(
         set((state) => {
           const parent = findNodeInTree(state.document, parentId);
           if (!parent) return;
+
+          // Validate that the parent can have children
+          const parentDef = componentDefinitions[parent.type];
+          if (!parentDef?.canHaveChildren) return;
+
+          // Validate that the parent accepts this child type
+          if (parentDef.allowedChildren && !parentDef.allowedChildren.includes(node.type)) {
+            return;
+          }
 
           if (!parent.children) {
             parent.children = [];
@@ -220,6 +238,11 @@ export const useEditorStore = create<EditorStore>()(
         set((state) => {
           const node = findNodeInTree(state.document, nodeId);
           if (!node) return;
+
+          // Validate that the node can have children
+          const nodeDef = componentDefinitions[node.type];
+          if (!nodeDef?.canHaveChildren) return;
+
           node.children = children;
         }),
 
@@ -239,9 +262,12 @@ export const useEditorStore = create<EditorStore>()(
           // Get the node to be moved
           const nodeToMove = currentParentInfo.parent.children![currentParentInfo.index];
 
-          // Validate that the new parent can accept this type of child
+          // Validate that the new parent can have children
           const newParentDef = componentDefinitions[newParent.type];
-          if (newParentDef?.allowedChildren) {
+          if (!newParentDef?.canHaveChildren) return;
+
+          // Validate that the new parent can accept this type of child
+          if (newParentDef.allowedChildren) {
             if (!newParentDef.allowedChildren.includes(nodeToMove.type)) {
               return;
             }

@@ -4,6 +4,7 @@
 
 import mjml2html from 'mjml-browser';
 import type { EditorNode, HeadSettings } from '@/features/editor/types';
+import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
 
 // Self-closing MJML tags (components that don't have children or text content)
 const SELF_CLOSING_TAGS = ['mj-divider', 'mj-spacer', 'mj-image', 'mj-carousel-image'];
@@ -33,6 +34,10 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   const spaces = '  '.repeat(indent);
   const { type, props, children, content } = node;
 
+  // Get component definition to check if it can have children
+  const componentDef = componentDefinitions[type];
+  const canHaveChildren = componentDef?.canHaveChildren ?? false;
+
   // Build attributes string
   const attrs = Object.entries(props)
     .filter(([, value]) => value !== undefined && value !== '')
@@ -42,18 +47,21 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   const openTag = attrs ? `<${type} ${attrs}>` : `<${type}>`;
   const closeTag = `</${type}>`;
 
+  // Only consider children if the component type allows children
+  const validChildren = canHaveChildren ? children : undefined;
+
   // Handle self-closing tags for components without children or content
-  if (!children?.length && !content) {
+  if (!validChildren?.length && !content) {
     if (SELF_CLOSING_TAGS.includes(type)) {
       return `${spaces}${attrs ? `<${type} ${attrs} />` : `<${type} />`}`;
     }
   }
 
-  // Build children MJML
-  const childrenMjml = children?.map((child) => nodeToMjml(child, indent + 1)).join('\n');
+  // Build children MJML (only for components that can have children)
+  const childrenMjml = validChildren?.map((child) => nodeToMjml(child, indent + 1)).join('\n');
 
   // Combine parts
-  if (content && !children?.length) {
+  if (content && !validChildren?.length) {
     // For HTML content tags, preserve the content as-is (with proper indentation)
     if (HTML_CONTENT_TAGS.includes(type)) {
       const indentedContent = content
