@@ -30,20 +30,15 @@ const columnAcceptTypes: MJMLComponentType[] = [
 ];
 
 export const ColumnNode = memo(function ColumnNode({ node }: ColumnNodeProps) {
-  const width = (node.props['width'] as string) || '100%';
   const bgColor = node.props['background-color'] as string;
   const padding = (node.props['padding'] as string) || '10px';
 
-  // Calculate flex basis
-  const flexBasis = width.includes('%') ? width : 'auto';
-
+  // Note: flex/width properties are applied to the CanvasNode wrapper for proper flex layout
   return (
     <DroppableContainer nodeId={node.id} acceptTypes={columnAcceptTypes}>
       <div
-        className="min-h-[60px]"
+        className="min-h-[60px] w-full"
         style={{
-          flex: `1 1 ${flexBasis}`,
-          maxWidth: width,
           backgroundColor: bgColor,
           padding,
         }}

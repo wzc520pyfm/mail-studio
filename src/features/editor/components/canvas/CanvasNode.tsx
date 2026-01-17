@@ -55,9 +55,20 @@ export const CanvasNode = memo(function CanvasNode({
       },
     });
 
-  const style = {
+  // Calculate column-specific styles for proper flex layout
+  const isColumn = node.type === 'mj-column';
+  const columnWidth = isColumn ? ((node.props['width'] as string) || '100%') : undefined;
+  const columnFlexBasis = isColumn && columnWidth?.includes('%') ? columnWidth : 'auto';
+
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition || 'transform 200ms ease',
+    // Apply flex properties for columns so they properly participate in section's flex layout
+    ...(isColumn && {
+      flex: `1 1 ${columnFlexBasis}`,
+      maxWidth: columnWidth,
+      minWidth: 0, // Allow column to shrink below content size
+    }),
   };
 
   const handleClick = useCallback(
