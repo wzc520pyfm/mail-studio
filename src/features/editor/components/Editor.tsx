@@ -1,36 +1,83 @@
-"use client";
+/**
+ * Main Editor component - orchestrates the entire editor UI
+ */
 
+'use client';
+
+import { memo, useState, useCallback } from 'react';
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
   pointerWithin,
-} from "@dnd-kit/core";
-import { useState, useCallback } from "react";
-import { Toolbar } from "./Toolbar";
-import { Sidebar } from "./Sidebar";
-import { Canvas } from "./Canvas";
-import { EditMode } from "./EditMode";
-import { Properties } from "./Properties";
-import { Preview } from "../preview/Preview";
-import { CodeEditor } from "./CodeEditor";
-import { useEditorStore } from "@/stores/editor";
-import { useUIStore } from "@/stores/ui";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { MJMLComponentType } from "@/types/editor";
-import { componentDefinitions } from "@/lib/mjml/schema";
-import * as Icons from "lucide-react";
+} from '@dnd-kit/core';
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
-} from "@/components/ui/resizable";
+} from '@/components/ui/resizable';
+import { useEditorStore, useUIStore } from '@/features/editor/stores';
+import { useKeyboardShortcuts } from '@/features/editor/hooks';
+import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
+import type { MJMLComponentType } from '@/features/editor/types';
+import { Toolbar } from './toolbar';
+import { Sidebar } from './sidebar';
+import { Canvas } from './canvas';
+import { Properties } from './properties';
+// Import other mode components from original location (to be migrated later)
+import { EditMode } from '@/components/editor/EditMode';
+import { Preview } from '@/components/preview/Preview';
+import { CodeEditor } from '@/components/editor/CodeEditor';
 
-export function Editor() {
-  const { addNode, moveNode, setSelectedId } = useEditorStore();
-  const { editorMode, setIsDragging, isDragging } = useUIStore();
-  const [activeId, setActiveId] = useState<string | null>(null);
+// Direct icon imports for better performance
+import {
+  Type,
+  Image,
+  Minus,
+  Space,
+  Table,
+  Code,
+  MousePointerClick,
+  Menu,
+  ChevronDown,
+  GalleryHorizontal,
+  Share2,
+  Rows3,
+  Columns3,
+  Group,
+  Square,
+  LayoutTemplate,
+} from 'lucide-react';
+
+// Icon mapping
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Type,
+  Image,
+  Minus,
+  Space,
+  Table,
+  Code,
+  MousePointerClick,
+  Menu,
+  ChevronDown,
+  GalleryHorizontal,
+  Share2,
+  Rows3,
+  Columns3,
+  Group,
+  Square,
+  LayoutTemplate,
+};
+
+export const Editor = memo(function Editor() {
+  const addNode = useEditorStore((s) => s.addNode);
+  const moveNode = useEditorStore((s) => s.moveNode);
+  const editorMode = useUIStore((s) => s.editorMode);
+  const setIsDragging = useUIStore((s) => s.setIsDragging);
+  const isDragging = useUIStore((s) => s.isDragging);
+
+  const [, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<MJMLComponentType | null>(null);
 
   // Initialize keyboard shortcuts
@@ -43,7 +90,7 @@ export function Editor() {
       setActiveId(active.id as string);
 
       // Check if it's a new component drag
-      if (active.data.current?.type === "new-component") {
+      if (active.data.current?.type === 'new-component') {
         setActiveType(active.data.current.componentType);
       } else {
         setActiveType(null);
@@ -76,7 +123,7 @@ export function Editor() {
       };
 
       // Handle new component drop
-      if (activeData.type === "new-component") {
+      if (activeData.type === 'new-component') {
         const componentType = activeData.componentType as MJMLComponentType;
         const targetId = overData.nodeId as string;
         const index = overData.index as number | undefined;
@@ -84,53 +131,44 @@ export function Editor() {
 
         // Validate that the target accepts this component type
         if (!canDropInto(componentType, acceptTypes)) {
-          console.warn(`Cannot drop ${componentType} into this container`);
           return;
         }
 
         addNode(targetId, componentType, index);
       }
       // Handle existing node move
-      else if (activeData.type === "existing-node") {
+      else if (activeData.type === 'existing-node') {
         const nodeId = activeData.nodeId as string;
         const nodeType = activeData.nodeType as MJMLComponentType;
-        
+
         // Determine the actual target parent and index
-        // If dropping on a DroppableContainer (drop-* or empty-*), use that nodeId as parent
-        // If dropping on another sortable node, use that node's parent
         const overId = over.id as string;
         const isDropContainer = overId.startsWith('drop-') || overId.startsWith('empty-');
-        
+
         let targetParentId: string;
         let targetIndex: number;
         let acceptTypes: MJMLComponentType[] | undefined;
-        
+
         if (isDropContainer) {
-          // Dropping directly into a container
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         } else if (overData.type === 'existing-node') {
-          // Dropping onto another node - use the node's parent as the target
           targetParentId = overData.parentId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
-          
+
           // Don't move if trying to drop on itself
           if (nodeId === overId) return;
-          
-          // If the active node is from the same parent and before the over node,
-          // we need to adjust the index
+
+          // Adjust index if moving within same parent
           if (activeData.parentId === targetParentId) {
             const activeIndex = activeData.index as number;
             if (activeIndex < targetIndex) {
-              targetIndex = targetIndex; // Insert after the over node
-            } else {
-              targetIndex = targetIndex; // Insert at the over node's position
+              targetIndex = targetIndex;
             }
           }
         } else {
-          // Fallback
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
@@ -138,13 +176,12 @@ export function Editor() {
 
         // Validate that the target accepts this node type
         if (nodeType && !canDropInto(nodeType, acceptTypes)) {
-          console.warn(`Cannot move ${nodeType} into this container`);
           return;
         }
 
         // Don't move if nothing changes
         if (nodeId === targetParentId) return;
-        
+
         moveNode(nodeId, targetParentId, targetIndex);
       }
     },
@@ -162,16 +199,12 @@ export function Editor() {
     if (!activeType) return null;
 
     const def = componentDefinitions[activeType];
-    const IconComponent = Icons[
-      def.icon as keyof typeof Icons
-    ] as React.ElementType;
+    const IconComponent = iconMap[def.icon];
 
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg shadow-2xl border-2 border-blue-400 transform -rotate-2 scale-105">
         <div className="p-1.5 bg-blue-50 rounded-md">
-          {IconComponent && (
-            <IconComponent className="w-4 h-4 text-blue-600" />
-          )}
+          {IconComponent && <IconComponent className="w-4 h-4 text-blue-600" />}
         </div>
         <span className="text-sm font-semibold text-gray-700">{def.name}</span>
         <div className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded font-medium">
@@ -181,7 +214,7 @@ export function Editor() {
     );
   };
 
-  // Custom drop animation for smoother experience
+  // Custom drop animation
   const dropAnimation = {
     duration: 200,
     easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
@@ -197,10 +230,10 @@ export function Editor() {
       <div className="h-screen flex flex-col bg-background">
         <Toolbar />
 
-        {/* Main Content Area - Using Flexbox */}
+        {/* Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Sidebar (hidden in edit mode) */}
-          {editorMode === "canvas" && (
+          {editorMode === 'canvas' && (
             <div className="w-[280px] min-w-[280px] flex-shrink-0 border-r border-border">
               <Sidebar />
             </div>
@@ -208,7 +241,7 @@ export function Editor() {
 
           {/* Center Panel - Canvas / Edit / Code / Preview */}
           <div className="flex-1 min-w-0 overflow-hidden">
-            {editorMode === "code" && (
+            {editorMode === 'code' && (
               <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <CodeEditor />
@@ -219,13 +252,13 @@ export function Editor() {
                 </ResizablePanel>
               </ResizablePanelGroup>
             )}
-            {editorMode === "preview" && <Preview />}
-            {editorMode === "edit" && <EditMode />}
-            {editorMode === "canvas" && <Canvas />}
+            {editorMode === 'preview' && <Preview />}
+            {editorMode === 'edit' && <EditMode />}
+            {editorMode === 'canvas' && <Canvas />}
           </div>
 
           {/* Right Panel - Properties (hidden in edit, code, preview mode) */}
-          {editorMode === "canvas" && (
+          {editorMode === 'canvas' && (
             <div className="w-[300px] min-w-[300px] flex-shrink-0 border-l border-border">
               <Properties />
             </div>
@@ -238,4 +271,4 @@ export function Editor() {
       </DragOverlay>
     </DndContext>
   );
-}
+});

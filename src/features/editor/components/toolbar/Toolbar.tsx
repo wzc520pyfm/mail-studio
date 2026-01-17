@@ -1,20 +1,10 @@
-"use client";
+/**
+ * Toolbar component with view controls and actions
+ */
 
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+'use client';
+
+import { memo, useCallback } from 'react';
 import {
   Undo2,
   Redo2,
@@ -28,23 +18,46 @@ import {
   FileCode,
   LayoutGrid,
   PenLine,
-} from "lucide-react";
-import { useEditorStore, useTemporalStore } from "@/stores/editor";
-import { useUIStore } from "@/stores/ui";
-import { compileDocument, generateMjml } from "@/lib/mjml/compiler";
-import { useCallback } from "react";
-import { HeadSettingsButton } from "./HeadSettings";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useEditorStore, useUIStore, useUndoRedo } from '@/features/editor/stores';
+import { compileDocument, generateMjml } from '@/features/editor/lib/mjml/compiler';
+import { HeadSettingsButton } from './HeadSettingsButton';
 
-export function Toolbar() {
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export const Toolbar = memo(function Toolbar() {
   const document = useEditorStore((s) => s.document);
   const headSettings = useEditorStore((s) => s.headSettings);
-  const { undo, redo, pastStates, futureStates } =
-    useTemporalStore().getState();
-  const { editorMode, previewMode, setEditorMode, setPreviewMode } =
-    useUIStore();
-
-  const canUndo = pastStates.length > 0;
-  const canRedo = futureStates.length > 0;
+  const editorMode = useUIStore((s) => s.editorMode);
+  const previewMode = useUIStore((s) => s.previewMode);
+  const setEditorMode = useUIStore((s) => s.setEditorMode);
+  const setPreviewMode = useUIStore((s) => s.setPreviewMode);
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
 
   const handleUndo = useCallback(() => {
     if (canUndo) undo();
@@ -56,12 +69,12 @@ export function Toolbar() {
 
   const handleExportMjml = useCallback(() => {
     const mjml = generateMjml(document, headSettings);
-    downloadFile(mjml, "email.mjml", "text/plain");
+    downloadFile(mjml, 'email.mjml', 'text/plain');
   }, [document, headSettings]);
 
   const handleExportHtml = useCallback(() => {
     const { html } = compileDocument(document, headSettings);
-    downloadFile(html, "email.html", "text/html");
+    downloadFile(html, 'email.html', 'text/html');
   }, [document, headSettings]);
 
   const handleCopyMjml = useCallback(async () => {
@@ -105,10 +118,10 @@ export function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "canvas" ? "secondary" : "ghost"}
+                variant={editorMode === 'canvas' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="h-8 px-3"
-                onClick={() => setEditorMode("canvas")}
+                onClick={() => setEditorMode('canvas')}
               >
                 <LayoutGrid className="w-4 h-4 mr-2" />
                 Canvas
@@ -120,10 +133,10 @@ export function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "edit" ? "secondary" : "ghost"}
+                variant={editorMode === 'edit' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="h-8 px-3"
-                onClick={() => setEditorMode("edit")}
+                onClick={() => setEditorMode('edit')}
               >
                 <PenLine className="w-4 h-4 mr-2" />
                 Edit
@@ -135,10 +148,10 @@ export function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "preview" ? "secondary" : "ghost"}
+                variant={editorMode === 'preview' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="h-8 px-3"
-                onClick={() => setEditorMode("preview")}
+                onClick={() => setEditorMode('preview')}
               >
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
@@ -150,10 +163,10 @@ export function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "code" ? "secondary" : "ghost"}
+                variant={editorMode === 'code' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="h-8 px-3"
-                onClick={() => setEditorMode("code")}
+                onClick={() => setEditorMode('code')}
               >
                 <Code2 className="w-4 h-4 mr-2" />
                 Code
@@ -166,18 +179,16 @@ export function Toolbar() {
         {/* Right Section - Actions */}
         <div className="flex items-center gap-2">
           {/* Device Toggle (only in preview) */}
-          {editorMode === "preview" && (
+          {editorMode === 'preview' && (
             <>
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={
-                        previewMode === "desktop" ? "secondary" : "ghost"
-                      }
+                      variant={previewMode === 'desktop' ? 'secondary' : 'ghost'}
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => setPreviewMode("desktop")}
+                      onClick={() => setPreviewMode('desktop')}
                     >
                       <Monitor className="w-4 h-4" />
                     </Button>
@@ -188,10 +199,10 @@ export function Toolbar() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={previewMode === "mobile" ? "secondary" : "ghost"}
+                      variant={previewMode === 'mobile' ? 'secondary' : 'ghost'}
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => setPreviewMode("mobile")}
+                      onClick={() => setPreviewMode('mobile')}
                     >
                       <Smartphone className="w-4 h-4" />
                     </Button>
@@ -278,16 +289,4 @@ export function Toolbar() {
       </div>
     </TooltipProvider>
   );
-}
-
-function downloadFile(content: string, filename: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+});

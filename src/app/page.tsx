@@ -2,8 +2,9 @@
 
 import dynamic from 'next/dynamic';
 
+// Dynamic import for the Editor to disable SSR (required for MJML browser compilation)
 const Editor = dynamic(
-  () => import('@/components/editor/Editor').then((mod) => mod.Editor),
+  () => import('@/features/editor').then((mod) => mod.Editor),
   {
     ssr: false,
     loading: () => (

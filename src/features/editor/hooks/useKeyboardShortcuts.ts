@@ -1,11 +1,18 @@
+/**
+ * Hook for keyboard shortcuts in the editor
+ */
+
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { useEditorStore, useTemporalStore } from '@/stores/editor';
+import { useEditorStore, useUndoRedo } from '@/features/editor/stores';
 
 export function useKeyboardShortcuts() {
-  const { selectedId, removeNode, duplicateNode, setSelectedId } = useEditorStore();
-  const { undo, redo, pastStates, futureStates } = useTemporalStore().getState();
+  const selectedId = useEditorStore((s) => s.selectedId);
+  const removeNode = useEditorStore((s) => s.removeNode);
+  const duplicateNode = useEditorStore((s) => s.duplicateNode);
+  const setSelectedId = useEditorStore((s) => s.setSelectedId);
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -25,7 +32,7 @@ export function useKeyboardShortcuts() {
       // Undo: Cmd/Ctrl + Z
       if (modKey && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        if (pastStates.length > 0) {
+        if (canUndo) {
           undo();
         }
         return;
@@ -34,7 +41,7 @@ export function useKeyboardShortcuts() {
       // Redo: Cmd/Ctrl + Shift + Z or Cmd/Ctrl + Y
       if ((modKey && e.shiftKey && e.key === 'z') || (modKey && e.key === 'y')) {
         e.preventDefault();
-        if (futureStates.length > 0) {
+        if (canRedo) {
           redo();
         }
         return;
@@ -61,7 +68,7 @@ export function useKeyboardShortcuts() {
         return;
       }
     },
-    [selectedId, removeNode, duplicateNode, setSelectedId, undo, redo, pastStates.length, futureStates.length]
+    [selectedId, removeNode, duplicateNode, setSelectedId, undo, redo, canUndo, canRedo]
   );
 
   useEffect(() => {
