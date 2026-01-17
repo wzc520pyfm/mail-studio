@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 import { useEditorStore } from "@/stores/editor";
 import { EditorNode, MJMLComponentType } from "@/types/editor";
 import { generateId } from "@/lib/mjml/schema";
@@ -270,7 +270,7 @@ function EditSectionContainer({ node }: { node: EditorNode }) {
 
       {/* Section Content */}
       <div
-        className="min-h-[80px] rounded-lg overflow-hidden"
+        className="min-h-[80px] rounded-lg"
         style={{ backgroundColor: bgColor !== "transparent" ? bgColor : undefined }}
       >
         {columnCount > 0 ? (
@@ -316,7 +316,7 @@ function EditHeroContainer({ node }: { node: EditorNode }) {
   return (
     <div
       className={cn(
-        "relative group rounded-lg overflow-hidden transition-all",
+        "relative group rounded-lg transition-all",
         isSelected ? "ring-2 ring-blue-400 ring-offset-2" : "",
         isHovered && !isSelected && "ring-2 ring-gray-200"
       )}
@@ -452,6 +452,14 @@ function EditBlock({ node, parentId }: { node: EditorNode; parentId: string }) {
     removeNode(node.id);
   }, [node.id, removeNode]);
 
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    // Only select if not clicking on an editable element
+    const target = e.target as HTMLElement;
+    if (!target.closest('[contenteditable="true"]')) {
+      setSelectedId(node.id);
+    }
+  }, [node.id, setSelectedId]);
+
   return (
     <div
       className={cn(
@@ -461,7 +469,7 @@ function EditBlock({ node, parentId }: { node: EditorNode; parentId: string }) {
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => setSelectedId(node.id)}
+      onClick={handleClick}
     >
       {/* Block Controls */}
       <div
@@ -511,6 +519,18 @@ function EditableText({ node }: { node: EditorNode }) {
   const [showToolbar, setShowToolbar] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const isSelected = selectedId === node.id;
+  const initialContentRef = useRef(node.content || "");
+
+  // Only set initial content once on mount or when node.id changes
+  useEffect(() => {
+    if (contentRef.current && contentRef.current.innerHTML !== node.content) {
+      // Only update if the content actually changed from external source
+      // and the element is not currently focused
+      if (document.activeElement !== contentRef.current) {
+        contentRef.current.innerHTML = node.content || "";
+      }
+    }
+  }, [node.id]); // Only depend on node.id, not node.content
 
   const handleInput = useCallback(() => {
     if (contentRef.current) {
@@ -519,10 +539,14 @@ function EditableText({ node }: { node: EditorNode }) {
   }, [node.id, updateNodeContent]);
 
   const handleFocus = () => setShowToolbar(true);
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
+    // Save content on blur
+    if (contentRef.current) {
+      updateNodeContent(node.id, contentRef.current.innerHTML);
+    }
     // Delay hiding to allow toolbar click
     setTimeout(() => setShowToolbar(false), 200);
-  };
+  }, [node.id, updateNodeContent]);
 
   const execCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -544,6 +568,7 @@ function EditableText({ node }: { node: EditorNode }) {
       {(showToolbar || isSelected) && (
         <div className="absolute -top-10 left-0 z-50 flex items-center gap-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200">
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCommand("bold")}
             className="p-1.5 rounded hover:bg-gray-100"
             title="Bold"
@@ -551,6 +576,7 @@ function EditableText({ node }: { node: EditorNode }) {
             <Bold className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCommand("italic")}
             className="p-1.5 rounded hover:bg-gray-100"
             title="Italic"
@@ -558,6 +584,7 @@ function EditableText({ node }: { node: EditorNode }) {
             <Italic className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => execCommand("underline")}
             className="p-1.5 rounded hover:bg-gray-100"
             title="Underline"
@@ -566,6 +593,7 @@ function EditableText({ node }: { node: EditorNode }) {
           </button>
           <div className="w-px h-5 bg-gray-200 mx-1" />
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => updateNodeProps(node.id, { align: "left" })}
             className={cn(
               "p-1.5 rounded hover:bg-gray-100",
@@ -576,6 +604,7 @@ function EditableText({ node }: { node: EditorNode }) {
             <AlignLeft className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => updateNodeProps(node.id, { align: "center" })}
             className={cn(
               "p-1.5 rounded hover:bg-gray-100",
@@ -586,6 +615,7 @@ function EditableText({ node }: { node: EditorNode }) {
             <AlignCenter className="w-4 h-4" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => updateNodeProps(node.id, { align: "right" })}
             className={cn(
               "p-1.5 rounded hover:bg-gray-100",
@@ -597,6 +627,7 @@ function EditableText({ node }: { node: EditorNode }) {
           </button>
           <div className="w-px h-5 bg-gray-200 mx-1" />
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               const url = prompt("Enter URL:");
               if (url) execCommand("createLink", url);
@@ -610,7 +641,13 @@ function EditableText({ node }: { node: EditorNode }) {
       )}
 
       <div
-        ref={contentRef}
+        ref={(el) => {
+          contentRef.current = el;
+          // Set initial content on mount
+          if (el && !el.innerHTML) {
+            el.innerHTML = initialContentRef.current;
+          }
+        }}
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
@@ -618,7 +655,6 @@ function EditableText({ node }: { node: EditorNode }) {
         onBlur={handleBlur}
         className="outline-none min-h-[1.6em] px-2 py-1"
         style={style}
-        dangerouslySetInnerHTML={{ __html: node.content || "" }}
       />
     </div>
   );
@@ -664,7 +700,9 @@ function EditableImage({ node }: { node: EditorNode }) {
 function EditableButton({ node }: { node: EditorNode }) {
   const { updateNodeContent, updateNodeProps, selectedId } = useEditorStore();
   const [showToolbar, setShowToolbar] = useState(false);
+  const contentRef = useRef<HTMLSpanElement>(null);
   const isSelected = selectedId === node.id;
+  const initialContentRef = useRef(node.content || "Button");
 
   const bgColor = (node.props["background-color"] as string) || "#2563eb";
   const textColor = (node.props["color"] as string) || "#ffffff";
@@ -681,6 +719,7 @@ function EditableButton({ node }: { node: EditorNode }) {
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200">
           <select
             value={borderRadius}
+            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) =>
               updateNodeProps(node.id, { "border-radius": e.target.value })
             }
@@ -694,6 +733,7 @@ function EditableButton({ node }: { node: EditorNode }) {
           <input
             type="color"
             value={bgColor}
+            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) =>
               updateNodeProps(node.id, { "background-color": e.target.value })
             }
@@ -703,6 +743,7 @@ function EditableButton({ node }: { node: EditorNode }) {
           <input
             type="color"
             value={textColor}
+            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) =>
               updateNodeProps(node.id, { color: e.target.value })
             }
@@ -711,6 +752,7 @@ function EditableButton({ node }: { node: EditorNode }) {
           />
           <div className="w-px h-5 bg-gray-200 mx-1" />
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               const url = prompt(
                 "Enter button URL:",
@@ -727,6 +769,12 @@ function EditableButton({ node }: { node: EditorNode }) {
       )}
 
       <span
+        ref={(el) => {
+          contentRef.current = el;
+          if (el && !el.textContent) {
+            el.textContent = initialContentRef.current;
+          }
+        }}
         contentEditable
         suppressContentEditableWarning
         onFocus={() => setShowToolbar(true)}
@@ -740,9 +788,7 @@ function EditableButton({ node }: { node: EditorNode }) {
           color: textColor,
           borderRadius,
         }}
-      >
-        {node.content || "Button"}
-      </span>
+      />
     </div>
   );
 }
