@@ -122,6 +122,19 @@ export const Editor = memo(function Editor() {
         return acceptTypes.includes(componentType);
       };
 
+      // Calculate drop position (before or after the target element)
+      const calculateDropPosition = (): 'before' | 'after' => {
+        const overRect = over.rect;
+        const activeRect = active.rect.current.translated;
+        
+        if (overRect && activeRect) {
+          const activeCenter = activeRect.top + activeRect.height / 2;
+          const overCenter = overRect.top + overRect.height / 2;
+          return activeCenter < overCenter ? 'before' : 'after';
+        }
+        return 'after';
+      };
+
       // Handle new component drop
       if (activeData.type === 'new-component') {
         const componentType = activeData.componentType as MJMLComponentType;
@@ -155,19 +168,16 @@ export const Editor = memo(function Editor() {
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         } else if (overData.type === 'existing-node') {
           targetParentId = overData.parentId as string;
-          targetIndex = (overData.index as number) ?? 0;
+          const overIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
 
           // Don't move if trying to drop on itself
           if (nodeId === overId) return;
 
-          // Adjust index if moving within same parent
-          if (activeData.parentId === targetParentId) {
-            const activeIndex = activeData.index as number;
-            if (activeIndex < targetIndex) {
-              targetIndex = targetIndex;
-            }
-          }
+          // Calculate position and adjust index accordingly
+          const dropPosition = calculateDropPosition();
+          targetIndex = dropPosition === 'after' ? overIndex + 1 : overIndex;
+
         } else {
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
