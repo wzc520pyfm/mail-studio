@@ -4,7 +4,7 @@
 
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,127 @@ interface PropertyFieldProps {
   node: EditorNode;
 }
 
+// Separate component for text-based inputs to manage local state properly
+// Uses key prop from parent to reset state when node/schema changes
+const TextInputField = memo(function TextInputField({
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  className = "h-8 text-sm",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: "text" | "number";
+  className?: string;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      onChange(newValue);
+    },
+    [onChange]
+  );
+
+  return (
+    <Input
+      type={type}
+      value={localValue}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+});
+
+// Separate component for textarea to manage local state properly
+// Uses key prop from parent to reset state when node/schema changes
+const TextareaField = memo(function TextareaField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      onChange(newValue);
+    },
+    [onChange]
+  );
+
+  return (
+    <textarea
+      value={localValue}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background resize-y"
+    />
+  );
+});
+
+// Color input component with local state
+// Uses key prop from parent to reset state when node/schema changes
+const ColorInputField = memo(function ColorInputField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+
+  const handleColorChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      onChange(newValue);
+    },
+    [onChange]
+  );
+
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      onChange(newValue);
+    },
+    [onChange]
+  );
+
+  return (
+    <div className="flex gap-2">
+      <div className="relative">
+        <input
+          type="color"
+          value={localValue || placeholder || "#000000"}
+          onChange={handleColorChange}
+          className="w-8 h-8 rounded border border-input cursor-pointer"
+        />
+      </div>
+      <Input
+        type="text"
+        value={localValue}
+        onChange={handleTextChange}
+        placeholder={placeholder || "#000000"}
+        className="h-8 text-sm flex-1"
+      />
+    </div>
+  );
+});
+
 export const PropertyField = memo(function PropertyField({ schema, node }: PropertyFieldProps) {
   const updateNodeProps = useEditorStore((s) => s.updateNodeProps);
   const value = node.props[schema.key];
@@ -35,6 +156,9 @@ export const PropertyField = memo(function PropertyField({ schema, node }: Prope
     [node.id, schema.key, updateNodeProps]
   );
 
+  // Use combined key to reset input state when node or schema changes
+  const fieldKey = `${node.id}-${schema.key}`;
+
   switch (schema.type) {
     case "text":
     case "size":
@@ -42,12 +166,11 @@ export const PropertyField = memo(function PropertyField({ schema, node }: Prope
       return (
         <div className="space-y-2">
           <Label className="text-xs">{schema.label}</Label>
-          <Input
-            type="text"
+          <TextInputField
+            key={fieldKey}
             value={(value as string) || ""}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={handleChange}
             placeholder={schema.placeholder || schema.defaultValue?.toString()}
-            className="h-8 text-sm"
           />
         </div>
       );
@@ -56,11 +179,11 @@ export const PropertyField = memo(function PropertyField({ schema, node }: Prope
       return (
         <div className="space-y-2">
           <Label className="text-xs">{schema.label}</Label>
-          <textarea
+          <TextareaField
+            key={fieldKey}
             value={(value as string) || ""}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={handleChange}
             placeholder={schema.placeholder || schema.defaultValue?.toString()}
-            className="w-full min-h-[100px] px-3 py-2 text-sm rounded-md border border-input bg-background resize-y"
           />
         </div>
       );
@@ -69,12 +192,12 @@ export const PropertyField = memo(function PropertyField({ schema, node }: Prope
       return (
         <div className="space-y-2">
           <Label className="text-xs">{schema.label}</Label>
-          <Input
+          <TextInputField
+            key={fieldKey}
             type="number"
-            value={(value as number) || ""}
-            onChange={(e) => handleChange(e.target.value ? Number(e.target.value) : undefined)}
+            value={value !== undefined ? String(value) : ""}
+            onChange={(v) => handleChange(v ? Number(v) : undefined)}
             placeholder={schema.defaultValue?.toString()}
-            className="h-8 text-sm"
           />
         </div>
       );
@@ -83,23 +206,12 @@ export const PropertyField = memo(function PropertyField({ schema, node }: Prope
       return (
         <div className="space-y-2">
           <Label className="text-xs">{schema.label}</Label>
-          <div className="flex gap-2">
-            <div className="relative">
-              <input
-                type="color"
-                value={(value as string) || schema.defaultValue || "#000000"}
-                onChange={(e) => handleChange(e.target.value)}
-                className="w-8 h-8 rounded border border-input cursor-pointer"
-              />
-            </div>
-            <Input
-              type="text"
-              value={(value as string) || ""}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={schema.defaultValue?.toString() || "#000000"}
-              className="h-8 text-sm flex-1"
-            />
-          </div>
+          <ColorInputField
+            key={fieldKey}
+            value={(value as string) || ""}
+            onChange={handleChange}
+            placeholder={schema.defaultValue?.toString()}
+          />
         </div>
       );
 

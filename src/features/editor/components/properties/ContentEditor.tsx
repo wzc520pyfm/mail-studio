@@ -4,7 +4,7 @@
 
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useEditorStore } from "@/features/editor/stores";
@@ -16,15 +16,21 @@ interface ContentEditorProps {
   isHtmlContent?: boolean;
 }
 
-export const ContentEditor = memo(function ContentEditor({
+// Inner component that resets state when key changes
+const ContentEditorInner = memo(function ContentEditorInner({
   node,
   isHtmlContent = false,
 }: ContentEditorProps) {
   const updateNodeContent = useEditorStore((s) => s.updateNodeContent);
 
+  // Local state initialized from node.content
+  const [localValue, setLocalValue] = useState(node.content || "");
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      updateNodeContent(node.id, e.target.value);
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      updateNodeContent(node.id, newValue);
     },
     [node.id, updateNodeContent]
   );
@@ -33,7 +39,7 @@ export const ContentEditor = memo(function ContentEditor({
     <div className="space-y-2">
       <Label>{isHtmlContent ? "HTML Content" : "Content"}</Label>
       <textarea
-        value={node.content || ""}
+        value={localValue}
         onChange={handleChange}
         className={cn(
           "w-full px-3 py-2 text-sm rounded-md border border-input bg-background resize-y",
@@ -49,4 +55,10 @@ export const ContentEditor = memo(function ContentEditor({
       <Separator className="my-4" />
     </div>
   );
+});
+
+// Wrapper that uses key to reset state when node changes
+export const ContentEditor = memo(function ContentEditor(props: ContentEditorProps) {
+  // Use node.id as key to reset internal state when switching nodes
+  return <ContentEditorInner key={props.node.id} {...props} />;
 });
