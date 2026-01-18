@@ -142,7 +142,7 @@ export const CanvasNode = memo(function CanvasNode({
       className={cn(
         'relative group transition-all duration-150',
         // Selection states
-        !isDragging && isSelected && 'ring-2 ring-blue-500 ring-offset-2 rounded-sm',
+        !isDragging && isSelected && 'ring-2 ring-blue-500 ring-offset-2 rounded-sm z-51',
         !isDragging && isHovered && !isSelected && 'ring-2 ring-blue-300/50 rounded-sm',
         // Dragging states
         isDragging &&

@@ -138,16 +138,39 @@ export const Editor = memo(function Editor() {
       // Handle new component drop
       if (activeData.type === 'new-component') {
         const componentType = activeData.componentType as MJMLComponentType;
-        const targetId = overData.nodeId as string;
-        const index = overData.index as number | undefined;
-        const acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
+        const overId = over.id as string;
+        const isDropContainer = overId.startsWith('drop-') || overId.startsWith('empty-');
+
+        let targetId: string;
+        let targetIndex: number | undefined;
+        let acceptTypes: MJMLComponentType[] | undefined;
+
+        if (isDropContainer) {
+          // Dropping directly on a container
+          targetId = overData.nodeId as string;
+          targetIndex = overData.index as number | undefined;
+          acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
+        } else if (overData.type === 'existing-node') {
+          // Dropping on an existing node - add to its parent
+          targetId = overData.parentId as string;
+          acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
+          const overIndex = (overData.index as number) ?? 0;
+          // Calculate position and adjust index accordingly
+          const dropPosition = calculateDropPosition();
+          targetIndex = dropPosition === 'after' ? overIndex + 1 : overIndex;
+        } else {
+          // Fallback
+          targetId = overData.nodeId as string;
+          targetIndex = overData.index as number | undefined;
+          acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
+        }
 
         // Validate that the target accepts this component type
         if (!canDropInto(componentType, acceptTypes)) {
           return;
         }
 
-        addNode(targetId, componentType, index);
+        addNode(targetId, componentType, targetIndex);
       }
       // Handle existing node move
       else if (activeData.type === 'existing-node') {
