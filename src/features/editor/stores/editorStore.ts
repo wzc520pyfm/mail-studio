@@ -49,6 +49,7 @@ interface EditorActions {
   updateNodeContent: (nodeId: string, content: string) => void;
   updateNodeChildren: (nodeId: string, children: EditorNode[]) => void;
   moveNode: (nodeId: string, newParentId: string, newIndex: number) => void;
+  reorderNode: (nodeId: string, targetNodeId: string) => void;
   duplicateNode: (nodeId: string) => void;
 
   // Head settings operations
@@ -299,6 +300,32 @@ export const useEditorStore = create<EditorStore>()(
           adjustedIndex = Math.max(0, adjustedIndex);
 
           newParent.children.splice(adjustedIndex, 0, node);
+        }),
+
+      reorderNode: (nodeId, targetNodeId) =>
+        set((state) => {
+          // Don't reorder if same element
+          if (nodeId === targetNodeId) return;
+
+          // Find both nodes' parent info
+          const sourceInfo = findParentInTree(state.document, nodeId);
+          const targetInfo = findParentInTree(state.document, targetNodeId);
+
+          if (!sourceInfo || !targetInfo) return;
+
+          // Only allow reordering within the same parent
+          if (sourceInfo.parent.id !== targetInfo.parent.id) return;
+
+          const parent = sourceInfo.parent;
+          const sourceIndex = sourceInfo.index;
+          const targetIndex = targetInfo.index;
+
+          // Don't reorder if already at the target position
+          if (sourceIndex === targetIndex) return;
+
+          // Use arrayMove pattern: remove from source and insert at target
+          // This correctly handles both forward and backward moves
+          parent.children!.splice(targetIndex, 0, parent.children!.splice(sourceIndex, 1)[0]);
         }),
 
       duplicateNode: (nodeId) =>

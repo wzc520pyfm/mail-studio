@@ -4,14 +4,23 @@
 
 "use client";
 
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef } from "react";
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragOverEvent,
   pointerWithin,
+  rectIntersection,
+  closestCenter,
+  CollisionDetection,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { useKeyboardShortcuts } from "@/features/editor/hooks";
@@ -66,15 +75,67 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutTemplate,
 };
 
+// Custom collision detection optimized for both new component drops and reordering
+const customCollisionDetection: CollisionDetection = (args) => {
+  const activeData = args.active.data.current;
+  const activeType = activeData?.type;
+  const isDraggingNewComponent = activeType === "new-component";
+  const activeParentId = activeData?.parentId;
+
+  if (isDraggingNewComponent) {
+    // For new components, use pointerWithin to find the deepest container
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    // Fallback to rect intersection
+    return rectIntersection(args);
+  } else {
+    // For existing nodes, use closestCenter for accurate reordering
+    const centerCollisions = closestCenter(args);
+
+    // Filter to only include siblings (same parent) for better reordering accuracy
+    const siblingCollisions = centerCollisions.filter((collision) => {
+      const collisionData = collision.data?.droppableContainer?.data?.current;
+      return collisionData?.parentId === activeParentId && collisionData?.type === "existing-node";
+    });
+
+    if (siblingCollisions.length > 0) {
+      return siblingCollisions;
+    }
+
+    // If no sibling collisions, check all existing nodes and drop containers
+    if (centerCollisions.length > 0) {
+      return centerCollisions;
+    }
+
+    // Fallback to pointerWithin for cross-container drops
+    return pointerWithin(args);
+  }
+};
+
 export const Editor = memo(function Editor() {
   const addNode = useEditorStore((s) => s.addNode);
   const moveNode = useEditorStore((s) => s.moveNode);
+  const reorderNode = useEditorStore((s) => s.reorderNode);
   const editorMode = useUIStore((s) => s.editorMode);
   const setIsDragging = useUIStore((s) => s.setIsDragging);
   const isDragging = useUIStore((s) => s.isDragging);
 
   const [, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<MJMLComponentType | null>(null);
+
+  // Configure sensors to match EditMode for consistent drag behavior
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Start drag after 8px movement
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts();
@@ -95,12 +156,63 @@ export const Editor = memo(function Editor() {
     [setIsDragging]
   );
 
+  // Track the last over id to avoid redundant moves
+  const lastOverId = useRef<string | null>(null);
+
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event;
+
+      if (!over) {
+        lastOverId.current = null;
+        return;
+      }
+
+      const activeData = active.data.current;
+      const overData = over.data.current;
+
+      if (!activeData || !overData) return;
+
+      // Only handle real-time sorting for existing nodes
+      if (activeData.type !== "existing-node" || overData.type !== "existing-node") {
+        return;
+      }
+
+      const activeId = activeData.nodeId as string;
+      const overId = overData.nodeId as string;
+
+      // Don't process if same element
+      if (activeId === overId) {
+        return;
+      }
+
+      // Don't process if same as last processed (debounce)
+      if (lastOverId.current === overId) {
+        return;
+      }
+
+      // Only allow sorting within the same parent
+      const activeParentId = activeData.parentId as string;
+      const overParentId = overData.parentId as string;
+
+      if (activeParentId !== overParentId) {
+        return;
+      }
+
+      // Reorder the node to the target position
+      lastOverId.current = overId;
+      reorderNode(activeId, overId);
+    },
+    [reorderNode]
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       setIsDragging(false);
       setActiveId(null);
       setActiveType(null);
+      lastOverId.current = null;
 
       if (!over) return;
 
@@ -116,19 +228,6 @@ export const Editor = memo(function Editor() {
       ): boolean => {
         if (!acceptTypes) return true;
         return acceptTypes.includes(componentType);
-      };
-
-      // Calculate drop position (before or after the target element)
-      const calculateDropPosition = (): "before" | "after" => {
-        const overRect = over.rect;
-        const activeRect = active.rect.current.translated;
-
-        if (overRect && activeRect) {
-          const activeCenter = activeRect.top + activeRect.height / 2;
-          const overCenter = overRect.top + overRect.height / 2;
-          return activeCenter < overCenter ? "before" : "after";
-        }
-        return "after";
       };
 
       // Handle new component drop
@@ -147,13 +246,11 @@ export const Editor = memo(function Editor() {
           targetIndex = overData.index as number | undefined;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         } else if (overData.type === "existing-node") {
-          // Dropping on an existing node - add to its parent
+          // Dropping on an existing node - add after it
           targetId = overData.parentId as string;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
           const overIndex = (overData.index as number) ?? 0;
-          // Calculate position and adjust index accordingly
-          const dropPosition = calculateDropPosition();
-          targetIndex = dropPosition === "after" ? overIndex + 1 : overIndex;
+          targetIndex = overIndex + 1;
         } else {
           // Fallback
           targetId = overData.nodeId as string;
@@ -168,12 +265,13 @@ export const Editor = memo(function Editor() {
 
         addNode(targetId, componentType, targetIndex);
       }
-      // Handle existing node move
+      // Handle cross-container move (existing node to different parent)
       else if (activeData.type === "existing-node") {
         const nodeId = activeData.nodeId as string;
         const nodeType = activeData.nodeType as MJMLComponentType;
+        const activeParentId = activeData.parentId as string;
 
-        // Determine the actual target parent and index
+        // Determine the target container
         const overId = over.id as string;
         const isDropContainer = overId.startsWith("drop-") || overId.startsWith("empty-");
 
@@ -189,26 +287,22 @@ export const Editor = memo(function Editor() {
           targetParentId = overData.parentId as string;
           const overIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
-
-          // Don't move if trying to drop on itself
-          if (nodeId === overId) return;
-
-          // Calculate position and adjust index accordingly
-          const dropPosition = calculateDropPosition();
-          targetIndex = dropPosition === "after" ? overIndex + 1 : overIndex;
+          targetIndex = overIndex;
         } else {
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         }
 
+        // Skip if same parent (already handled by onDragOver)
+        if (activeParentId === targetParentId) {
+          return;
+        }
+
         // Validate that the target accepts this node type
         if (nodeType && !canDropInto(nodeType, acceptTypes)) {
           return;
         }
-
-        // Don't move if nothing changes
-        if (nodeId === targetParentId) return;
 
         moveNode(nodeId, targetParentId, targetIndex);
       }
@@ -220,6 +314,7 @@ export const Editor = memo(function Editor() {
     setIsDragging(false);
     setActiveId(null);
     setActiveType(null);
+    lastOverId.current = null;
   }, [setIsDragging]);
 
   // Render drag overlay
@@ -250,10 +345,12 @@ export const Editor = memo(function Editor() {
 
   return (
     <DndContext
+      sensors={sensors}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
-      collisionDetection={pointerWithin}
+      collisionDetection={customCollisionDetection}
     >
       <div className="h-screen flex flex-col bg-background">
         <Toolbar />
