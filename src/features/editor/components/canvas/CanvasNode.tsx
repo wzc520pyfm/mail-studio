@@ -21,6 +21,10 @@ import {
   DividerNode,
   SpacerNode,
   TableNode,
+  NavbarNode,
+  AccordionNode,
+  CarouselNode,
+  SocialNode,
   GenericNode,
 } from "./nodes";
 
@@ -136,6 +140,14 @@ export const CanvasNode = memo(function CanvasNode({
         return <SpacerNode node={node} />;
       case "mj-table":
         return <TableNode node={node} />;
+      case "mj-navbar":
+        return <NavbarNode node={node} />;
+      case "mj-accordion":
+        return <AccordionNode node={node} />;
+      case "mj-carousel":
+        return <CarouselNode node={node} />;
+      case "mj-social":
+        return <SocialNode node={node} />;
       default:
         return <GenericNode node={node} />;
     }
