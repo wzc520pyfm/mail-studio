@@ -29,7 +29,7 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
 
   const def = componentDefinitions[node.type];
   const hasAllowedChildren = def?.allowedChildren && def.allowedChildren.length > 0;
-  const childType = hasAllowedChildren ? (def.allowedChildren[0] as MJMLComponentType) : null;
+  const childType = hasAllowedChildren ? (def.allowedChildren![0] as MJMLComponentType) : null;
   const childDef = childType ? componentDefinitions[childType] : null;
   const children = useMemo(() => node.children || [], [node.children]);
 
