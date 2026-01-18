@@ -57,17 +57,22 @@ export const CanvasNode = memo(function CanvasNode({
 
   // Calculate column-specific styles for proper flex layout
   const isColumn = node.type === 'mj-column';
-  const columnWidth = isColumn ? ((node.props['width'] as string) || '100%') : undefined;
-  const columnFlexBasis = isColumn && columnWidth?.includes('%') ? columnWidth : 'auto';
+  const explicitWidth = isColumn ? (node.props['width'] as string) : undefined;
+  // If column has explicit width, use it; otherwise use flex: 1 to share space equally
+  const hasExplicitWidth = explicitWidth && explicitWidth !== '';
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition || 'transform 200ms ease',
     // Apply flex properties for columns so they properly participate in section's flex layout
-    ...(isColumn && {
-      flex: `1 1 ${columnFlexBasis}`,
-      maxWidth: columnWidth,
-      minWidth: 0, // Allow column to shrink below content size
+    ...(isColumn && hasExplicitWidth && {
+      flex: `0 0 ${explicitWidth}`,
+      maxWidth: explicitWidth,
+      minWidth: 0,
+    }),
+    ...(isColumn && !hasExplicitWidth && {
+      flex: '1 1 0%', // Equal share with siblings
+      minWidth: 0,
     }),
   };
 
