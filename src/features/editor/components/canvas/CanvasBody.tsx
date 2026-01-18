@@ -68,6 +68,7 @@ export const CanvasBody = memo(function CanvasBody({ node }: CanvasBodyProps) {
             }
             acceptTypes={bodyAcceptTypes}
             small={hasChildren}
+            index={node.children?.length ?? 0}
           />
         )}
       </DroppableContainer>
