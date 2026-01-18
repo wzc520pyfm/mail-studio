@@ -86,6 +86,78 @@ const welcomeTemplate: EditorNode = {
         },
       ],
     },
+    {
+      id: "section-2",
+      type: "mj-section",
+      props: {
+        "background-color": "#ffffff",
+        padding: "0",
+      },
+      children: [
+        {
+          id: "column-2",
+          type: "mj-column",
+          props: {
+            padding: "0",
+          },
+          children: [
+            {
+              id: "text-3",
+              type: "mj-text",
+              props: {
+                padding: "0px 25px",
+                "font-size": "16px",
+                "line-height": "1.5",
+                color: "#333333",
+                align: "right",
+              },
+              content: "Contact us:",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "section-3",
+      type: "mj-section",
+      props: {
+        "background-color": "#ffffff",
+        padding: "0",
+      },
+      children: [
+        {
+          id: "column-3",
+          type: "mj-column",
+          props: {
+            padding: "10px",
+          },
+          children: [
+            {
+              id: "social-1",
+              type: "mj-social",
+              props: {
+                mode: "horizontal",
+                padding: "0 12px",
+                "icon-size": "20px",
+                align: "right",
+              },
+              children: [
+                {
+                  id: "social-element-1",
+                  type: "mj-social-element",
+                  props: {
+                    name: "github",
+                    href: "https://github.com/wzc520pyfm/mail-studio",
+                    target: "_blank",
+                    alt: "Github",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
