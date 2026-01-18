@@ -4,14 +4,14 @@
 
 "use client";
 
-import { memo, useContext } from "react";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { memo } from "react";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDndContext } from "@dnd-kit/core";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
+import { useUIStore } from "@/features/editor/stores";
 import { DroppableContainer } from "./DroppableContainer";
 import { EmptyDropZone } from "./EmptyDropZone";
 import { CanvasNode } from "./CanvasNode";
-import { DragStateContext } from "./DragStateContext";
 
 interface SectionNodeProps {
   node: EditorNode;
@@ -22,20 +22,20 @@ const sectionAcceptTypes: MJMLComponentType[] = ["mj-column"];
 export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps) {
   const bgColor = node.props["background-color"] as string;
   const padding = (node.props["padding"] as string) || "20px 0";
-  const dragState = useContext(DragStateContext);
+  const isDraggingNewComponent = useUIStore((s) => s.isDraggingNewComponent);
   const { active } = useDndContext();
   const hasChildren = node.children && node.children.length > 0;
 
-  // Check if we're dragging a column component
+  // Check if we're dragging a NEW column component (not reordering existing ones)
   const activeData = active?.data.current;
   const activeType = (activeData?.componentType || activeData?.nodeType) as
     | MJMLComponentType
     | undefined;
-  const isDraggingColumn =
-    dragState.isDragging && activeType && sectionAcceptTypes.includes(activeType);
+  const isDraggingNewColumn =
+    isDraggingNewComponent && activeType && sectionAcceptTypes.includes(activeType);
 
-  // Show drop zone when empty OR when dragging a column
-  const showDropZone = !hasChildren || isDraggingColumn;
+  // Show drop zone when empty OR when dragging a NEW column (not during reorder)
+  const showDropZone = !hasChildren || isDraggingNewColumn;
 
   return (
     <DroppableContainer nodeId={node.id} acceptTypes={sectionAcceptTypes}>
@@ -48,7 +48,7 @@ export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps)
       >
         <SortableContext
           items={node.children?.map((c) => c.id) || []}
-          strategy={verticalListSortingStrategy}
+          strategy={horizontalListSortingStrategy}
         >
           {node.children?.map((child, index) => (
             <CanvasNode

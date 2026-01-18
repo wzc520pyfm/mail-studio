@@ -26,4 +26,4 @@ export type {
 } from "./component";
 
 // UI types
-export type { EditorMode, PreviewMode, SidebarTab, DragState, DragItem } from "./ui";
+export type { EditorMode, PreviewMode, SidebarTab, DragItem } from "./ui";

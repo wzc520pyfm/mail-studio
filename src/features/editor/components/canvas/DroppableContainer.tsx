@@ -4,11 +4,11 @@
 
 "use client";
 
-import { memo, useContext } from "react";
+import { memo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import type { MJMLComponentType } from "@/features/editor/types";
+import { useUIStore } from "@/features/editor/stores";
 import { cn } from "@/lib/utils";
-import { DragStateContext } from "./DragStateContext";
 
 interface DroppableContainerProps {
   nodeId: string;
@@ -21,7 +21,7 @@ export const DroppableContainer = memo(function DroppableContainer({
   acceptTypes,
   children,
 }: DroppableContainerProps) {
-  const dragState = useContext(DragStateContext);
+  const isDraggingNewComponent = useUIStore((s) => s.isDraggingNewComponent);
   const { isOver, setNodeRef, active } = useDroppable({
     id: `drop-${nodeId}`,
     data: {
@@ -38,9 +38,9 @@ export const DroppableContainer = memo(function DroppableContainer({
     | undefined;
   const isAcceptable = !activeType || acceptTypes.includes(activeType);
 
-  // Show visual feedback during drag
-  const showAcceptableHighlight = dragState.isDragging && isAcceptable;
-  const showNotAcceptableHighlight = dragState.isDragging && activeType && !isAcceptable;
+  // Show visual feedback only during NEW component drag (not during reorder)
+  const showAcceptableHighlight = isDraggingNewComponent && isAcceptable;
+  const showNotAcceptableHighlight = isDraggingNewComponent && activeType && !isAcceptable;
 
   return (
     <div
@@ -51,10 +51,10 @@ export const DroppableContainer = memo(function DroppableContainer({
         isOver && isAcceptable && "bg-blue-50/60 ring-2 ring-blue-400 ring-inset rounded-sm",
         // Show warning when not acceptable
         isOver && !isAcceptable && "bg-red-50/60 ring-2 ring-red-300 ring-inset rounded-sm",
-        // Subtle highlight when dragging compatible items but not over this container
-        showAcceptableHighlight && !isOver && "bg-blue-50/20",
-        // Dim appearance when dragging incompatible items
-        showNotAcceptableHighlight && !isOver && "opacity-50"
+        // Very subtle highlight when dragging compatible NEW items but not over this container
+        showAcceptableHighlight && !isOver && "bg-blue-50/10",
+        // Slight dim appearance when dragging incompatible NEW items
+        showNotAcceptableHighlight && !isOver && "opacity-80"
       )}
     >
       {children}

@@ -4,14 +4,14 @@
 
 "use client";
 
-import { memo, useContext } from "react";
+import { memo } from "react";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDndContext } from "@dnd-kit/core";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
+import { useUIStore } from "@/features/editor/stores";
 import { DroppableContainer } from "./DroppableContainer";
 import { EmptyDropZone } from "./EmptyDropZone";
 import { CanvasNode } from "./CanvasNode";
-import { DragStateContext } from "./DragStateContext";
 
 interface ColumnNodeProps {
   node: EditorNode;
@@ -34,20 +34,20 @@ const columnAcceptTypes: MJMLComponentType[] = [
 export const ColumnNode = memo(function ColumnNode({ node }: ColumnNodeProps) {
   const bgColor = node.props["background-color"] as string;
   const padding = (node.props["padding"] as string) || "10px";
-  const dragState = useContext(DragStateContext);
+  const isDraggingNewComponent = useUIStore((s) => s.isDraggingNewComponent);
   const { active } = useDndContext();
   const hasChildren = node.children && node.children.length > 0;
 
-  // Check if we're dragging a content component
+  // Check if we're dragging a NEW content component (not reordering existing ones)
   const activeData = active?.data.current;
   const activeType = (activeData?.componentType || activeData?.nodeType) as
     | MJMLComponentType
     | undefined;
-  const isDraggingContent =
-    dragState.isDragging && activeType && columnAcceptTypes.includes(activeType);
+  const isDraggingNewContent =
+    isDraggingNewComponent && activeType && columnAcceptTypes.includes(activeType);
 
-  // Show drop zone when empty OR when dragging content
-  const showDropZone = !hasChildren || isDraggingContent;
+  // Show drop zone when empty OR when dragging NEW content (not during reorder)
+  const showDropZone = !hasChildren || isDraggingNewContent;
 
   // Note: flex/width properties are applied to the CanvasNode wrapper for proper flex layout
   return (

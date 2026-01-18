@@ -10,7 +10,6 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
-  DragOverEvent,
   pointerWithin,
   rectIntersection,
   closestCenter,
@@ -20,7 +19,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { useKeyboardShortcuts } from "@/features/editor/hooks";
@@ -116,9 +115,11 @@ const customCollisionDetection: CollisionDetection = (args) => {
 export const Editor = memo(function Editor() {
   const addNode = useEditorStore((s) => s.addNode);
   const moveNode = useEditorStore((s) => s.moveNode);
-  const reorderNode = useEditorStore((s) => s.reorderNode);
+  const findNode = useEditorStore((s) => s.findNode);
+  const updateNodeChildren = useEditorStore((s) => s.updateNodeChildren);
   const editorMode = useUIStore((s) => s.editorMode);
   const setIsDragging = useUIStore((s) => s.setIsDragging);
+  const setIsDraggingNewComponent = useUIStore((s) => s.setIsDraggingNewComponent);
   const isDragging = useUIStore((s) => s.isDragging);
 
   const [, setActiveId] = useState<string | null>(null);
@@ -146,69 +147,26 @@ export const Editor = memo(function Editor() {
       setActiveId(active.id as string);
 
       // Check if it's a new component drag
-      if (active.data.current?.type === "new-component") {
+      const isNewComponent = active.data.current?.type === "new-component";
+      setIsDraggingNewComponent(isNewComponent);
+
+      if (isNewComponent && active.data.current) {
         setActiveType(active.data.current.componentType);
       } else {
         setActiveType(null);
       }
     },
-    [setIsDragging]
+    [setIsDragging, setIsDraggingNewComponent]
   );
 
-  // Track the last over id to avoid redundant moves
+  // Track the last over id (used for reference but no longer for real-time reordering)
   const lastOverId = useRef<string | null>(null);
-
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      const { active, over } = event;
-
-      if (!over) {
-        lastOverId.current = null;
-        return;
-      }
-
-      const activeData = active.data.current;
-      const overData = over.data.current;
-
-      if (!activeData || !overData) return;
-
-      // Only handle real-time sorting for existing nodes
-      if (activeData.type !== "existing-node" || overData.type !== "existing-node") {
-        return;
-      }
-
-      const activeId = activeData.nodeId as string;
-      const overId = overData.nodeId as string;
-
-      // Don't process if same element
-      if (activeId === overId) {
-        return;
-      }
-
-      // Don't process if same as last processed (debounce)
-      if (lastOverId.current === overId) {
-        return;
-      }
-
-      // Only allow sorting within the same parent
-      const activeParentId = activeData.parentId as string;
-      const overParentId = overData.parentId as string;
-
-      if (activeParentId !== overParentId) {
-        return;
-      }
-
-      // Reorder the node to the target position
-      lastOverId.current = overId;
-      reorderNode(activeId, overId);
-    },
-    [reorderNode]
-  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
       setIsDragging(false);
+      setIsDraggingNewComponent(false);
       setActiveId(null);
       setActiveType(null);
       lastOverId.current = null;
@@ -264,11 +222,12 @@ export const Editor = memo(function Editor() {
 
         addNode(targetId, componentType, targetIndex);
       }
-      // Handle cross-container move (existing node to different parent)
+      // Handle existing node drag (reorder within same parent or move to different parent)
       else if (activeData.type === "existing-node") {
         const nodeId = activeData.nodeId as string;
         const nodeType = activeData.nodeType as MJMLComponentType;
         const activeParentId = activeData.parentId as string;
+        const activeIndex = activeData.index as number;
 
         // Determine the target container
         const overId = over.id as string;
@@ -284,20 +243,27 @@ export const Editor = memo(function Editor() {
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         } else if (overData.type === "existing-node") {
           targetParentId = overData.parentId as string;
-          const overIndex = (overData.index as number) ?? 0;
+          targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
-          targetIndex = overIndex;
         } else {
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
         }
 
-        // Skip if same parent (already handled by onDragOver)
+        // Handle reordering within the same parent (like Editor mode)
         if (activeParentId === targetParentId) {
+          if (activeIndex !== targetIndex) {
+            const parent = findNode(activeParentId);
+            if (parent?.children) {
+              const newChildren = arrayMove(parent.children, activeIndex, targetIndex);
+              updateNodeChildren(activeParentId, newChildren);
+            }
+          }
           return;
         }
 
+        // Handle cross-container move
         // Validate that the target accepts this node type
         if (nodeType && !canDropInto(nodeType, acceptTypes)) {
           return;
@@ -306,15 +272,16 @@ export const Editor = memo(function Editor() {
         moveNode(nodeId, targetParentId, targetIndex);
       }
     },
-    [addNode, moveNode, setIsDragging]
+    [addNode, moveNode, findNode, updateNodeChildren, setIsDragging, setIsDraggingNewComponent]
   );
 
   const handleDragCancel = useCallback(() => {
     setIsDragging(false);
+    setIsDraggingNewComponent(false);
     setActiveId(null);
     setActiveType(null);
     lastOverId.current = null;
-  }, [setIsDragging]);
+  }, [setIsDragging, setIsDraggingNewComponent]);
 
   // Render drag overlay
   const renderDragOverlay = () => {
@@ -346,7 +313,6 @@ export const Editor = memo(function Editor() {
     <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
       collisionDetection={customCollisionDetection}

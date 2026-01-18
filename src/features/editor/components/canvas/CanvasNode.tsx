@@ -4,16 +4,14 @@
 
 "use client";
 
-import { memo, useContext, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Copy, Trash2 } from "lucide-react";
-import { useEditorStore } from "@/features/editor/stores";
+import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
-import { DragStateContext } from "./DragStateContext";
-import { DropIndicatorLine } from "./DropIndicatorLine";
 import { SectionNode } from "./SectionNode";
 import { ColumnNode } from "./ColumnNode";
 import { TextNode, ImageNode, ButtonNode, DividerNode, SpacerNode, GenericNode } from "./nodes";
@@ -37,10 +35,10 @@ export const CanvasNode = memo(function CanvasNode({
   const setHoveredId = useEditorStore((s) => s.setHoveredId);
   const removeNode = useEditorStore((s) => s.removeNode);
   const duplicateNode = useEditorStore((s) => s.duplicateNode);
+  const globalIsDragging = useUIStore((s) => s.isDragging);
 
-  const dragState = useContext(DragStateContext);
   const isSelected = selectedId === node.id;
-  const isHovered = hoveredId === node.id && !dragState.isDragging;
+  const isHovered = hoveredId === node.id && !globalIsDragging;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
     useSortable({
@@ -87,10 +85,10 @@ export const CanvasNode = memo(function CanvasNode({
   );
 
   const handleMouseEnter = useCallback(() => {
-    if (!dragState.isDragging) {
+    if (!globalIsDragging) {
       setHoveredId(node.id);
     }
-  }, [node.id, setHoveredId, dragState.isDragging]);
+  }, [node.id, setHoveredId, globalIsDragging]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredId(null);
@@ -133,10 +131,6 @@ export const CanvasNode = memo(function CanvasNode({
     }
   };
 
-  // Determine if we should show drop indicators
-  const showDropBefore = isOver && dragState.overPosition === "before";
-  const showDropAfter = isOver && dragState.overPosition === "after";
-
   return (
     <div
       ref={setNodeRef}
@@ -144,20 +138,15 @@ export const CanvasNode = memo(function CanvasNode({
       className={cn(
         "relative group transition-all duration-150",
         // Selection states
-        !isDragging && isSelected && "ring-2 ring-blue-500 ring-offset-2 rounded-sm z-51",
+        !isDragging && isSelected && "ring-2 ring-blue-500 ring-offset-2 rounded-sm z-10",
         !isDragging && isHovered && !isSelected && "ring-2 ring-blue-300/50 rounded-sm",
-        // Dragging states
-        isDragging && "opacity-40 scale-[0.98] ring-2 ring-blue-400 ring-dashed rounded-sm z-50",
-        // When being dragged over
-        isOver && !isDragging && "ring-2 ring-blue-400 ring-offset-1 bg-blue-50/30 rounded-sm"
+        // Dragging states - subtle opacity to indicate dragging
+        isDragging && "opacity-75 z-50 scale-[1.02] shadow-lg"
       )}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Drop indicator - before */}
-      {showDropBefore && <DropIndicatorLine position="before" />}
-
       {/* Component Label */}
       {(isSelected || isHovered) && !isDragging && (
         <div className="absolute -top-7 left-0 z-[9999] flex items-center gap-1 animate-in fade-in slide-in-from-bottom-1 duration-150">
@@ -211,9 +200,6 @@ export const CanvasNode = memo(function CanvasNode({
 
       {/* Content */}
       <div className={cn(isDragging && "pointer-events-none")}>{renderContent()}</div>
-
-      {/* Drop indicator - after */}
-      {showDropAfter && <DropIndicatorLine position="after" />}
     </div>
   );
 });

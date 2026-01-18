@@ -24,6 +24,7 @@ interface UIState {
 
   // Drag state
   isDragging: boolean;
+  isDraggingNewComponent: boolean;
   dragOverId: string | null;
 }
 
@@ -36,6 +37,7 @@ interface UIActions {
   setShowPreview: (show: boolean) => void;
   setActiveTab: (tab: SidebarTab) => void;
   setIsDragging: (isDragging: boolean) => void;
+  setIsDraggingNewComponent: (isDraggingNewComponent: boolean) => void;
   setDragOverId: (id: string | null) => void;
   toggleCode: () => void;
   togglePreview: () => void;
@@ -57,6 +59,7 @@ export const useUIStore = create<UIStore>()(
       showPreview: false,
       activeTab: "components",
       isDragging: false,
+      isDraggingNewComponent: false,
       dragOverId: null,
 
       // Actions
@@ -69,6 +72,7 @@ export const useUIStore = create<UIStore>()(
       setShowPreview: (show) => set({ showPreview: show }),
       setActiveTab: (tab) => set({ activeTab: tab }),
       setIsDragging: (isDragging) => set({ isDragging }),
+      setIsDraggingNewComponent: (isDraggingNewComponent) => set({ isDraggingNewComponent }),
       setDragOverId: (id) => set({ dragOverId: id }),
       toggleCode: () => set((state) => ({ showCode: !state.showCode })),
       togglePreview: () => set((state) => ({ showPreview: !state.showPreview })),
@@ -88,6 +92,7 @@ export const useUIStore = create<UIStore>()(
 export const selectEditorMode = (state: UIStore) => state.editorMode;
 export const selectPreviewMode = (state: UIStore) => state.previewMode;
 export const selectIsDragging = (state: UIStore) => state.isDragging;
+export const selectIsDraggingNewComponent = (state: UIStore) => state.isDraggingNewComponent;
 export const selectActiveTab = (state: UIStore) => state.activeTab;
 
 // ============ Derived State Hooks ============

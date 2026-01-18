@@ -11,14 +11,6 @@ export type PreviewMode = "desktop" | "mobile";
 // Sidebar tabs
 export type SidebarTab = "components" | "templates";
 
-// Drag state for canvas
-export interface DragState {
-  isDragging: boolean;
-  activeId: string | null;
-  overId: string | null;
-  overPosition: "before" | "after" | "inside" | null;
-}
-
 // Drag item type
 export interface DragItem {
   type: "new-component" | "existing-node";

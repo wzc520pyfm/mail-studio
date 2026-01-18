@@ -30,13 +30,7 @@ export {
 } from "./stores";
 
 // Hooks
-export {
-  useDragState,
-  useNodeSelection,
-  useNodeActions,
-  useKeyboardShortcuts,
-  useBreadcrumb,
-} from "./hooks";
+export { useNodeSelection, useNodeActions, useKeyboardShortcuts, useBreadcrumb } from "./hooks";
 
 // Types
 export type {
@@ -48,7 +42,6 @@ export type {
   PropSchema,
   EditorMode,
   PreviewMode,
-  DragState,
 } from "./types";
 
 // Lib
