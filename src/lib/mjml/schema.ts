@@ -13,4 +13,4 @@ export {
   getComponentDefinition,
   predefinedSocialPlatforms,
   defaultSocialElements,
-} from '@/features/editor/lib/mjml/schema';
+} from "@/features/editor/lib/mjml/schema";

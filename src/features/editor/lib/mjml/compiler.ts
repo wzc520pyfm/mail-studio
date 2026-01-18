@@ -2,36 +2,33 @@
  * MJML Compiler - Convert EditorNode to MJML and compile to HTML
  */
 
-import mjml2html from 'mjml-browser';
-import type { EditorNode, HeadSettings } from '@/features/editor/types';
-import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
+import mjml2html from "mjml-browser";
+import type { EditorNode, HeadSettings } from "@/features/editor/types";
+import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 
 // Self-closing MJML tags (components that don't have children or text content)
-const SELF_CLOSING_TAGS = ['mj-divider', 'mj-spacer', 'mj-image', 'mj-carousel-image'];
+const SELF_CLOSING_TAGS = ["mj-divider", "mj-spacer", "mj-image", "mj-carousel-image"];
 
 // Tags that should use content as HTML (not text)
-const HTML_CONTENT_TAGS = ['mj-table', 'mj-raw'];
+const HTML_CONTENT_TAGS = ["mj-table", "mj-raw"];
 
 // Escape HTML attribute values
 function escapeAttr(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // Escape HTML content
 function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 // Convert EditorNode tree to MJML string
 export function nodeToMjml(node: EditorNode, indent = 0): string {
-  const spaces = '  '.repeat(indent);
+  const spaces = "  ".repeat(indent);
   const { type, props, children, content } = node;
 
   // Get component definition to check if it can have children
@@ -40,9 +37,9 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
 
   // Build attributes string
   const attrs = Object.entries(props)
-    .filter(([, value]) => value !== undefined && value !== '')
+    .filter(([, value]) => value !== undefined && value !== "")
     .map(([key, value]) => `${key}="${escapeAttr(String(value))}"`)
-    .join(' ');
+    .join(" ");
 
   const openTag = attrs ? `<${type} ${attrs}>` : `<${type}>`;
   const closeTag = `</${type}>`;
@@ -58,16 +55,16 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   }
 
   // Build children MJML (only for components that can have children)
-  const childrenMjml = validChildren?.map((child) => nodeToMjml(child, indent + 1)).join('\n');
+  const childrenMjml = validChildren?.map((child) => nodeToMjml(child, indent + 1)).join("\n");
 
   // Combine parts
   if (content && !validChildren?.length) {
     // For HTML content tags, preserve the content as-is (with proper indentation)
     if (HTML_CONTENT_TAGS.includes(type)) {
       const indentedContent = content
-        .split('\n')
+        .split("\n")
         .map((line) => `${spaces}  ${line}`)
-        .join('\n');
+        .join("\n");
       return `${spaces}${openTag}\n${indentedContent}\n${spaces}${closeTag}`;
     }
     return `${spaces}${openTag}${content}${closeTag}`;
@@ -97,9 +94,7 @@ function generateHeadContent(headSettings?: HeadSettings): string {
   // mj-font (custom fonts)
   if (headSettings?.fonts && headSettings.fonts.length > 0) {
     for (const font of headSettings.fonts) {
-      parts.push(
-        `    <mj-font name="${escapeAttr(font.name)}" href="${escapeAttr(font.href)}" />`
-      );
+      parts.push(`    <mj-font name="${escapeAttr(font.name)}" href="${escapeAttr(font.href)}" />`);
     }
   }
 
@@ -115,15 +110,15 @@ function generateHeadContent(headSettings?: HeadSettings): string {
     </mj-attributes>`);
 
   // mj-style (custom styles + defaults)
-  const defaultStyles = '.link-nostyle { color: inherit; text-decoration: none; }';
-  const customStyles = headSettings?.styles ? headSettings.styles : '';
-  const allStyles = [defaultStyles, customStyles].filter(Boolean).join('\n      ');
+  const defaultStyles = ".link-nostyle { color: inherit; text-decoration: none; }";
+  const customStyles = headSettings?.styles ? headSettings.styles : "";
+  const allStyles = [defaultStyles, customStyles].filter(Boolean).join("\n      ");
 
   parts.push(`    <mj-style>
       ${allStyles}
     </mj-style>`);
 
-  return parts.join('\n');
+  return parts.join("\n");
 }
 
 // Generate full MJML document from editor document
@@ -143,7 +138,7 @@ ${bodyContent}
 export function compileMjml(mjmlString: string): { html: string; errors: string[] } {
   try {
     const result = mjml2html(mjmlString, {
-      validationLevel: 'soft',
+      validationLevel: "soft",
       minify: false,
     });
 
@@ -153,7 +148,7 @@ export function compileMjml(mjmlString: string): { html: string; errors: string[
     };
   } catch (error) {
     return {
-      html: '',
+      html: "",
       errors: [(error as Error).message],
     };
   }
@@ -173,12 +168,12 @@ export function compileDocument(
 export function parseMjmlToNode(mjmlString: string): EditorNode | null {
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(mjmlString, 'text/xml');
+    const doc = parser.parseFromString(mjmlString, "text/xml");
 
-    const mjmlElement = doc.querySelector('mjml');
+    const mjmlElement = doc.querySelector("mjml");
     if (!mjmlElement) return null;
 
-    const bodyElement = mjmlElement.querySelector('mj-body');
+    const bodyElement = mjmlElement.querySelector("mj-body");
     if (!bodyElement) return null;
 
     return parseElement(bodyElement);
@@ -188,7 +183,7 @@ export function parseMjmlToNode(mjmlString: string): EditorNode | null {
 }
 
 function parseElement(element: Element): EditorNode {
-  const type = element.tagName.toLowerCase() as EditorNode['type'];
+  const type = element.tagName.toLowerCase() as EditorNode["type"];
   const props: Record<string, string> = {};
 
   // Extract attributes
@@ -203,12 +198,12 @@ function parseElement(element: Element): EditorNode {
     content = textNodes
       .map((n) => n.textContent?.trim())
       .filter(Boolean)
-      .join('');
+      .join("");
   }
 
   // Parse children
   const childElements = Array.from(element.children).filter((el) =>
-    el.tagName.toLowerCase().startsWith('mj-')
+    el.tagName.toLowerCase().startsWith("mj-")
   );
 
   const children = childElements.length > 0 ? childElements.map(parseElement) : undefined;

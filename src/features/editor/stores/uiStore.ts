@@ -2,9 +2,9 @@
  * UI Store - UI state management with persistence
  */
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { EditorMode, PreviewMode, SidebarTab } from '@/features/editor/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { EditorMode, PreviewMode, SidebarTab } from "@/features/editor/types";
 
 // ============ State Types ============
 
@@ -51,11 +51,11 @@ export const useUIStore = create<UIStore>()(
       // Initial state
       leftPanelWidth: 280,
       rightPanelWidth: 300,
-      editorMode: 'canvas',
-      previewMode: 'desktop',
+      editorMode: "canvas",
+      previewMode: "desktop",
       showCode: false,
       showPreview: false,
-      activeTab: 'components',
+      activeTab: "components",
       isDragging: false,
       dragOverId: null,
 
@@ -63,7 +63,7 @@ export const useUIStore = create<UIStore>()(
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
       setRightPanelWidth: (width) => set({ rightPanelWidth: width }),
       setEditorMode: (mode) =>
-        set({ editorMode: mode, showCode: mode === 'code', showPreview: mode === 'preview' }),
+        set({ editorMode: mode, showCode: mode === "code", showPreview: mode === "preview" }),
       setPreviewMode: (mode) => set({ previewMode: mode }),
       setShowCode: (show) => set({ showCode: show }),
       setShowPreview: (show) => set({ showPreview: show }),
@@ -74,7 +74,7 @@ export const useUIStore = create<UIStore>()(
       togglePreview: () => set((state) => ({ showPreview: !state.showPreview })),
     }),
     {
-      name: 'mail-studio-ui-v3',
+      name: "mail-studio-ui-v3",
       partialize: (state) => ({
         editorMode: state.editorMode,
         previewMode: state.previewMode,

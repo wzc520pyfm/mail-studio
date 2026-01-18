@@ -17,7 +17,7 @@ export {
   useIsSelected,
   useIsHovered,
   useUndoRedo,
-} from './editorStore';
+} from "./editorStore";
 
 // UI store
 export {
@@ -31,4 +31,4 @@ export {
   useEditorMode,
   usePreviewMode,
   useIsDragging,
-} from './uiStore';
+} from "./uiStore";

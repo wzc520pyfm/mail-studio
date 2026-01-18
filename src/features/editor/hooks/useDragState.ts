@@ -2,9 +2,9 @@
  * Hook for managing drag state in the canvas
  */
 
-import { useState, useCallback } from 'react';
-import { useDndMonitor, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
-import type { DragState } from '@/features/editor/types';
+import { useState, useCallback } from "react";
+import { useDndMonitor, type DragOverEvent, type DragStartEvent } from "@dnd-kit/core";
+import type { DragState } from "@/features/editor/types";
 
 const initialDragState: DragState = {
   isDragging: false,
@@ -30,16 +30,16 @@ export function useDragState() {
       const overRect = event.over.rect;
       const activeRect = event.active.rect.current.translated;
 
-      let position: 'before' | 'after' | 'inside' = 'inside';
+      let position: "before" | "after" | "inside" = "inside";
 
       if (overRect && activeRect) {
         const activeCenter = activeRect.top + activeRect.height / 2;
 
         // Determine position based on mouse position relative to element center
         if (activeCenter < overRect.top + overRect.height * 0.3) {
-          position = 'before';
+          position = "before";
         } else if (activeCenter > overRect.top + overRect.height * 0.7) {
-          position = 'after';
+          position = "after";
         }
       }
 

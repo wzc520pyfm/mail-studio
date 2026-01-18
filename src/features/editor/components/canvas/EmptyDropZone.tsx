@@ -41,8 +41,7 @@ export const EmptyDropZone = memo(function EmptyDropZone({
   const activeType = (activeData?.componentType || activeData?.nodeType) as
     | MJMLComponentType
     | undefined;
-  const isAcceptable =
-    !acceptTypes || !activeType || acceptTypes.includes(activeType);
+  const isAcceptable = !acceptTypes || !activeType || acceptTypes.includes(activeType);
 
   return (
     <div
@@ -63,9 +62,7 @@ export const EmptyDropZone = memo(function EmptyDropZone({
           !isOver &&
           "border-gray-300 bg-gray-100/50 opacity-50",
         // Hovering over with acceptable type
-        isOver &&
-          isAcceptable &&
-          "border-blue-500 bg-blue-100/50 scale-[1.02] shadow-inner",
+        isOver && isAcceptable && "border-blue-500 bg-blue-100/50 scale-[1.02] shadow-inner",
         // Hovering over with non-acceptable type
         isOver && !isAcceptable && "border-red-400 bg-red-100/50"
       )}
@@ -73,18 +70,8 @@ export const EmptyDropZone = memo(function EmptyDropZone({
       {dragState.isDragging ? (
         isAcceptable ? (
           <>
-            <Plus
-              className={cn(
-                "text-blue-500 mb-1",
-                small ? "w-5 h-5" : "w-8 h-8"
-              )}
-            />
-            <span
-              className={cn(
-                "text-blue-600 font-medium",
-                small ? "text-xs" : "text-sm"
-              )}
-            >
+            <Plus className={cn("text-blue-500 mb-1", small ? "w-5 h-5" : "w-8 h-8")} />
+            <span className={cn("text-blue-600 font-medium", small ? "text-xs" : "text-sm")}>
               {isOver ? "Release to drop" : message}
             </span>
           </>
@@ -94,9 +81,7 @@ export const EmptyDropZone = memo(function EmptyDropZone({
           </span>
         )
       ) : (
-        <span className={cn("text-gray-400", small ? "text-xs" : "text-sm")}>
-          {message}
-        </span>
+        <span className={cn("text-gray-400", small ? "text-xs" : "text-sm")}>{message}</span>
       )}
     </div>
   );

@@ -2,24 +2,24 @@
  * Section node renderer with droppable children
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { EditorNode, MJMLComponentType } from '@/features/editor/types';
-import { DroppableContainer } from './DroppableContainer';
-import { EmptyDropZone } from './EmptyDropZone';
-import { CanvasNode } from './CanvasNode';
+import { memo } from "react";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
+import { DroppableContainer } from "./DroppableContainer";
+import { EmptyDropZone } from "./EmptyDropZone";
+import { CanvasNode } from "./CanvasNode";
 
 interface SectionNodeProps {
   node: EditorNode;
 }
 
-const sectionAcceptTypes: MJMLComponentType[] = ['mj-column'];
+const sectionAcceptTypes: MJMLComponentType[] = ["mj-column"];
 
 export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps) {
-  const bgColor = node.props['background-color'] as string;
-  const padding = (node.props['padding'] as string) || '20px 0';
+  const bgColor = node.props["background-color"] as string;
+  const padding = (node.props["padding"] as string) || "20px 0";
 
   return (
     <DroppableContainer nodeId={node.id} acceptTypes={sectionAcceptTypes}>

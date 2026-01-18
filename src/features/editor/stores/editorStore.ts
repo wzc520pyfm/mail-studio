@@ -2,20 +2,25 @@
  * Editor Store - Document state management with undo/redo support
  */
 
-import { create } from 'zustand';
-import { temporal, type TemporalState } from 'zundo';
-import { immer } from 'zustand/middleware/immer';
-import type { EditorNode, MJMLComponentType, HeadSettings, FontDefinition } from '@/features/editor/types';
-import { emptyDocument, cloneDocumentWithNewIds } from '@/features/editor/lib/mjml/templates';
-import { createNode, generateId, componentDefinitions } from '@/features/editor/lib/mjml/schema';
+import { create } from "zustand";
+import { temporal, type TemporalState } from "zundo";
+import { immer } from "zustand/middleware/immer";
+import type {
+  EditorNode,
+  MJMLComponentType,
+  HeadSettings,
+  FontDefinition,
+} from "@/features/editor/types";
+import { emptyDocument, cloneDocumentWithNewIds } from "@/features/editor/lib/mjml/templates";
+import { createNode, generateId, componentDefinitions } from "@/features/editor/lib/mjml/schema";
 
 // Default head settings
 const defaultHeadSettings: HeadSettings = {
-  title: '',
-  preview: '',
+  title: "",
+  preview: "",
   fonts: [],
-  styles: '',
-  breakpoint: '',
+  styles: "",
+  breakpoint: "",
 };
 
 // ============ State Types ============
@@ -161,8 +166,8 @@ export const useEditorStore = create<EditorStore>()(
           const newNode = createNode(type);
 
           // If adding a section, add a column by default
-          if (type === 'mj-section') {
-            newNode.children = [createNode('mj-column')];
+          if (type === "mj-section") {
+            newNode.children = [createNode("mj-column")];
           }
 
           if (index !== undefined && index >= 0 && index <= parent.children.length) {
@@ -219,7 +224,7 @@ export const useEditorStore = create<EditorStore>()(
           if (!node) return;
 
           Object.entries(props).forEach(([key, value]) => {
-            if (value === undefined || value === '') {
+            if (value === undefined || value === "") {
               delete node.props[key];
             } else {
               node.props[key] = value;

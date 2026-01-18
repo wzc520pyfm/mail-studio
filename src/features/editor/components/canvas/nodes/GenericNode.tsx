@@ -2,10 +2,10 @@
  * Generic node renderer for unknown/unimplemented components
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import type { EditorNode } from '@/features/editor/types';
+import { memo } from "react";
+import type { EditorNode } from "@/features/editor/types";
 
 interface GenericNodeProps {
   node: EditorNode;

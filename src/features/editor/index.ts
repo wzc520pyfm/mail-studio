@@ -12,7 +12,7 @@
  */
 
 // Components
-export { Editor } from './components';
+export { Editor } from "./components";
 
 // Stores
 export {
@@ -27,7 +27,7 @@ export {
   useEditorMode,
   usePreviewMode,
   useIsDragging,
-} from './stores';
+} from "./stores";
 
 // Hooks
 export {
@@ -36,7 +36,7 @@ export {
   useNodeActions,
   useKeyboardShortcuts,
   useBreadcrumb,
-} from './hooks';
+} from "./hooks";
 
 // Types
 export type {
@@ -49,7 +49,7 @@ export type {
   EditorMode,
   PreviewMode,
   DragState,
-} from './types';
+} from "./types";
 
 // Lib
 export {
@@ -61,4 +61,4 @@ export {
   generateMjml,
   templates,
   cloneDocumentWithNewIds,
-} from './lib/mjml';
+} from "./lib/mjml";

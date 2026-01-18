@@ -9,4 +9,4 @@ export {
   compileMjml,
   compileDocument,
   parseMjmlToNode,
-} from '@/features/editor/lib/mjml/compiler';
+} from "@/features/editor/lib/mjml/compiler";

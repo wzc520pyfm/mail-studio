@@ -2,15 +2,15 @@
  * Canvas - Main canvas component for visual editing
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { useEditorStore, useUIStore } from '@/features/editor/stores';
-import { useDragState } from '@/features/editor/hooks';
-import { cn } from '@/lib/utils';
-import { DragStateContext } from './DragStateContext';
-import { Breadcrumb } from './Breadcrumb';
-import { CanvasBody } from './CanvasBody';
+import { memo } from "react";
+import { useEditorStore, useUIStore } from "@/features/editor/stores";
+import { useDragState } from "@/features/editor/hooks";
+import { cn } from "@/lib/utils";
+import { DragStateContext } from "./DragStateContext";
+import { Breadcrumb } from "./Breadcrumb";
+import { CanvasBody } from "./CanvasBody";
 
 export const Canvas = memo(function Canvas() {
   const document = useEditorStore((s) => s.document);
@@ -28,10 +28,10 @@ export const Canvas = memo(function Canvas() {
           <div className="min-h-full flex items-start justify-center p-8">
             <div
               className={cn(
-                'bg-white shadow-lg rounded-lg transition-shadow duration-200',
-                isDragging && 'shadow-xl ring-2 ring-blue-100'
+                "bg-white shadow-lg rounded-lg transition-shadow duration-200",
+                isDragging && "shadow-xl ring-2 ring-blue-100"
               )}
-              style={{ width: '600px', minHeight: '400px' }}
+              style={{ width: "600px", minHeight: "400px" }}
             >
               <CanvasBody node={document} />
             </div>

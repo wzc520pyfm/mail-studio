@@ -2,9 +2,9 @@
  * Hook for building breadcrumb path to selected node
  */
 
-import { useMemo } from 'react';
-import { useEditorStore } from '@/features/editor/stores';
-import type { EditorNode } from '@/features/editor/types';
+import { useMemo } from "react";
+import { useEditorStore } from "@/features/editor/stores";
+import type { EditorNode } from "@/features/editor/types";
 
 export function useBreadcrumb(): EditorNode[] {
   const document = useEditorStore((s) => s.document);

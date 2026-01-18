@@ -15,4 +15,4 @@ export {
   useIsSelected,
   useIsHovered,
   useUndoRedo,
-} from '@/features/editor/stores';
+} from "@/features/editor/stores";

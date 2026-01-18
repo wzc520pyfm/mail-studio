@@ -13,10 +13,7 @@ export function Preview() {
 
   // Compile MJML to HTML using useMemo (derived state)
   const { compiledHtml, errors } = useMemo(() => {
-    const { html, errors: compileErrors } = compileDocument(
-      document,
-      headSettings
-    );
+    const { html, errors: compileErrors } = compileDocument(document, headSettings);
     return { compiledHtml: html, errors: compileErrors };
   }, [document, headSettings]);
 
@@ -40,8 +37,7 @@ export function Preview() {
           <div
             className={cn(
               "bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300",
-              previewMode === "mobile" &&
-                "border-8 border-gray-800 rounded-[2rem]"
+              previewMode === "mobile" && "border-8 border-gray-800 rounded-[2rem]"
             )}
             style={{
               width: frameWidth,

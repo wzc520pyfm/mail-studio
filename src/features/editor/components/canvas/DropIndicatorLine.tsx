@@ -2,13 +2,13 @@
  * Drop indicator line component
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { cn } from '@/lib/utils';
+import { memo } from "react";
+import { cn } from "@/lib/utils";
 
 interface DropIndicatorLineProps {
-  position: 'before' | 'after';
+  position: "before" | "after";
 }
 
 export const DropIndicatorLine = memo(function DropIndicatorLine({
@@ -17,8 +17,8 @@ export const DropIndicatorLine = memo(function DropIndicatorLine({
   return (
     <div
       className={cn(
-        'absolute left-0 right-0 z-50 pointer-events-none',
-        position === 'before' ? '-top-0.5' : '-bottom-0.5'
+        "absolute left-0 right-0 z-50 pointer-events-none",
+        position === "before" ? "-top-0.5" : "-bottom-0.5"
       )}
     >
       <div className="relative">

@@ -2,14 +2,14 @@
  * Content editor for text-based components
  */
 
-'use client';
+"use client";
 
-import { memo, useCallback } from 'react';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useEditorStore } from '@/features/editor/stores';
-import type { EditorNode } from '@/features/editor/types';
-import { cn } from '@/lib/utils';
+import { memo, useCallback } from "react";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useEditorStore } from "@/features/editor/stores";
+import type { EditorNode } from "@/features/editor/types";
+import { cn } from "@/lib/utils";
 
 interface ContentEditorProps {
   node: EditorNode;
@@ -31,15 +31,15 @@ export const ContentEditor = memo(function ContentEditor({
 
   return (
     <div className="space-y-2">
-      <Label>{isHtmlContent ? 'HTML Content' : 'Content'}</Label>
+      <Label>{isHtmlContent ? "HTML Content" : "Content"}</Label>
       <textarea
-        value={node.content || ''}
+        value={node.content || ""}
         onChange={handleChange}
         className={cn(
-          'w-full px-3 py-2 text-sm rounded-md border border-input bg-background resize-y',
-          isHtmlContent ? 'min-h-[150px] font-mono text-xs' : 'min-h-[80px]'
+          "w-full px-3 py-2 text-sm rounded-md border border-input bg-background resize-y",
+          isHtmlContent ? "min-h-[150px] font-mono text-xs" : "min-h-[80px]"
         )}
-        placeholder={isHtmlContent ? 'Enter HTML content...' : 'Enter content...'}
+        placeholder={isHtmlContent ? "Enter HTML content..." : "Enter content..."}
       />
       {isHtmlContent && (
         <p className="text-xs text-muted-foreground">

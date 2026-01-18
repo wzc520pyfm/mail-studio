@@ -158,7 +158,9 @@
 
 /* Canvas element styles */
 .canvas-element {
-  transition: box-shadow 150ms ease, transform 150ms ease;
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 .canvas-element:hover {

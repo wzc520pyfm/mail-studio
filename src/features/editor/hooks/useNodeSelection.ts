@@ -2,8 +2,8 @@
  * Hook for node selection and hover management
  */
 
-import { useCallback } from 'react';
-import { useEditorStore } from '@/features/editor/stores';
+import { useCallback } from "react";
+import { useEditorStore } from "@/features/editor/stores";
 
 export function useNodeSelection(nodeId: string) {
   const selectedId = useEditorStore((s) => s.selectedId);

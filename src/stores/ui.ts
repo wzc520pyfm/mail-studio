@@ -12,4 +12,4 @@ export {
   useEditorMode,
   usePreviewMode,
   useIsDragging,
-} from '@/features/editor/stores';
+} from "@/features/editor/stores";

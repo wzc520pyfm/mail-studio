@@ -2,20 +2,20 @@
  * Properties panel for editing selected node properties
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Trash2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { useEditorStore, useSelectedNode } from '@/features/editor/stores';
-import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
-import { ContentEditor } from './ContentEditor';
-import { ChildrenEditor } from './ChildrenEditor';
-import { PropertyField } from './PropertyField';
+import { memo } from "react";
+import { Trash2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { useEditorStore, useSelectedNode } from "@/features/editor/stores";
+import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
+import { ContentEditor } from "./ContentEditor";
+import { ChildrenEditor } from "./ChildrenEditor";
+import { PropertyField } from "./PropertyField";
 
 // Components that have editable child elements
-const COMPONENTS_WITH_CHILDREN_EDITOR = ['mj-social', 'mj-navbar', 'mj-accordion', 'mj-carousel'];
+const COMPONENTS_WITH_CHILDREN_EDITOR = ["mj-social", "mj-navbar", "mj-accordion", "mj-carousel"];
 
 export const Properties = memo(function Properties() {
   const removeNode = useEditorStore((s) => s.removeNode);
@@ -68,7 +68,7 @@ export const Properties = memo(function Properties() {
           {selectedNode.content !== undefined && (
             <ContentEditor
               node={selectedNode}
-              isHtmlContent={selectedNode.type === 'mj-table' || selectedNode.type === 'mj-raw'}
+              isHtmlContent={selectedNode.type === "mj-table" || selectedNode.type === "mj-raw"}
             />
           )}
 

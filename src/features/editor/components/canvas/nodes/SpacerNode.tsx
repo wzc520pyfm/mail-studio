@@ -2,17 +2,17 @@
  * Spacer node renderer for the canvas
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import type { EditorNode } from '@/features/editor/types';
+import { memo } from "react";
+import type { EditorNode } from "@/features/editor/types";
 
 interface SpacerNodeProps {
   node: EditorNode;
 }
 
 export const SpacerNode = memo(function SpacerNode({ node }: SpacerNodeProps) {
-  const height = (node.props['height'] as string) || '30px';
+  const height = (node.props["height"] as string) || "30px";
 
   return (
     <div

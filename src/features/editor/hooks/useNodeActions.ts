@@ -2,8 +2,8 @@
  * Hook for node manipulation actions
  */
 
-import { useCallback } from 'react';
-import { useEditorStore } from '@/features/editor/stores';
+import { useCallback } from "react";
+import { useEditorStore } from "@/features/editor/stores";
 
 export function useNodeActions(nodeId: string) {
   const removeNode = useEditorStore((s) => s.removeNode);

@@ -2,28 +2,28 @@
  * Component definition types
  */
 
-import type { MJMLComponentType, DefaultChildNode } from './node';
+import type { MJMLComponentType, DefaultChildNode } from "./node";
 
 // Component category
-export type ComponentCategory = 'layout' | 'content' | 'interactive' | 'social';
+export type ComponentCategory = "layout" | "content" | "interactive" | "social";
 
 // Property Schema - defines editable properties
 export interface PropSchema {
   key: string;
   label: string;
   type:
-    | 'text'
-    | 'number'
-    | 'color'
-    | 'select'
-    | 'size'
-    | 'alignment'
-    | 'url'
-    | 'textarea'
-    | 'social-elements'
-    | 'navbar-links'
-    | 'accordion-elements'
-    | 'carousel-images';
+    | "text"
+    | "number"
+    | "color"
+    | "select"
+    | "size"
+    | "alignment"
+    | "url"
+    | "textarea"
+    | "social-elements"
+    | "navbar-links"
+    | "accordion-elements"
+    | "carousel-images";
   options?: { value: string; label: string }[];
   placeholder?: string;
   defaultValue?: string | number;
@@ -56,9 +56,9 @@ export interface SocialElement {
   name: string;
   href: string;
   src?: string;
-  'background-color'?: string;
-  'border-radius'?: string;
-  'icon-size'?: string;
+  "background-color"?: string;
+  "border-radius"?: string;
+  "icon-size"?: string;
   padding?: string;
 }
 
@@ -67,8 +67,8 @@ export interface NavbarLink {
   content: string;
   href: string;
   color?: string;
-  'font-family'?: string;
-  'font-size'?: string;
+  "font-family"?: string;
+  "font-size"?: string;
   padding?: string;
 }
 
@@ -76,9 +76,9 @@ export interface NavbarLink {
 export interface AccordionElement {
   title: string;
   content: string;
-  'icon-wrapped-url'?: string;
-  'icon-unwrapped-url'?: string;
-  'background-color'?: string;
+  "icon-wrapped-url"?: string;
+  "icon-unwrapped-url"?: string;
+  "background-color"?: string;
 }
 
 // Carousel Image for mj-carousel-image
@@ -87,7 +87,7 @@ export interface CarouselImage {
   alt?: string;
   href?: string;
   title?: string;
-  'thumbnails-src'?: string;
+  "thumbnails-src"?: string;
 }
 
 // Predefined social platform

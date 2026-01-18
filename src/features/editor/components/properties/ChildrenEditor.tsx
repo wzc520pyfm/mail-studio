@@ -2,16 +2,20 @@
  * Children editor for components like mj-social, mj-navbar, etc.
  */
 
-'use client';
+"use client";
 
-import { memo, useCallback, useMemo } from 'react';
-import { Plus, GripVertical, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useEditorStore } from '@/features/editor/stores';
-import { componentDefinitions, createNode, predefinedSocialPlatforms } from '@/features/editor/lib/mjml/schema';
-import type { EditorNode, MJMLComponentType } from '@/features/editor/types';
+import { memo, useCallback, useMemo } from "react";
+import { Plus, GripVertical, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useEditorStore } from "@/features/editor/stores";
+import {
+  componentDefinitions,
+  createNode,
+  predefinedSocialPlatforms,
+} from "@/features/editor/lib/mjml/schema";
+import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 
 interface ChildrenEditorProps {
   node: EditorNode;
@@ -25,7 +29,7 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
 
   const def = componentDefinitions[node.type];
   const hasAllowedChildren = def?.allowedChildren && def.allowedChildren.length > 0;
-  const childType = hasAllowedChildren ? def.allowedChildren[0] as MJMLComponentType : null;
+  const childType = hasAllowedChildren ? (def.allowedChildren[0] as MJMLComponentType) : null;
   const childDef = childType ? componentDefinitions[childType] : null;
   const children = useMemo(() => node.children || [], [node.children]);
 
@@ -43,9 +47,9 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
   );
 
   const handleMoveChild = useCallback(
-    (index: number, direction: 'up' | 'down') => {
+    (index: number, direction: "up" | "down") => {
       const newChildren = [...children];
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      const newIndex = direction === "up" ? index - 1 : index + 1;
       if (newIndex < 0 || newIndex >= newChildren.length) return;
 
       [newChildren[index], newChildren[newIndex]] = [newChildren[newIndex], newChildren[index]];
@@ -54,24 +58,27 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
     [node.id, children, updateNodeChildren]
   );
 
-  const getChildLabel = useCallback((child: EditorNode, index: number): string => {
-    if (child.type === 'mj-social-element') {
-      const name = child.props.name as string;
-      const platform = predefinedSocialPlatforms.find((p) => p.name === name);
-      return platform?.label || name || `Social ${index + 1}`;
-    }
-    if (child.type === 'mj-navbar-link') {
-      return child.content || `Link ${index + 1}`;
-    }
-    if (child.type === 'mj-carousel-image') {
-      return (child.props.alt as string) || `Slide ${index + 1}`;
-    }
-    if (child.type === 'mj-accordion-element') {
-      const titleChild = child.children?.find((c) => c.type === 'mj-accordion-title');
-      return titleChild?.content || `Item ${index + 1}`;
-    }
-    return `${childDef?.name || childType} ${index + 1}`;
-  }, [childDef?.name, childType]);
+  const getChildLabel = useCallback(
+    (child: EditorNode, index: number): string => {
+      if (child.type === "mj-social-element") {
+        const name = child.props.name as string;
+        const platform = predefinedSocialPlatforms.find((p) => p.name === name);
+        return platform?.label || name || `Social ${index + 1}`;
+      }
+      if (child.type === "mj-navbar-link") {
+        return child.content || `Link ${index + 1}`;
+      }
+      if (child.type === "mj-carousel-image") {
+        return (child.props.alt as string) || `Slide ${index + 1}`;
+      }
+      if (child.type === "mj-accordion-element") {
+        const titleChild = child.children?.find((c) => c.type === "mj-accordion-title");
+        return titleChild?.content || `Item ${index + 1}`;
+      }
+      return `${childDef?.name || childType} ${index + 1}`;
+    },
+    [childDef?.name, childType]
+  );
 
   // Early return after all hooks
   if (!hasAllowedChildren) {
@@ -81,7 +88,7 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <Label className="text-xs">{childDef?.name || 'Items'}</Label>
+        <Label className="text-xs">{childDef?.name || "Items"}</Label>
         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddChild}>
           <Plus className="w-3 h-3 mr-1" />
           Add
@@ -111,7 +118,7 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => handleMoveChild(index, 'up')}
+                  onClick={() => handleMoveChild(index, "up")}
                   disabled={index === 0}
                 >
                   <ChevronUp className="w-3 h-3" />
@@ -120,7 +127,7 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6"
-                  onClick={() => handleMoveChild(index, 'down')}
+                  onClick={() => handleMoveChild(index, "down")}
                   disabled={index === children.length - 1}
                 >
                   <ChevronDown className="w-3 h-3" />

@@ -2,13 +2,13 @@
  * Components panel showing draggable MJML components
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { LayoutGrid, FileText, MousePointerClick, Share2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { componentCategories } from '@/features/editor/lib/mjml/schema';
-import { DraggableComponent } from './DraggableComponent';
+import { memo } from "react";
+import { LayoutGrid, FileText, MousePointerClick, Share2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { componentCategories } from "@/features/editor/lib/mjml/schema";
+import { DraggableComponent } from "./DraggableComponent";
 
 // Category icons mapping
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {

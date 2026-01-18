@@ -10,7 +10,7 @@ export type {
   FontDefinition,
   HeadSettings,
   Template,
-} from './node';
+} from "./node";
 
 // Component types
 export type {
@@ -23,13 +23,7 @@ export type {
   AccordionElement,
   CarouselImage,
   SocialPlatform,
-} from './component';
+} from "./component";
 
 // UI types
-export type {
-  EditorMode,
-  PreviewMode,
-  SidebarTab,
-  DragState,
-  DragItem,
-} from './ui';
+export type { EditorMode, PreviewMode, SidebarTab, DragState, DragItem } from "./ui";

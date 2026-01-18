@@ -2,15 +2,15 @@
  * Templates panel showing available email templates
  */
 
-'use client';
+"use client";
 
-import { memo, useCallback } from 'react';
-import { FileText } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEditorStore } from '@/features/editor/stores';
-import { templates, cloneDocumentWithNewIds } from '@/features/editor/lib/mjml/templates';
-import type { EditorNode } from '@/features/editor/types';
-import { cn } from '@/lib/utils';
+import { memo, useCallback } from "react";
+import { FileText } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEditorStore } from "@/features/editor/stores";
+import { templates, cloneDocumentWithNewIds } from "@/features/editor/lib/mjml/templates";
+import type { EditorNode } from "@/features/editor/types";
+import { cn } from "@/lib/utils";
 
 export const TemplatesPanel = memo(function TemplatesPanel() {
   const loadTemplate = useEditorStore((s) => s.loadTemplate);
@@ -30,9 +30,9 @@ export const TemplatesPanel = memo(function TemplatesPanel() {
             key={template.id}
             onClick={() => handleSelectTemplate(template.document)}
             className={cn(
-              'w-full p-3 rounded-lg border border-border bg-background text-left',
-              'hover:border-primary/50 hover:bg-accent/50 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-primary/50'
+              "w-full p-3 rounded-lg border border-border bg-background text-left",
+              "hover:border-primary/50 hover:bg-accent/50 transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-primary/50"
             )}
           >
             <div className="flex items-center gap-3">

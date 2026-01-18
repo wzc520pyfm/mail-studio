@@ -24,11 +24,11 @@ export type {
   SidebarTab,
   DragState,
   DragItem,
-} from '@/features/editor/types';
+} from "@/features/editor/types";
 
 // Legacy interfaces for compatibility
 export interface EditorState {
-  document: import('@/features/editor/types').EditorNode;
+  document: import("@/features/editor/types").EditorNode;
   selectedId: string | null;
   hoveredId: string | null;
   isDragging: boolean;
@@ -37,7 +37,7 @@ export interface EditorState {
 export interface UIState {
   leftPanelWidth: number;
   rightPanelWidth: number;
-  previewMode: 'desktop' | 'mobile';
+  previewMode: "desktop" | "mobile";
   showCode: boolean;
-  activeTab: 'components' | 'templates';
+  activeTab: "components" | "templates";
 }

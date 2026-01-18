@@ -2,33 +2,29 @@
  * Main Editor component - orchestrates the entire editor UI
  */
 
-'use client';
+"use client";
 
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback } from "react";
 import {
   DndContext,
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
   pointerWithin,
-} from '@dnd-kit/core';
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable';
-import { useEditorStore, useUIStore } from '@/features/editor/stores';
-import { useKeyboardShortcuts } from '@/features/editor/hooks';
-import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
-import type { MJMLComponentType } from '@/features/editor/types';
-import { Toolbar } from './toolbar';
-import { Sidebar } from './sidebar';
-import { Canvas } from './canvas';
-import { Properties } from './properties';
+} from "@dnd-kit/core";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { useEditorStore, useUIStore } from "@/features/editor/stores";
+import { useKeyboardShortcuts } from "@/features/editor/hooks";
+import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
+import type { MJMLComponentType } from "@/features/editor/types";
+import { Toolbar } from "./toolbar";
+import { Sidebar } from "./sidebar";
+import { Canvas } from "./canvas";
+import { Properties } from "./properties";
 // Import other mode components from original location (to be migrated later)
-import { EditMode } from '@/components/editor/EditMode';
-import { Preview } from '@/components/preview/Preview';
-import { CodeEditor } from '@/components/editor/CodeEditor';
+import { EditMode } from "@/components/editor/EditMode";
+import { Preview } from "@/components/preview/Preview";
+import { CodeEditor } from "@/components/editor/CodeEditor";
 
 // Direct icon imports for better performance
 import {
@@ -48,7 +44,7 @@ import {
   Group,
   Square,
   LayoutTemplate,
-} from 'lucide-react';
+} from "lucide-react";
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -90,7 +86,7 @@ export const Editor = memo(function Editor() {
       setActiveId(active.id as string);
 
       // Check if it's a new component drag
-      if (active.data.current?.type === 'new-component') {
+      if (active.data.current?.type === "new-component") {
         setActiveType(active.data.current.componentType);
       } else {
         setActiveType(null);
@@ -123,23 +119,23 @@ export const Editor = memo(function Editor() {
       };
 
       // Calculate drop position (before or after the target element)
-      const calculateDropPosition = (): 'before' | 'after' => {
+      const calculateDropPosition = (): "before" | "after" => {
         const overRect = over.rect;
         const activeRect = active.rect.current.translated;
-        
+
         if (overRect && activeRect) {
           const activeCenter = activeRect.top + activeRect.height / 2;
           const overCenter = overRect.top + overRect.height / 2;
-          return activeCenter < overCenter ? 'before' : 'after';
+          return activeCenter < overCenter ? "before" : "after";
         }
-        return 'after';
+        return "after";
       };
 
       // Handle new component drop
-      if (activeData.type === 'new-component') {
+      if (activeData.type === "new-component") {
         const componentType = activeData.componentType as MJMLComponentType;
         const overId = over.id as string;
-        const isDropContainer = overId.startsWith('drop-') || overId.startsWith('empty-');
+        const isDropContainer = overId.startsWith("drop-") || overId.startsWith("empty-");
 
         let targetId: string;
         let targetIndex: number | undefined;
@@ -150,14 +146,14 @@ export const Editor = memo(function Editor() {
           targetId = overData.nodeId as string;
           targetIndex = overData.index as number | undefined;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
-        } else if (overData.type === 'existing-node') {
+        } else if (overData.type === "existing-node") {
           // Dropping on an existing node - add to its parent
           targetId = overData.parentId as string;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
           const overIndex = (overData.index as number) ?? 0;
           // Calculate position and adjust index accordingly
           const dropPosition = calculateDropPosition();
-          targetIndex = dropPosition === 'after' ? overIndex + 1 : overIndex;
+          targetIndex = dropPosition === "after" ? overIndex + 1 : overIndex;
         } else {
           // Fallback
           targetId = overData.nodeId as string;
@@ -173,13 +169,13 @@ export const Editor = memo(function Editor() {
         addNode(targetId, componentType, targetIndex);
       }
       // Handle existing node move
-      else if (activeData.type === 'existing-node') {
+      else if (activeData.type === "existing-node") {
         const nodeId = activeData.nodeId as string;
         const nodeType = activeData.nodeType as MJMLComponentType;
 
         // Determine the actual target parent and index
         const overId = over.id as string;
-        const isDropContainer = overId.startsWith('drop-') || overId.startsWith('empty-');
+        const isDropContainer = overId.startsWith("drop-") || overId.startsWith("empty-");
 
         let targetParentId: string;
         let targetIndex: number;
@@ -189,7 +185,7 @@ export const Editor = memo(function Editor() {
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.acceptTypes as MJMLComponentType[] | undefined;
-        } else if (overData.type === 'existing-node') {
+        } else if (overData.type === "existing-node") {
           targetParentId = overData.parentId as string;
           const overIndex = (overData.index as number) ?? 0;
           acceptTypes = overData.parentAcceptTypes as MJMLComponentType[] | undefined;
@@ -199,8 +195,7 @@ export const Editor = memo(function Editor() {
 
           // Calculate position and adjust index accordingly
           const dropPosition = calculateDropPosition();
-          targetIndex = dropPosition === 'after' ? overIndex + 1 : overIndex;
-
+          targetIndex = dropPosition === "after" ? overIndex + 1 : overIndex;
         } else {
           targetParentId = overData.nodeId as string;
           targetIndex = (overData.index as number) ?? 0;
@@ -250,7 +245,7 @@ export const Editor = memo(function Editor() {
   // Custom drop animation
   const dropAnimation = {
     duration: 200,
-    easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+    easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
   };
 
   return (
@@ -266,7 +261,7 @@ export const Editor = memo(function Editor() {
         {/* Main Content Area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Sidebar (hidden in edit mode) */}
-          {editorMode === 'canvas' && (
+          {editorMode === "canvas" && (
             <div className="w-[280px] min-w-[280px] flex-shrink-0 border-r border-border">
               <Sidebar />
             </div>
@@ -274,7 +269,7 @@ export const Editor = memo(function Editor() {
 
           {/* Center Panel - Canvas / Edit / Code / Preview */}
           <div className="flex-1 min-w-0 overflow-hidden">
-            {editorMode === 'code' && (
+            {editorMode === "code" && (
               <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <CodeEditor />
@@ -285,13 +280,13 @@ export const Editor = memo(function Editor() {
                 </ResizablePanel>
               </ResizablePanelGroup>
             )}
-            {editorMode === 'preview' && <Preview />}
-            {editorMode === 'edit' && <EditMode />}
-            {editorMode === 'canvas' && <Canvas />}
+            {editorMode === "preview" && <Preview />}
+            {editorMode === "edit" && <EditMode />}
+            {editorMode === "canvas" && <Canvas />}
           </div>
 
           {/* Right Panel - Properties (hidden in edit, code, preview mode) */}
-          {editorMode === 'canvas' && (
+          {editorMode === "canvas" && (
             <div className="w-[300px] min-w-[300px] flex-shrink-0 border-l border-border">
               <Properties />
             </div>
@@ -299,9 +294,7 @@ export const Editor = memo(function Editor() {
         </div>
       </div>
 
-      <DragOverlay dropAnimation={dropAnimation}>
-        {isDragging && renderDragOverlay()}
-      </DragOverlay>
+      <DragOverlay dropAnimation={dropAnimation}>{isDragging && renderDragOverlay()}</DragOverlay>
     </DndContext>
   );
 });

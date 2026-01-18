@@ -2,13 +2,13 @@
  * Droppable container for drag and drop
  */
 
-'use client';
+"use client";
 
-import { memo, useContext } from 'react';
-import { useDroppable } from '@dnd-kit/core';
-import type { MJMLComponentType } from '@/features/editor/types';
-import { cn } from '@/lib/utils';
-import { DragStateContext } from './DragStateContext';
+import { memo, useContext } from "react";
+import { useDroppable } from "@dnd-kit/core";
+import type { MJMLComponentType } from "@/features/editor/types";
+import { cn } from "@/lib/utils";
+import { DragStateContext } from "./DragStateContext";
 
 interface DroppableContainerProps {
   nodeId: string;
@@ -46,15 +46,15 @@ export const DroppableContainer = memo(function DroppableContainer({
     <div
       ref={setNodeRef}
       className={cn(
-        'transition-all duration-200 min-h-[20px] relative',
+        "transition-all duration-200 min-h-[20px] relative",
         // Highlight when dragging over and acceptable
-        isOver && isAcceptable && 'bg-blue-50/60 ring-2 ring-blue-400 ring-inset rounded-sm',
+        isOver && isAcceptable && "bg-blue-50/60 ring-2 ring-blue-400 ring-inset rounded-sm",
         // Show warning when not acceptable
-        isOver && !isAcceptable && 'bg-red-50/60 ring-2 ring-red-300 ring-inset rounded-sm',
+        isOver && !isAcceptable && "bg-red-50/60 ring-2 ring-red-300 ring-inset rounded-sm",
         // Subtle highlight when dragging compatible items but not over this container
-        showAcceptableHighlight && !isOver && 'bg-blue-50/20',
+        showAcceptableHighlight && !isOver && "bg-blue-50/20",
         // Dim appearance when dragging incompatible items
-        showNotAcceptableHighlight && !isOver && 'opacity-50'
+        showNotAcceptableHighlight && !isOver && "opacity-50"
       )}
     >
       {children}

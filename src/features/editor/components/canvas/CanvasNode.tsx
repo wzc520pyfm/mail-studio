@@ -2,21 +2,21 @@
  * Canvas node wrapper with selection, hover, and drag-drop support
  */
 
-'use client';
+"use client";
 
-import { memo, useContext, useCallback } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Copy, Trash2 } from 'lucide-react';
-import { useEditorStore } from '@/features/editor/stores';
-import { componentDefinitions } from '@/features/editor/lib/mjml/schema';
-import type { EditorNode, MJMLComponentType } from '@/features/editor/types';
-import { cn } from '@/lib/utils';
-import { DragStateContext } from './DragStateContext';
-import { DropIndicatorLine } from './DropIndicatorLine';
-import { SectionNode } from './SectionNode';
-import { ColumnNode } from './ColumnNode';
-import { TextNode, ImageNode, ButtonNode, DividerNode, SpacerNode, GenericNode } from './nodes';
+import { memo, useContext, useCallback } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Copy, Trash2 } from "lucide-react";
+import { useEditorStore } from "@/features/editor/stores";
+import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
+import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
+import { cn } from "@/lib/utils";
+import { DragStateContext } from "./DragStateContext";
+import { DropIndicatorLine } from "./DropIndicatorLine";
+import { SectionNode } from "./SectionNode";
+import { ColumnNode } from "./ColumnNode";
+import { TextNode, ImageNode, ButtonNode, DividerNode, SpacerNode, GenericNode } from "./nodes";
 
 interface CanvasNodeProps {
   node: EditorNode;
@@ -46,7 +46,7 @@ export const CanvasNode = memo(function CanvasNode({
     useSortable({
       id: node.id,
       data: {
-        type: 'existing-node',
+        type: "existing-node",
         nodeId: node.id,
         nodeType: node.type,
         parentId,
@@ -56,24 +56,26 @@ export const CanvasNode = memo(function CanvasNode({
     });
 
   // Calculate column-specific styles for proper flex layout
-  const isColumn = node.type === 'mj-column';
-  const explicitWidth = isColumn ? (node.props['width'] as string) : undefined;
+  const isColumn = node.type === "mj-column";
+  const explicitWidth = isColumn ? (node.props["width"] as string) : undefined;
   // If column has explicit width, use it; otherwise use flex: 1 to share space equally
-  const hasExplicitWidth = explicitWidth && explicitWidth !== '';
+  const hasExplicitWidth = explicitWidth && explicitWidth !== "";
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 200ms ease',
+    transition: transition || "transform 200ms ease",
     // Apply flex properties for columns so they properly participate in section's flex layout
-    ...(isColumn && hasExplicitWidth && {
-      flex: `0 0 ${explicitWidth}`,
-      maxWidth: explicitWidth,
-      minWidth: 0,
-    }),
-    ...(isColumn && !hasExplicitWidth && {
-      flex: '1 1 0%', // Equal share with siblings
-      minWidth: 0,
-    }),
+    ...(isColumn &&
+      hasExplicitWidth && {
+        flex: `0 0 ${explicitWidth}`,
+        maxWidth: explicitWidth,
+        minWidth: 0,
+      }),
+    ...(isColumn &&
+      !hasExplicitWidth && {
+        flex: "1 1 0%", // Equal share with siblings
+        minWidth: 0,
+      }),
   };
 
   const handleClick = useCallback(
@@ -112,19 +114,19 @@ export const CanvasNode = memo(function CanvasNode({
 
   const renderContent = () => {
     switch (node.type) {
-      case 'mj-section':
+      case "mj-section":
         return <SectionNode node={node} />;
-      case 'mj-column':
+      case "mj-column":
         return <ColumnNode node={node} />;
-      case 'mj-text':
+      case "mj-text":
         return <TextNode node={node} />;
-      case 'mj-image':
+      case "mj-image":
         return <ImageNode node={node} />;
-      case 'mj-button':
+      case "mj-button":
         return <ButtonNode node={node} />;
-      case 'mj-divider':
+      case "mj-divider":
         return <DividerNode node={node} />;
-      case 'mj-spacer':
+      case "mj-spacer":
         return <SpacerNode node={node} />;
       default:
         return <GenericNode node={node} />;
@@ -132,23 +134,22 @@ export const CanvasNode = memo(function CanvasNode({
   };
 
   // Determine if we should show drop indicators
-  const showDropBefore = isOver && dragState.overPosition === 'before';
-  const showDropAfter = isOver && dragState.overPosition === 'after';
+  const showDropBefore = isOver && dragState.overPosition === "before";
+  const showDropAfter = isOver && dragState.overPosition === "after";
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative group transition-all duration-150',
+        "relative group transition-all duration-150",
         // Selection states
-        !isDragging && isSelected && 'ring-2 ring-blue-500 ring-offset-2 rounded-sm z-51',
-        !isDragging && isHovered && !isSelected && 'ring-2 ring-blue-300/50 rounded-sm',
+        !isDragging && isSelected && "ring-2 ring-blue-500 ring-offset-2 rounded-sm z-51",
+        !isDragging && isHovered && !isSelected && "ring-2 ring-blue-300/50 rounded-sm",
         // Dragging states
-        isDragging &&
-          'opacity-40 scale-[0.98] ring-2 ring-blue-400 ring-dashed rounded-sm z-50',
+        isDragging && "opacity-40 scale-[0.98] ring-2 ring-blue-400 ring-dashed rounded-sm z-50",
         // When being dragged over
-        isOver && !isDragging && 'ring-2 ring-blue-400 ring-offset-1 bg-blue-50/30 rounded-sm'
+        isOver && !isDragging && "ring-2 ring-blue-400 ring-offset-1 bg-blue-50/30 rounded-sm"
       )}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
@@ -165,10 +166,10 @@ export const CanvasNode = memo(function CanvasNode({
             {...attributes}
             {...listeners}
             className={cn(
-              'p-1.5 rounded-md bg-blue-500 text-white shadow-md',
-              'cursor-grab active:cursor-grabbing',
-              'hover:bg-blue-600 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-blue-300'
+              "p-1.5 rounded-md bg-blue-500 text-white shadow-md",
+              "cursor-grab active:cursor-grabbing",
+              "hover:bg-blue-600 transition-colors",
+              "focus:outline-none focus:ring-2 focus:ring-blue-300"
             )}
             title="Drag to reorder"
           >
@@ -186,9 +187,9 @@ export const CanvasNode = memo(function CanvasNode({
           <button
             onClick={handleDuplicate}
             className={cn(
-              'p-1.5 rounded-md bg-white border border-gray-200 shadow-md',
-              'hover:bg-gray-50 hover:border-gray-300 transition-all',
-              'focus:outline-none focus:ring-2 focus:ring-blue-300'
+              "p-1.5 rounded-md bg-white border border-gray-200 shadow-md",
+              "hover:bg-gray-50 hover:border-gray-300 transition-all",
+              "focus:outline-none focus:ring-2 focus:ring-blue-300"
             )}
             title="Duplicate (Ctrl+D)"
           >
@@ -197,9 +198,9 @@ export const CanvasNode = memo(function CanvasNode({
           <button
             onClick={handleDelete}
             className={cn(
-              'p-1.5 rounded-md bg-white border border-gray-200 shadow-md',
-              'hover:bg-red-50 hover:border-red-300 transition-all',
-              'focus:outline-none focus:ring-2 focus:ring-red-300'
+              "p-1.5 rounded-md bg-white border border-gray-200 shadow-md",
+              "hover:bg-red-50 hover:border-red-300 transition-all",
+              "focus:outline-none focus:ring-2 focus:ring-red-300"
             )}
             title="Delete (Del)"
           >
@@ -209,7 +210,7 @@ export const CanvasNode = memo(function CanvasNode({
       )}
 
       {/* Content */}
-      <div className={cn(isDragging && 'pointer-events-none')}>{renderContent()}</div>
+      <div className={cn(isDragging && "pointer-events-none")}>{renderContent()}</div>
 
       {/* Drop indicator - after */}
       {showDropAfter && <DropIndicatorLine position="after" />}

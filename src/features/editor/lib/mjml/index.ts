@@ -13,7 +13,7 @@ export {
   getComponentDefinition,
   predefinedSocialPlatforms,
   defaultSocialElements,
-} from './schema';
+} from "./schema";
 
 // Compiler
 export {
@@ -22,7 +22,7 @@ export {
   compileMjml,
   compileDocument,
   parseMjmlToNode,
-} from './compiler';
+} from "./compiler";
 
 // Templates
-export { templates, emptyDocument, cloneDocumentWithNewIds } from './templates';
+export { templates, emptyDocument, cloneDocumentWithNewIds } from "./templates";

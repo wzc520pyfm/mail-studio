@@ -5,10 +5,7 @@
 "use client";
 
 import { memo, useContext } from "react";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDndContext } from "@dnd-kit/core";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { DroppableContainer } from "./DroppableContainer";
@@ -20,11 +17,7 @@ interface CanvasBodyProps {
   node: EditorNode;
 }
 
-const bodyAcceptTypes: MJMLComponentType[] = [
-  "mj-section",
-  "mj-wrapper",
-  "mj-hero",
-];
+const bodyAcceptTypes: MJMLComponentType[] = ["mj-section", "mj-wrapper", "mj-hero"];
 
 export const CanvasBody = memo(function CanvasBody({ node }: CanvasBodyProps) {
   const bgColor = (node.props["background-color"] as string) || "#f4f4f4";
@@ -63,9 +56,7 @@ export const CanvasBody = memo(function CanvasBody({ node }: CanvasBodyProps) {
         {showDropZone && (
           <EmptyDropZone
             nodeId={node.id}
-            message={
-              hasChildren ? "Drop here to add" : "Drop a Section here to start"
-            }
+            message={hasChildren ? "Drop here to add" : "Drop a Section here to start"}
             acceptTypes={bodyAcceptTypes}
             small={hasChildren}
             index={node.children?.length ?? 0}

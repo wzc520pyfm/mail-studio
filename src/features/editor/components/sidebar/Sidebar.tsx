@@ -2,14 +2,14 @@
  * Sidebar component with tabs for components and templates
  */
 
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUIStore } from '@/features/editor/stores';
-import type { SidebarTab } from '@/features/editor/types';
-import { ComponentsPanel } from './ComponentsPanel';
-import { TemplatesPanel } from './TemplatesPanel';
+import { memo } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUIStore } from "@/features/editor/stores";
+import type { SidebarTab } from "@/features/editor/types";
+import { ComponentsPanel } from "./ComponentsPanel";
+import { TemplatesPanel } from "./TemplatesPanel";
 
 export const Sidebar = memo(function Sidebar() {
   const activeTab = useUIStore((s) => s.activeTab);

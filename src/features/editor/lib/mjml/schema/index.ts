@@ -8,12 +8,12 @@ import type {
   DefaultChildNode,
   ComponentDefinition,
   ComponentCategoryGroup,
-} from '@/features/editor/types';
+} from "@/features/editor/types";
 
-import { layoutComponents } from './layout';
-import { contentComponents } from './content';
-import { interactiveComponents } from './interactive';
-import { socialComponents, predefinedSocialPlatforms, defaultSocialElements } from './social';
+import { layoutComponents } from "./layout";
+import { contentComponents } from "./content";
+import { interactiveComponents } from "./interactive";
+import { socialComponents, predefinedSocialPlatforms, defaultSocialElements } from "./social";
 
 // Re-export social utilities
 export { predefinedSocialPlatforms, defaultSocialElements };
@@ -29,24 +29,24 @@ export const componentDefinitions: Record<MJMLComponentType, ComponentDefinition
 // Get component categories for sidebar
 export const componentCategories: ComponentCategoryGroup[] = [
   {
-    id: 'layout',
-    name: 'Layout',
-    components: ['mj-section', 'mj-column', 'mj-group', 'mj-wrapper', 'mj-hero'],
+    id: "layout",
+    name: "Layout",
+    components: ["mj-section", "mj-column", "mj-group", "mj-wrapper", "mj-hero"],
   },
   {
-    id: 'content',
-    name: 'Content',
-    components: ['mj-text', 'mj-image', 'mj-table', 'mj-divider', 'mj-spacer', 'mj-raw'],
+    id: "content",
+    name: "Content",
+    components: ["mj-text", "mj-image", "mj-table", "mj-divider", "mj-spacer", "mj-raw"],
   },
   {
-    id: 'interactive',
-    name: 'Interactive',
-    components: ['mj-button', 'mj-navbar', 'mj-accordion', 'mj-carousel'],
+    id: "interactive",
+    name: "Interactive",
+    components: ["mj-button", "mj-navbar", "mj-accordion", "mj-carousel"],
   },
   {
-    id: 'social',
-    name: 'Social',
-    components: ['mj-social'],
+    id: "social",
+    name: "Social",
+    components: ["mj-social"],
   },
 ];
 
