@@ -21,7 +21,8 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { useEditorStore, useUIStore } from "@/features/editor/stores";
+import { Button } from "@/components/ui/button";
+import { useEditorStore, useUIStore, useSelectedNode } from "@/features/editor/stores";
 import { useKeyboardShortcuts } from "@/features/editor/hooks";
 import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 import type { MJMLComponentType } from "@/features/editor/types";
@@ -51,6 +52,8 @@ import {
   Group,
   Square,
   LayoutTemplate,
+  PanelLeft,
+  Settings2,
 } from "lucide-react";
 
 // Icon mapping
@@ -121,6 +124,11 @@ export const Editor = memo(function Editor() {
   const setIsDragging = useUIStore((s) => s.setIsDragging);
   const setIsDraggingNewComponent = useUIStore((s) => s.setIsDraggingNewComponent);
   const isDragging = useUIStore((s) => s.isDragging);
+  const isSidebarOpen = useUIStore((s) => s.isSidebarOpen);
+  const isPropertiesOpen = useUIStore((s) => s.isPropertiesOpen);
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen);
+  const setPropertiesOpen = useUIStore((s) => s.setPropertiesOpen);
+  const selectedNode = useSelectedNode();
 
   const [, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<MJMLComponentType | null>(null);
@@ -152,11 +160,13 @@ export const Editor = memo(function Editor() {
 
       if (isNewComponent && active.data.current) {
         setActiveType(active.data.current.componentType);
+        // Auto-close sidebar when dragging a new component (for mobile UX)
+        setSidebarOpen(false);
       } else {
         setActiveType(null);
       }
     },
-    [setIsDragging, setIsDraggingNewComponent]
+    [setIsDragging, setIsDraggingNewComponent, setSidebarOpen]
   );
 
   // Track the last over id (used for reference but no longer for real-time reordering)
@@ -321,18 +331,62 @@ export const Editor = memo(function Editor() {
         <Toolbar />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel - Sidebar (hidden in edit mode) */}
+        <div className="flex-1 flex overflow-hidden relative">
+          {/* Left Panel - Sidebar with responsive behavior */}
           {editorMode === "canvas" && (
-            <div className="w-[280px] min-w-[280px] flex-shrink-0 border-r border-border">
-              <Sidebar />
-            </div>
+            <>
+              {/* Mobile Sidebar Backdrop */}
+              <div
+                className={`lg:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+                  isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              />
+
+              {/* Desktop Sidebar - static position */}
+              <div className="hidden lg:block w-[280px] min-w-[280px] flex-shrink-0 border-r border-border bg-background">
+                <Sidebar idPrefix="desktop-" />
+              </div>
+
+              {/* Mobile Sidebar - slide-in panel */}
+              <div
+                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[300px] sm:w-[340px] bg-background border-r border-border transform transition-transform duration-300 ease-in-out ${
+                  isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 z-10 h-8 w-8"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className="sr-only">关闭</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </Button>
+                <div className="h-full overflow-hidden">
+                  <Sidebar idPrefix="mobile-" />
+                </div>
+              </div>
+            </>
           )}
 
           {/* Center Panel - Canvas / Edit / Code / Preview */}
           <div className="flex-1 min-w-0 overflow-hidden">
             {editorMode === "code" && (
-              <ResizablePanelGroup direction="horizontal">
+              <ResizablePanelGroup direction="horizontal" className="hidden md:flex">
                 <ResizablePanel defaultSize={50} minSize={30}>
                   <CodeEditor />
                 </ResizablePanel>
@@ -342,15 +396,90 @@ export const Editor = memo(function Editor() {
                 </ResizablePanel>
               </ResizablePanelGroup>
             )}
+            {/* Mobile code mode - stacked layout */}
+            {editorMode === "code" && (
+              <div className="flex flex-col h-full md:hidden">
+                <div className="flex-1 min-h-0">
+                  <CodeEditor />
+                </div>
+              </div>
+            )}
             {editorMode === "preview" && <Preview />}
             {editorMode === "edit" && <EditMode />}
             {editorMode === "canvas" && <Canvas />}
           </div>
 
-          {/* Right Panel - Properties (hidden in edit, code, preview mode) */}
+          {/* Right Panel - Properties with responsive behavior */}
           {editorMode === "canvas" && (
-            <div className="w-[300px] min-w-[300px] flex-shrink-0 border-l border-border">
-              <Properties />
+            <>
+              {/* Mobile Properties Backdrop */}
+              <div
+                className={`lg:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+                  isPropertiesOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() => setPropertiesOpen(false)}
+              />
+
+              {/* Desktop Properties - static position */}
+              <div className="hidden lg:block w-[300px] min-w-[300px] flex-shrink-0 border-l border-border bg-background">
+                <Properties />
+              </div>
+
+              {/* Mobile Properties - slide-in panel */}
+              <div
+                className={`lg:hidden fixed inset-y-0 right-0 z-50 w-[300px] sm:w-[360px] bg-background border-l border-border transform transition-transform duration-300 ease-in-out ${
+                  isPropertiesOpen ? "translate-x-0" : "translate-x-full"
+                }`}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 z-10 h-8 w-8"
+                  onClick={() => setPropertiesOpen(false)}
+                >
+                  <span className="sr-only">关闭</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </Button>
+                <Properties />
+              </div>
+            </>
+          )}
+
+          {/* Mobile Floating Action Buttons */}
+          {editorMode === "canvas" && !isSidebarOpen && !isPropertiesOpen && (
+            <div className="lg:hidden fixed bottom-4 left-4 right-4 flex justify-between z-30 pointer-events-none">
+              <Button
+                variant="default"
+                size="icon"
+                className="h-12 w-12 rounded-full shadow-lg pointer-events-auto"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <PanelLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="default"
+                size="icon"
+                className="h-12 w-12 rounded-full shadow-lg pointer-events-auto"
+                onClick={() => setPropertiesOpen(true)}
+              >
+                <Settings2 className="w-5 h-5" />
+                {selectedNode && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background" />
+                )}
+              </Button>
             </div>
           )}
         </div>

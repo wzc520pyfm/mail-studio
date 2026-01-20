@@ -18,7 +18,13 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
   social: Share2,
 };
 
-export const ComponentsPanel = memo(function ComponentsPanel() {
+interface ComponentsPanelProps {
+  idPrefix?: string;
+}
+
+export const ComponentsPanel = memo(function ComponentsPanel({
+  idPrefix = "",
+}: ComponentsPanelProps) {
   return (
     <ScrollArea className="h-full">
       <div className="p-3 space-y-4">
@@ -32,7 +38,7 @@ export const ComponentsPanel = memo(function ComponentsPanel() {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {category.components.map((type) => (
-                  <DraggableComponent key={type} type={type} />
+                  <DraggableComponent key={type} type={type} idPrefix={idPrefix} />
                 ))}
               </div>
             </div>

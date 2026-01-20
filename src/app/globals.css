@@ -176,3 +176,30 @@
   pointer-events: none;
   z-index: 1000;
 }
+
+/* Mobile optimizations */
+@media (max-width: 1023px) {
+  /* Prevent body scroll when sheet is open */
+  body:has([data-state="open"][data-slot="sheet-content"]) {
+    overflow: hidden;
+  }
+
+  /* Make touch targets larger on mobile */
+  .canvas-element {
+    min-height: 44px;
+  }
+}
+
+/* Smooth transitions for panels */
+@media (prefers-reduced-motion: no-preference) {
+  .panel-transition {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Safe area insets for mobile devices with notches */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

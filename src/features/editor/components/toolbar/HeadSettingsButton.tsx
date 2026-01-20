@@ -44,7 +44,7 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
       <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-7 w-7">
               <Settings className="w-4 h-4" />
             </Button>
           </DialogTrigger>

@@ -284,9 +284,9 @@ export function SendEmailDialog() {
       <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
-            <Button variant="default" size="sm" className="h-8">
-              <Send className="w-4 h-4 mr-2" />
-              Send
+            <Button variant="default" size="sm" className="h-7 md:h-8 !px-1.5 md:!px-3 border-0">
+              <Send className="w-4 h-4 md:mr-1.5" />
+              <span className="hidden md:inline text-xs">Send</span>
             </Button>
           </DialogTrigger>
         </TooltipTrigger>

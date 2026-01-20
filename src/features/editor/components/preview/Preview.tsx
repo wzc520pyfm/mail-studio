@@ -36,14 +36,14 @@ export function Preview() {
 
       {/* Preview Frame */}
       <div className="flex-1 overflow-auto">
-        <div className="min-h-full flex items-start justify-center p-8">
+        <div className="min-h-full flex items-start justify-center p-4 sm:p-6 lg:p-8">
           <div
             className={cn(
-              "bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300",
-              previewMode === "mobile" && "border-8 border-gray-800 rounded-[2rem]"
+              "bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-300 w-full",
+              previewMode === "mobile" && "border-8 border-gray-800 rounded-[2rem] w-auto"
             )}
             style={{
-              width: frameWidth,
+              width: previewMode === "mobile" ? frameWidth : "100%",
               maxWidth: frameMaxWidth,
             }}
           >

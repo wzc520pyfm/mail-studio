@@ -11,7 +11,11 @@ import type { SidebarTab } from "@/features/editor/types";
 import { ComponentsPanel } from "./ComponentsPanel";
 import { TemplatesPanel } from "./TemplatesPanel";
 
-export const Sidebar = memo(function Sidebar() {
+interface SidebarProps {
+  idPrefix?: string;
+}
+
+export const Sidebar = memo(function Sidebar({ idPrefix = "" }: SidebarProps) {
   const activeTab = useUIStore((s) => s.activeTab);
   const setActiveTab = useUIStore((s) => s.setActiveTab);
 
@@ -34,7 +38,7 @@ export const Sidebar = memo(function Sidebar() {
         </div>
 
         <TabsContent value="components" className="flex-1 mt-0 overflow-hidden">
-          <ComponentsPanel />
+          <ComponentsPanel idPrefix={idPrefix} />
         </TabsContent>
 
         <TabsContent value="templates" className="flex-1 mt-0 overflow-hidden">

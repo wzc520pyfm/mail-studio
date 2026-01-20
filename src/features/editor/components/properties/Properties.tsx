@@ -24,7 +24,7 @@ export const Properties = memo(function Properties() {
   if (!selectedNode) {
     return (
       <div className="h-full bg-muted/30 flex flex-col">
-        <div className="p-4 border-b border-border">
+        <div className="p-4 pr-12 lg:pr-4 border-b border-border">
           <h2 className="font-semibold">Properties</h2>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
@@ -45,7 +45,7 @@ export const Properties = memo(function Properties() {
 
   return (
     <div className="h-full bg-muted/30 flex flex-col overflow-y-hidden">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 pr-10 lg:pr-4 border-b border-border">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold truncate">{def?.name || selectedNode.type}</h2>
@@ -54,7 +54,7 @@ export const Properties = memo(function Properties() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="h-8 w-8 mt-[-28px] flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4" />

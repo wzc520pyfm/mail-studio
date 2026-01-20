@@ -150,14 +150,14 @@ export const Toolbar = memo(function Toolbar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="h-14 border-b border-border bg-background px-4 flex items-center justify-between">
+      <div className="h-12 md:h-14 border-b border-border bg-background px-2 md:px-4 flex items-center justify-between gap-1 md:gap-2">
         {/* Left Section - Logo */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+        <div className="flex items-center gap-1.5 md:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 md:w-7 md:h-7 rounded-md bg-foreground flex items-center justify-center">
               <svg
                 viewBox="0 0 20 20"
-                className="w-4 h-4"
+                className="w-3.5 h-3.5 md:w-4 md:h-4"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -170,22 +170,22 @@ export const Toolbar = memo(function Toolbar() {
                 />
               </svg>
             </div>
-            <span className="font-semibold text-lg">Mail Studio</span>
+            <span className="font-semibold text-base md:text-lg hidden md:inline">Mail Studio</span>
           </div>
         </div>
 
         {/* Center Section - View Controls */}
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 flex-shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={editorMode === "canvas" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 px-3"
+                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
                 onClick={() => setEditorMode("canvas")}
               >
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Canvas
+                <LayoutGrid className="w-4 h-4 md:mr-1.5" />
+                <span className="hidden md:inline text-xs">Canvas</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Visual block editor</TooltipContent>
@@ -196,11 +196,11 @@ export const Toolbar = memo(function Toolbar() {
               <Button
                 variant={editorMode === "edit" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 px-3"
+                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
                 onClick={() => setEditorMode("edit")}
               >
-                <PenLine className="w-4 h-4 mr-2" />
-                Edit
+                <PenLine className="w-4 h-4 md:mr-1.5" />
+                <span className="hidden md:inline text-xs">Edit</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Text editing mode</TooltipContent>
@@ -211,11 +211,11 @@ export const Toolbar = memo(function Toolbar() {
               <Button
                 variant={editorMode === "preview" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 px-3"
+                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
                 onClick={() => setEditorMode("preview")}
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+                <Eye className="w-4 h-4 md:mr-1.5" />
+                <span className="hidden md:inline text-xs">Preview</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Preview rendered email</TooltipContent>
@@ -226,11 +226,11 @@ export const Toolbar = memo(function Toolbar() {
               <Button
                 variant={editorMode === "code" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 px-3"
+                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
                 onClick={() => setEditorMode("code")}
               >
-                <Code2 className="w-4 h-4 mr-2" />
-                Code
+                <Code2 className="w-4 h-4 md:mr-1.5" />
+                <span className="hidden md:inline text-xs">Code</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>MJML source code</TooltipContent>
@@ -238,51 +238,48 @@ export const Toolbar = memo(function Toolbar() {
         </div>
 
         {/* Right Section - Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5 md:gap-1.5 flex-shrink-0">
           {/* Device Toggle (only in preview) */}
           {editorMode === "preview" && (
-            <>
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={previewMode === "desktop" ? "secondary" : "ghost"}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPreviewMode("desktop")}
-                    >
-                      <Monitor className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Desktop View</TooltipContent>
-                </Tooltip>
+            <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={previewMode === "desktop" ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setPreviewMode("desktop")}
+                  >
+                    <Monitor className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Desktop View</TooltipContent>
+              </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={previewMode === "mobile" ? "secondary" : "ghost"}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPreviewMode("mobile")}
-                    >
-                      <Smartphone className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Mobile View</TooltipContent>
-                </Tooltip>
-              </div>
-              <Separator orientation="vertical" className="h-6" />
-            </>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={previewMode === "mobile" ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setPreviewMode("mobile")}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Mobile View</TooltipContent>
+              </Tooltip>
+            </div>
           )}
 
-          {/* Undo/Redo */}
-          <div className="flex items-center gap-1">
+          {/* Undo/Redo - Always visible */}
+          <div className="flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-7 w-7"
                   onClick={handleUndo}
                   disabled={!canUndo}
                 >
@@ -297,7 +294,7 @@ export const Toolbar = memo(function Toolbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-7 w-7"
                   onClick={handleRedo}
                   disabled={!canRedo}
                 >
@@ -308,29 +305,39 @@ export const Toolbar = memo(function Toolbar() {
             </Tooltip>
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
-
           {/* Head Settings */}
           <HeadSettingsButton />
 
-          {/* Send Email */}
+          {/* Send Email - Always visible */}
           <SendEmailDialog />
 
-          {/* File Menu - Import & Export */}
+          {/* More Menu for mobile - contains import/export options */}
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <FolderOpen className="w-4 h-4 mr-2" />
-                    File
+                  <Button variant="outline" size="icon" className="h-7 w-7 md:hidden">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="19" r="1" />
+                    </svg>
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Import & Export</TooltipContent>
+              <TooltipContent>More options</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className="w-52">
-              {/* Import Section */}
               <DropdownMenuLabel className="text-xs text-muted-foreground">
                 <Upload className="w-3 h-3 inline mr-1.5" />
                 Import
@@ -350,7 +357,62 @@ export const Toolbar = memo(function Toolbar() {
 
               <DropdownMenuSeparator />
 
-              {/* Export Section */}
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                <Download className="w-3 h-3 inline mr-1.5" />
+                Export
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleCopyMjml}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy MJML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopyHtml}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy HTML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportMjml}>
+                <FileJson className="w-4 h-4 mr-2" />
+                Download MJML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportHtml}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Download HTML
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* File Menu - Tablet and Desktop */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="hidden md:flex h-8 px-3">
+                    <FolderOpen className="w-4 h-4 mr-1.5" />
+                    <span className="text-xs">File</span>
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Import & Export</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                <Upload className="w-3 h-3 inline mr-1.5" />
+                Import
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleImportMjml}>
+                <FileJson className="w-4 h-4 mr-2" />
+                Import MJML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleImportHtml}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Import HTML
+                <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Beta
+                </span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
               <DropdownMenuLabel className="text-xs text-muted-foreground">
                 <Download className="w-3 h-3 inline mr-1.5" />
                 Export

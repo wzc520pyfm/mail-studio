@@ -21,13 +21,13 @@ export const Canvas = memo(function Canvas() {
 
       {/* Canvas Area */}
       <div className="flex-1 overflow-auto">
-        <div className="min-h-full flex items-start justify-center p-8">
+        <div className="min-h-full flex items-start justify-center p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           <div
             className={cn(
-              "bg-white shadow-lg rounded-lg transition-shadow duration-200",
+              "bg-white shadow-lg rounded-lg transition-shadow duration-200 w-full max-w-[600px]",
               isDragging && "shadow-xl ring-2 ring-blue-100"
             )}
-            style={{ width: "600px", minHeight: "400px" }}
+            style={{ minHeight: "400px" }}
           >
             <CanvasBody node={document} />
           </div>
@@ -36,7 +36,7 @@ export const Canvas = memo(function Canvas() {
 
       {/* Drag hint */}
       {isDragging && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-900 text-white text-sm rounded-full shadow-lg z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-20 lg:bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-900 text-white text-sm rounded-full shadow-lg z-50 pointer-events-none animate-in fade-in slide-in-from-bottom-2">
           Release to drop the component
         </div>
       )}

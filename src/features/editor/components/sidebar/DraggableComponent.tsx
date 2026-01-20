@@ -50,16 +50,18 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 interface DraggableComponentProps {
   type: MJMLComponentType;
+  idPrefix?: string;
 }
 
 export const DraggableComponent = memo(function DraggableComponent({
   type,
+  idPrefix = "",
 }: DraggableComponentProps) {
   const def = componentDefinitions[type];
   const IconComponent = iconMap[def.icon];
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `new-${type}`,
+    id: `${idPrefix}new-${type}`,
     data: {
       type: "new-component",
       componentType: type,
