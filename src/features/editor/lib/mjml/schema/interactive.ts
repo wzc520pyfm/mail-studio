@@ -20,13 +20,14 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: false,
     defaultProps: {
       href: "#",
-      "background-color": "#2563eb",
+      "background-color": "#000000",
       color: "#ffffff",
       "font-size": "16px",
+      "font-weight": "500",
       padding: "15px 30px",
-      "border-radius": "6px",
+      "border-radius": "50px",
     },
-    defaultContent: "Click me",
+    defaultContent: "Click me →",
     propsSchema: [
       { key: "href", label: "Link URL", type: "url", placeholder: "https://example.com" },
       {
@@ -38,7 +39,7 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
           { value: "_blank", label: "New Window" },
         ],
       },
-      { key: "background-color", label: "Background", type: "color", defaultValue: "#2563eb" },
+      { key: "background-color", label: "Background", type: "color", defaultValue: "#000000" },
       { key: "color", label: "Text Color", type: "color", defaultValue: "#ffffff" },
       { key: "font-size", label: "Font Size", type: "size", defaultValue: "16px" },
       {
@@ -52,7 +53,7 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
       },
       { key: "font-family", label: "Font Family", type: "select", options: fontFamilyOptions },
       { key: "border", label: "Border", type: "text", placeholder: "1px solid #000" },
-      { key: "border-radius", label: "Border Radius", type: "size", defaultValue: "6px" },
+      { key: "border-radius", label: "Border Radius", type: "size", defaultValue: "50px" },
       { key: "inner-padding", label: "Inner Padding", type: "size", defaultValue: "15px 30px" },
       { key: "padding", label: "Outer Padding", type: "size" },
       { key: "align", label: "Alignment", type: "alignment" },
