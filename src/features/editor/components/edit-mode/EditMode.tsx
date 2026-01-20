@@ -82,7 +82,7 @@ export function EditMode() {
     const newSection: EditorNode = {
       id: generateId(),
       type: "mj-section",
-      props: { padding: "20px 0" },
+      props: { padding: "20px 0", "background-color": "#ffffff" },
       children: columns,
     };
 
