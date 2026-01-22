@@ -111,11 +111,76 @@ function cloneNodeWithNewIds(node: EditorNode): EditorNode {
   };
 }
 
+// Remove locked status from a node and all its children (for duplicating)
+function removeLockFromNode(node: EditorNode): void {
+  delete node.locked;
+  if (node.children) {
+    node.children.forEach(removeLockFromNode);
+  }
+}
+
 // Check if target is descendant of parent
 function isDescendant(parent: EditorNode, targetId: string): boolean {
   if (parent.id === targetId) return true;
   if (!parent.children) return false;
   return parent.children.some((child) => isDescendant(child, targetId));
+}
+
+// Check if a node is locked (directly or via ancestors)
+function isNodeLocked(root: EditorNode, nodeId: string): boolean {
+  const node = findNodeInTree(root, nodeId);
+  if (!node) return false;
+  if (node.locked) return true;
+
+  // Check if any ancestor is locked
+  const checkAncestors = (current: EditorNode, targetId: string): boolean => {
+    if (current.locked) return true;
+    if (!current.children) return false;
+
+    for (const child of current.children) {
+      if (child.id === targetId) {
+        return current.locked ?? false;
+      }
+      if (hasDescendant(child, targetId)) {
+        return child.locked || checkAncestors(child, targetId);
+      }
+    }
+    return false;
+  };
+
+  return checkAncestors(root, nodeId);
+}
+
+// Check if node has descendant with given id
+function hasDescendant(node: EditorNode, targetId: string): boolean {
+  if (node.id === targetId) return true;
+  if (!node.children) return false;
+  return node.children.some((child) => hasDescendant(child, targetId));
+}
+
+// Check if a node or any of its ancestors is locked
+function isNodeOrAncestorLocked(root: EditorNode, nodeId: string): boolean {
+  // First check if the node itself is locked
+  const node = findNodeInTree(root, nodeId);
+  if (node?.locked) return true;
+
+  // Then check ancestors by traversing from root
+  const checkPath = (current: EditorNode, targetId: string): boolean => {
+    if (current.id === targetId) return current.locked ?? false;
+    if (current.locked) return true;
+
+    if (current.children) {
+      for (const child of current.children) {
+        if (child.id === targetId || hasDescendant(child, targetId)) {
+          if (current.locked) return true;
+          return checkPath(child, targetId);
+        }
+      }
+    }
+    return false;
+  };
+
+  return checkPath(root, nodeId);
 }
 
 // ============ Store Creation ============
@@ -148,6 +213,9 @@ export const useEditorStore = create<EditorStore>()(
       // Node operations
       addNode: (parentId, type, index) =>
         set((state) => {
+          // Check if parent is locked
+          if (isNodeOrAncestorLocked(state.document, parentId)) return;
+
           const parent = findNodeInTree(state.document, parentId);
           if (!parent) return;
 
@@ -182,6 +250,9 @@ export const useEditorStore = create<EditorStore>()(
 
       addChildNode: (parentId, node, index) =>
         set((state) => {
+          // Check if parent is locked
+          if (isNodeOrAncestorLocked(state.document, parentId)) return;
+
           const parent = findNodeInTree(state.document, parentId);
           if (!parent) return;
 
@@ -209,8 +280,14 @@ export const useEditorStore = create<EditorStore>()(
 
       removeNode: (nodeId) =>
         set((state) => {
+          // Check if node or its ancestors are locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+
           const parentInfo = findParentInTree(state.document, nodeId);
           if (!parentInfo) return;
+
+          // Also check if parent is locked
+          if (parentInfo.parent.locked) return;
 
           parentInfo.parent.children?.splice(parentInfo.index, 1);
 
@@ -221,6 +298,9 @@ export const useEditorStore = create<EditorStore>()(
 
       updateNodeProps: (nodeId, props) =>
         set((state) => {
+          // Check if node or its ancestors are locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+
           const node = findNodeInTree(state.document, nodeId);
           if (!node) return;
 
@@ -235,6 +315,9 @@ export const useEditorStore = create<EditorStore>()(
 
       updateNodeContent: (nodeId, content) =>
         set((state) => {
+          // Check if node or its ancestors are locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+
           const node = findNodeInTree(state.document, nodeId);
           if (!node) return;
           node.content = content;
@@ -242,6 +325,9 @@ export const useEditorStore = create<EditorStore>()(
 
       updateNodeChildren: (nodeId, children) =>
         set((state) => {
+          // Check if node or its ancestors are locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+
           const node = findNodeInTree(state.document, nodeId);
           if (!node) return;
 
@@ -257,9 +343,16 @@ export const useEditorStore = create<EditorStore>()(
           // Don't move if trying to move to itself
           if (nodeId === newParentId) return;
 
+          // Check if node, current parent, or new parent is locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+          if (isNodeOrAncestorLocked(state.document, newParentId)) return;
+
           // Find and validate current parent
           const currentParentInfo = findParentInTree(state.document, nodeId);
           if (!currentParentInfo) return;
+
+          // Check if current parent is locked
+          if (currentParentInfo.parent.locked) return;
 
           // Find and validate new parent BEFORE removing from current position
           const newParent = findNodeInTree(state.document, newParentId);
@@ -307,6 +400,10 @@ export const useEditorStore = create<EditorStore>()(
           // Don't reorder if same element
           if (nodeId === targetNodeId) return;
 
+          // Check if node or target is locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+          if (isNodeOrAncestorLocked(state.document, targetNodeId)) return;
+
           // Find both nodes' parent info
           const sourceInfo = findParentInTree(state.document, nodeId);
           const targetInfo = findParentInTree(state.document, targetNodeId);
@@ -315,6 +412,9 @@ export const useEditorStore = create<EditorStore>()(
 
           // Only allow reordering within the same parent
           if (sourceInfo.parent.id !== targetInfo.parent.id) return;
+
+          // Check if parent is locked
+          if (sourceInfo.parent.locked) return;
 
           const parent = sourceInfo.parent;
           const sourceIndex = sourceInfo.index;
@@ -330,11 +430,19 @@ export const useEditorStore = create<EditorStore>()(
 
       duplicateNode: (nodeId) =>
         set((state) => {
+          // Check if node or its ancestors are locked
+          if (isNodeOrAncestorLocked(state.document, nodeId)) return;
+
           const parentInfo = findParentInTree(state.document, nodeId);
           if (!parentInfo) return;
 
+          // Check if parent is locked
+          if (parentInfo.parent.locked) return;
+
           const node = parentInfo.parent.children![parentInfo.index];
           const clonedNode = cloneNodeWithNewIds(node);
+          // Remove locked status from cloned node and its children
+          removeLockFromNode(clonedNode);
 
           parentInfo.parent.children!.splice(parentInfo.index + 1, 0, clonedNode);
           state.selectedId = clonedNode.id;
@@ -455,3 +563,19 @@ export function useUndoRedo() {
     canRedo: futureStates.length > 0,
   };
 }
+
+// Check if a node is locked (directly or via ancestors)
+export function useIsNodeLocked(nodeId: string): boolean {
+  const document = useEditorStore(selectDocument);
+  return isNodeOrAncestorLocked(document, nodeId);
+}
+
+// Check if a node has lock attribute directly (not inherited)
+export function useIsNodeDirectlyLocked(nodeId: string): boolean {
+  const findNode = useEditorStore((s) => s.findNode);
+  const node = findNode(nodeId);
+  return node?.locked ?? false;
+}
+
+// Export helper for external use
+export { isNodeOrAncestorLocked };

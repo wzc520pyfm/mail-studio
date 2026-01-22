@@ -29,17 +29,23 @@ function escapeHtml(text: string): string {
 // Convert EditorNode tree to MJML string
 export function nodeToMjml(node: EditorNode, indent = 0): string {
   const spaces = "  ".repeat(indent);
-  const { type, props, children, content } = node;
+  const { type, props, children, content, locked } = node;
 
   // Get component definition to check if it can have children
   const componentDef = componentDefinitions[type];
   const canHaveChildren = componentDef?.canHaveChildren ?? false;
 
-  // Build attributes string
-  const attrs = Object.entries(props)
+  // Build attributes string (including locked attribute if present)
+  const attrEntries = Object.entries(props)
     .filter(([, value]) => value !== undefined && value !== "")
-    .map(([key, value]) => `${key}="${escapeAttr(String(value))}"`)
-    .join(" ");
+    .map(([key, value]) => `${key}="${escapeAttr(String(value))}"`);
+
+  // Add data-locked attribute for locked nodes
+  if (locked) {
+    attrEntries.push('data-locked="true"');
+  }
+
+  const attrs = attrEntries.join(" ");
 
   const openTag = attrs ? `<${type} ${attrs}>` : `<${type}>`;
   const closeTag = `</${type}>`;
@@ -134,10 +140,18 @@ ${bodyContent}
 </mjml>`;
 }
 
+// Remove data-locked attributes from MJML string before compilation
+function removeLockedAttributes(mjmlString: string): string {
+  // Remove data-locked="true" attribute from MJML tags
+  return mjmlString.replace(/\s+data-locked="true"/g, "");
+}
+
 // Compile MJML to HTML
 export function compileMjml(mjmlString: string): { html: string; errors: string[] } {
   try {
-    const result = mjml2html(mjmlString, {
+    // Remove data-locked attributes before compilation to avoid MJML validation errors
+    const cleanMjml = removeLockedAttributes(mjmlString);
+    const result = mjml2html(cleanMjml, {
       validationLevel: "soft",
       minify: false,
     });
@@ -262,10 +276,16 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
 function parseElement(element: Element): EditorNode {
   const type = element.tagName.toLowerCase() as EditorNode["type"];
   const props: Record<string, string> = {};
+  let locked = false;
 
   // Extract attributes
   for (const attr of Array.from(element.attributes)) {
-    props[attr.name] = attr.value;
+    // Handle data-locked attribute specially
+    if (attr.name === "data-locked" && attr.value === "true") {
+      locked = true;
+    } else {
+      props[attr.name] = attr.value;
+    }
   }
 
   // Get component definition to check if it can have children
@@ -318,6 +338,7 @@ function parseElement(element: Element): EditorNode {
     props,
     content,
     children,
+    ...(locked && { locked: true }),
   };
 }
 

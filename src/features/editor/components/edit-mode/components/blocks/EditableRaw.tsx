@@ -8,9 +8,10 @@ import { Code } from "lucide-react";
 
 interface EditableRawProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export function EditableRaw({ node }: EditableRawProps) {
+export function EditableRaw({ node, isLocked = false }: EditableRawProps) {
   const { updateNodeContent, selectedId } = useEditorStore();
   const isSelected = selectedId === node.id;
   const [isEditing, setIsEditing] = useState(false);
@@ -60,10 +61,15 @@ export function EditableRaw({ node }: EditableRawProps) {
     <div className="py-2">
       <div
         className={cn(
-          "border rounded-lg overflow-hidden cursor-pointer transition-all",
-          isSelected ? "ring-2 ring-blue-200" : "hover:border-gray-300"
+          "border rounded-lg overflow-hidden transition-all",
+          isLocked ? "cursor-not-allowed" : "cursor-pointer",
+          isSelected
+            ? isLocked
+              ? "ring-2 ring-amber-200"
+              : "ring-2 ring-blue-200"
+            : "hover:border-gray-300"
         )}
-        onClick={() => setIsEditing(true)}
+        onClick={isLocked ? undefined : () => setIsEditing(true)}
       >
         <div className="bg-gray-800 px-3 py-2">
           <span className="text-xs font-medium text-gray-300">

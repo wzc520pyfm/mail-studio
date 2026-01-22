@@ -14,12 +14,14 @@ import { cn } from "@/lib/utils";
 interface ContentEditorProps {
   node: EditorNode;
   isHtmlContent?: boolean;
+  isLocked?: boolean;
 }
 
 // Inner component that resets state when key changes
 const ContentEditorInner = memo(function ContentEditorInner({
   node,
   isHtmlContent = false,
+  isLocked = false,
 }: ContentEditorProps) {
   const updateNodeContent = useEditorStore((s) => s.updateNodeContent);
 
@@ -28,11 +30,12 @@ const ContentEditorInner = memo(function ContentEditorInner({
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (isLocked) return;
       const newValue = e.target.value;
       setLocalValue(newValue);
       updateNodeContent(node.id, newValue);
     },
-    [node.id, updateNodeContent]
+    [node.id, updateNodeContent, isLocked]
   );
 
   return (
@@ -41,13 +44,15 @@ const ContentEditorInner = memo(function ContentEditorInner({
       <textarea
         value={localValue}
         onChange={handleChange}
+        disabled={isLocked}
         className={cn(
           "w-full px-3 py-2 text-sm rounded-md border border-input bg-background resize-y",
-          isHtmlContent ? "min-h-[150px] font-mono text-xs" : "min-h-[80px]"
+          isHtmlContent ? "min-h-[150px] font-mono text-xs" : "min-h-[80px]",
+          isLocked && "opacity-50 cursor-not-allowed"
         )}
         placeholder={isHtmlContent ? "Enter HTML content..." : "Enter content..."}
       />
-      {isHtmlContent && (
+      {isHtmlContent && !isLocked && (
         <p className="text-xs text-muted-foreground">
           You can use raw HTML here. For tables, include &lt;tr&gt; and &lt;td&gt; tags.
         </p>

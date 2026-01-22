@@ -7,9 +7,10 @@ import { Image } from "lucide-react";
 
 interface EditableImageProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export function EditableImage({ node }: EditableImageProps) {
+export function EditableImage({ node, isLocked = false }: EditableImageProps) {
   const { updateNodeProps } = useEditorStore();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -34,7 +35,7 @@ export function EditableImage({ node }: EditableImageProps) {
           style={{ display: "inline-block" }}
           onClick={() => setIsEditing(true)}
         />
-      ) : (
+      ) : !isLocked ? (
         <button
           onClick={() => {
             const url = prompt("Enter image URL:");
@@ -45,6 +46,11 @@ export function EditableImage({ node }: EditableImageProps) {
           <Image className="w-8 h-8 mx-auto mb-2" />
           Click to add image
         </button>
+      ) : (
+        <div className="w-full py-8 border-2 border-dashed border-amber-300 rounded-lg text-amber-500 text-center">
+          <Image className="w-8 h-8 mx-auto mb-2" />
+          Image placeholder (locked)
+        </div>
       )}
     </div>
   );

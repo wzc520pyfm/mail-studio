@@ -5,13 +5,15 @@
 import type { EditorNode, Template } from "@/features/editor/types";
 import { generateId } from "./schema";
 
-// Helper function to deep clone a document with new IDs
+// Helper function to deep clone a document with new IDs (preserves locked state)
 export function cloneDocumentWithNewIds(document: EditorNode): EditorNode {
   return {
     ...document,
     id: generateId(),
     props: { ...document.props },
     children: document.children?.map(cloneDocumentWithNewIds),
+    // Preserve locked state when cloning
+    ...(document.locked && { locked: true }),
   };
 }
 
@@ -425,8 +427,167 @@ const notificationTemplate: EditorNode = {
   ],
 };
 
+// Locked template example - header and footer are locked
+const lockedTemplate: EditorNode = {
+  id: "root",
+  type: "mj-body",
+  props: {
+    "background-color": "#f4f4f4",
+    width: "600px",
+  },
+  children: [
+    // LOCKED HEADER SECTION
+    {
+      id: "section-header",
+      type: "mj-section",
+      props: {
+        "background-color": "#1e293b",
+        padding: "20px",
+      },
+      locked: true, // This section is locked
+      children: [
+        {
+          id: "column-header",
+          type: "mj-column",
+          props: {},
+          children: [
+            {
+              id: "text-header",
+              type: "mj-text",
+              props: {
+                "font-size": "24px",
+                "font-weight": "bold",
+                align: "center",
+                color: "#ffffff",
+              },
+              content: "🔒 Company Newsletter",
+            },
+            {
+              id: "text-subheader",
+              type: "mj-text",
+              props: {
+                "font-size": "14px",
+                align: "center",
+                color: "#94a3b8",
+                padding: "10px 0 0 0",
+              },
+              content: "This header section is locked and cannot be edited",
+            },
+          ],
+        },
+      ],
+    },
+    // EDITABLE CONTENT SECTION
+    {
+      id: "section-content",
+      type: "mj-section",
+      props: {
+        "background-color": "#ffffff",
+        padding: "30px 20px",
+      },
+      children: [
+        {
+          id: "column-content",
+          type: "mj-column",
+          props: {},
+          children: [
+            {
+              id: "text-title",
+              type: "mj-text",
+              props: {
+                "font-size": "20px",
+                "font-weight": "bold",
+                color: "#333333",
+                padding: "0 0 20px 0",
+              },
+              content: "✏️ Editable Content Area",
+            },
+            {
+              id: "text-content",
+              type: "mj-text",
+              props: {
+                "font-size": "16px",
+                color: "#666666",
+                "line-height": "1.6",
+              },
+              content:
+                "This section is fully editable. You can modify the text, add new components, delete existing ones, and rearrange everything freely.",
+            },
+            {
+              id: "spacer-1",
+              type: "mj-spacer",
+              props: {
+                height: "20px",
+              },
+            },
+            {
+              id: "button-cta",
+              type: "mj-button",
+              props: {
+                "background-color": "#3b82f6",
+                color: "#ffffff",
+                "font-weight": "500",
+                "border-radius": "8px",
+                href: "#",
+              },
+              content: "Learn More",
+            },
+          ],
+        },
+      ],
+    },
+    // LOCKED FOOTER SECTION
+    {
+      id: "section-footer",
+      type: "mj-section",
+      props: {
+        "background-color": "#1e293b",
+        padding: "20px",
+      },
+      locked: true, // This section is locked
+      children: [
+        {
+          id: "column-footer",
+          type: "mj-column",
+          props: {},
+          children: [
+            {
+              id: "text-footer",
+              type: "mj-text",
+              props: {
+                "font-size": "12px",
+                align: "center",
+                color: "#94a3b8",
+              },
+              content: "🔒 This footer is locked | © 2025 Company Name | All Rights Reserved",
+            },
+            {
+              id: "text-unsubscribe",
+              type: "mj-text",
+              props: {
+                "font-size": "11px",
+                align: "center",
+                color: "#64748b",
+                padding: "10px 0 0 0",
+              },
+              content:
+                '<a href="#" style="color: #94a3b8;">Unsubscribe</a> | <a href="#" style="color: #94a3b8;">Privacy Policy</a>',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 // Export templates
 export const templates: Template[] = [
+  {
+    id: "locked-template",
+    name: "Locked Template",
+    category: "newsletter",
+    document: lockedTemplate,
+  },
   {
     id: "welcome",
     name: "Welcome Email",

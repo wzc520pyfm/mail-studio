@@ -17,6 +17,10 @@ export {
   useIsSelected,
   useIsHovered,
   useUndoRedo,
+  // Lock related hooks
+  useIsNodeLocked,
+  useIsNodeDirectlyLocked,
+  isNodeOrAncestorLocked,
 } from "./editorStore";
 
 // UI store

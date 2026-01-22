@@ -22,6 +22,7 @@ import type { EditorNode, PropSchema } from "@/features/editor/types";
 interface PropertyFieldProps {
   schema: PropSchema;
   node: EditorNode;
+  isLocked?: boolean;
 }
 
 // Separate component for text-based inputs to manage local state properly
@@ -145,19 +146,38 @@ const ColorInputField = memo(function ColorInputField({
   );
 });
 
-export const PropertyField = memo(function PropertyField({ schema, node }: PropertyFieldProps) {
+export const PropertyField = memo(function PropertyField({
+  schema,
+  node,
+  isLocked = false,
+}: PropertyFieldProps) {
   const updateNodeProps = useEditorStore((s) => s.updateNodeProps);
   const value = node.props[schema.key];
 
   const handleChange = useCallback(
     (newValue: string | number | undefined) => {
+      if (isLocked) return;
       updateNodeProps(node.id, { [schema.key]: newValue });
     },
-    [node.id, schema.key, updateNodeProps]
+    [node.id, schema.key, updateNodeProps, isLocked]
   );
 
   // Use combined key to reset input state when node or schema changes
   const fieldKey = `${node.id}-${schema.key}`;
+
+  // If locked, render as disabled
+  if (isLocked) {
+    return (
+      <div className="space-y-2 opacity-50">
+        <Label className="text-xs">{schema.label}</Label>
+        <Input
+          value={(value as string) || schema.defaultValue?.toString() || ""}
+          disabled
+          className="h-8 text-sm cursor-not-allowed"
+        />
+      </div>
+    );
+  }
 
   switch (schema.type) {
     case "text":

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useEditorStore } from "@/features/editor/stores";
+import { useEditorStore, useIsNodeLocked } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
-import { GripVertical, Trash2 } from "lucide-react";
+import { GripVertical, Trash2, Lock } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -27,6 +27,7 @@ interface EditBlockProps {
   dragHandleProps?: Record<string, unknown>;
   isDragging?: boolean;
   hasColoredParent?: boolean;
+  isParentLocked?: boolean;
 }
 
 export function EditBlock({
@@ -35,14 +36,21 @@ export function EditBlock({
   dragHandleProps,
   isDragging,
   hasColoredParent = false,
+  isParentLocked = false,
 }: EditBlockProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { removeNode, selectedId, setSelectedId } = useEditorStore();
   const isSelected = selectedId === node.id;
 
+  // Check if this block is locked (directly or via parent)
+  const isNodeLocked = useIsNodeLocked(node.id);
+  const isLocked = isNodeLocked || isParentLocked;
+  const isDirectlyLocked = node.locked ?? false;
+
   const handleDelete = useCallback(() => {
+    if (isLocked) return;
     removeNode(node.id);
-  }, [node.id, removeNode]);
+  }, [node.id, removeNode, isLocked]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -58,10 +66,23 @@ export function EditBlock({
     <div
       className={cn(
         "group relative rounded-lg transition-all duration-150",
-        !hasColoredParent && isHovered && "bg-gray-100/70",
-        !hasColoredParent && isSelected && "bg-blue-50/50 ring-2 ring-blue-200",
-        hasColoredParent && isHovered && !isSelected && "bg-white/10 ring-1 ring-white/20",
-        hasColoredParent && isSelected && "bg-white/15 ring-2 ring-white/40",
+        !hasColoredParent && isHovered && (isLocked ? "bg-amber-50/70" : "bg-gray-100/70"),
+        !hasColoredParent &&
+          isSelected &&
+          (isLocked
+            ? "bg-amber-50/50 ring-2 ring-amber-200"
+            : "bg-blue-50/50 ring-2 ring-blue-200"),
+        hasColoredParent &&
+          isHovered &&
+          !isSelected &&
+          (isLocked
+            ? "bg-amber-50/10 ring-1 ring-amber-200/20"
+            : "bg-white/10 ring-1 ring-white/20"),
+        hasColoredParent &&
+          isSelected &&
+          (isLocked
+            ? "bg-amber-50/15 ring-2 ring-amber-200/40"
+            : "bg-white/15 ring-2 ring-white/40"),
         isDragging && "opacity-50"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -74,37 +95,48 @@ export function EditBlock({
           (isHovered || isSelected) && "opacity-100"
         )}
       >
-        <button
-          className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
-          title="Drag to reorder"
-          {...dragHandleProps}
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete();
-          }}
-          className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500"
-          title="Delete"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {isLocked ? (
+          <div
+            className="p-1 rounded text-amber-500"
+            title={isDirectlyLocked ? "This block is locked" : "Parent is locked"}
+          >
+            <Lock className="w-4 h-4" />
+          </div>
+        ) : (
+          <>
+            <button
+              className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+              title="Drag to reorder"
+              {...dragHandleProps}
+            >
+              <GripVertical className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete();
+              }}
+              className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
       </div>
 
       <div className="py-1">
-        {node.type === "mj-text" && <EditableText node={node} />}
-        {node.type === "mj-image" && <EditableImage node={node} />}
-        {node.type === "mj-button" && <EditableButton node={node} />}
+        {node.type === "mj-text" && <EditableText node={node} isLocked={isLocked} />}
+        {node.type === "mj-image" && <EditableImage node={node} isLocked={isLocked} />}
+        {node.type === "mj-button" && <EditableButton node={node} isLocked={isLocked} />}
         {node.type === "mj-divider" && <EditableDivider node={node} />}
         {node.type === "mj-spacer" && <EditableSpacer node={node} />}
-        {node.type === "mj-table" && <EditableTable node={node} />}
+        {node.type === "mj-table" && <EditableTable node={node} isLocked={isLocked} />}
         {node.type === "mj-social" && <EditableSocial node={node} />}
         {node.type === "mj-navbar" && <EditableNavbar node={node} />}
         {node.type === "mj-accordion" && <EditableAccordion node={node} />}
         {node.type === "mj-carousel" && <EditableCarousel node={node} />}
-        {node.type === "mj-raw" && <EditableRaw node={node} />}
+        {node.type === "mj-raw" && <EditableRaw node={node} isLocked={isLocked} />}
       </div>
     </div>
   );
@@ -115,11 +147,20 @@ interface SortableEditBlockProps {
   node: EditorNode;
   parentId: string;
   hasColoredParent: boolean;
+  isParentLocked?: boolean;
 }
 
-export function SortableEditBlock({ node, parentId, hasColoredParent }: SortableEditBlockProps) {
+export function SortableEditBlock({
+  node,
+  parentId,
+  hasColoredParent,
+  isParentLocked = false,
+}: SortableEditBlockProps) {
+  const isLocked = useIsNodeLocked(node.id) || isParentLocked;
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
+    disabled: isLocked, // Disable sorting for locked blocks
   });
 
   const style = {
@@ -133,9 +174,10 @@ export function SortableEditBlock({ node, parentId, hasColoredParent }: Sortable
       <EditBlock
         node={node}
         parentId={parentId}
-        dragHandleProps={{ ...attributes, ...listeners }}
+        dragHandleProps={isLocked ? undefined : { ...attributes, ...listeners }}
         isDragging={isDragging}
         hasColoredParent={hasColoredParent}
+        isParentLocked={isParentLocked}
       />
     </div>
   );

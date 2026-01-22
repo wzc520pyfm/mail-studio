@@ -7,9 +7,10 @@ import { Link } from "lucide-react";
 
 interface EditableButtonProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export function EditableButton({ node }: EditableButtonProps) {
+export function EditableButton({ node, isLocked = false }: EditableButtonProps) {
   const { updateNodeContent, updateNodeProps, selectedId } = useEditorStore();
   const [showToolbar, setShowToolbar] = useState(false);
   const contentRef = useRef<HTMLSpanElement>(null);
@@ -36,7 +37,7 @@ export function EditableButton({ node }: EditableButtonProps) {
         backgroundColor: containerBgColor,
       }}
     >
-      {(showToolbar || isSelected) && (
+      {!isLocked && (showToolbar || isSelected) && (
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200">
           <select
             value={borderRadius}
@@ -87,14 +88,18 @@ export function EditableButton({ node }: EditableButtonProps) {
             el.textContent = initialContentRef.current;
           }
         }}
-        contentEditable
+        contentEditable={!isLocked}
         suppressContentEditableWarning
-        onFocus={() => setShowToolbar(true)}
-        onBlur={(e) => {
-          setTimeout(() => setShowToolbar(false), 200);
-          updateNodeContent(node.id, e.currentTarget.textContent || "");
-        }}
-        className="inline-block px-6 py-3 font-medium outline-none cursor-text"
+        onFocus={isLocked ? undefined : () => setShowToolbar(true)}
+        onBlur={
+          isLocked
+            ? undefined
+            : (e) => {
+                setTimeout(() => setShowToolbar(false), 200);
+                updateNodeContent(node.id, e.currentTarget.textContent || "");
+              }
+        }
+        className={`inline-block px-6 py-3 font-medium outline-none ${isLocked ? "cursor-not-allowed" : "cursor-text"}`}
         style={{
           backgroundColor: bgColor,
           color: textColor,

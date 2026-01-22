@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useEditorStore } from "@/features/editor/stores";
+import { useEditorStore, useIsNodeLocked } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { generateId } from "@/features/editor/lib/mjml";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Copy, Trash2, Columns, LayoutGrid, Plus } from "lucide-react";
+import { GripVertical, Copy, Trash2, Columns, LayoutGrid, Plus, Lock } from "lucide-react";
 import { SortableColumnContainer } from "./ColumnContainer";
 import { HeroContainer } from "./HeroContainer";
 
@@ -41,6 +41,10 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     useEditorStore();
   const isSelected = selectedId === node.id;
   const [activeColumnId, setActiveColumnId] = useState<UniqueIdentifier | null>(null);
+
+  // Check if this section is locked
+  const isLocked = useIsNodeLocked(node.id);
+  const isDirectlyLocked = node.locked ?? false;
 
   const columnSensors = useSensors(
     useSensor(PointerSensor, {
@@ -78,7 +82,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
 
   // Handle Hero type
   if (node.type === "mj-hero") {
-    return <HeroContainer node={node} dragHandleProps={dragHandleProps} />;
+    return <HeroContainer node={node} dragHandleProps={dragHandleProps} isLocked={isLocked} />;
   }
 
   // Handle Wrapper type
@@ -131,8 +135,12 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     <div
       className={cn(
         "relative group rounded-lg transition-all",
-        isSelected ? "ring-2 ring-blue-400 ring-offset-2" : "",
-        isHovered && !isSelected && "ring-2 ring-gray-200",
+        isSelected
+          ? isLocked
+            ? "ring-2 ring-amber-400 ring-offset-2"
+            : "ring-2 ring-blue-400 ring-offset-2"
+          : "",
+        isHovered && !isSelected && (isLocked ? "ring-2 ring-amber-200" : "ring-2 ring-gray-200"),
         isDragging && "opacity-50"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -143,51 +151,70 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
       }}
     >
       {(isHovered || isSelected) && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2 py-1 bg-white rounded-lg shadow-sm border border-gray-200">
-          {dragHandleProps && (
-            <button
-              className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none"
-              title="Drag to reorder"
-              {...dragHandleProps}
-            >
-              <GripVertical className="w-3.5 h-3.5" />
-            </button>
+        <div
+          className={cn(
+            "absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2 py-1 rounded-lg shadow-sm border",
+            isLocked ? "bg-amber-50 border-amber-200" : "bg-white border-gray-200"
           )}
-          <span className="text-xs text-gray-500 font-medium mr-1">
-            <LayoutGrid className="w-3 h-3 inline mr-1" />
-            Section
-          </span>
-          <div className="w-px h-4 bg-gray-200" />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddColumn();
-            }}
-            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-            title="Add Column"
-          >
-            <Columns className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              duplicateNode(node.id);
-            }}
-            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-            title="Duplicate Section"
-          >
-            <Copy className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              removeNode(node.id);
-            }}
-            className="p-1 rounded hover:bg-red-100 text-gray-500 hover:text-red-500"
-            title="Delete Section"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+        >
+          {isLocked ? (
+            <>
+              <div className="p-1 text-amber-600" title="This section is locked">
+                <Lock className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs text-amber-600 font-medium mr-1">
+                <LayoutGrid className="w-3 h-3 inline mr-1" />
+                Section {isDirectlyLocked && "(Locked)"}
+              </span>
+            </>
+          ) : (
+            <>
+              {dragHandleProps && (
+                <button
+                  className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none"
+                  title="Drag to reorder"
+                  {...dragHandleProps}
+                >
+                  <GripVertical className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <span className="text-xs text-gray-500 font-medium mr-1">
+                <LayoutGrid className="w-3 h-3 inline mr-1" />
+                Section
+              </span>
+              <div className="w-px h-4 bg-gray-200" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddColumn();
+                }}
+                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                title="Add Column"
+              >
+                <Columns className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  duplicateNode(node.id);
+                }}
+                className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                title="Duplicate Section"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeNode(node.id);
+                }}
+                className="p-1 rounded hover:bg-red-100 text-gray-500 hover:text-red-500"
+                title="Delete Section"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -251,8 +278,11 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
 
 // Sortable wrapper for SectionContainer
 export function SortableSectionContainer({ node }: { node: EditorNode }) {
+  const isLocked = useIsNodeLocked(node.id);
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
+    disabled: isLocked, // Disable sorting for locked nodes
   });
 
   const style = {
@@ -265,7 +295,7 @@ export function SortableSectionContainer({ node }: { node: EditorNode }) {
     <div ref={setNodeRef} style={style}>
       <SectionContainer
         node={node}
-        dragHandleProps={{ ...attributes, ...listeners }}
+        dragHandleProps={isLocked ? undefined : { ...attributes, ...listeners }}
         isDragging={isDragging}
       />
     </div>

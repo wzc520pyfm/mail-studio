@@ -39,6 +39,11 @@ export interface EditorNode {
   props: Record<string, string | number | undefined>;
   children?: EditorNode[];
   content?: string;
+  /**
+   * Whether this node is locked and cannot be edited.
+   * Used for template regions that should remain unchanged.
+   */
+  locked?: boolean;
 }
 
 // Default child node definition (without id, recursive)

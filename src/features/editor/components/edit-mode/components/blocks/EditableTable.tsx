@@ -26,6 +26,7 @@ import {
 
 interface EditableTableProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
 interface TableCell {
@@ -122,7 +123,7 @@ function normalizeColumns(data: TableData): TableData {
   };
 }
 
-export function EditableTable({ node }: EditableTableProps) {
+export function EditableTable({ node, isLocked = false }: EditableTableProps) {
   const { updateNodeContent, selectedId } = useEditorStore();
   const isSelected = selectedId === node.id;
   const [isHovered, setIsHovered] = useState(false);
@@ -140,8 +141,8 @@ export function EditableTable({ node }: EditableTableProps) {
   const [selectedCol, setSelectedCol] = useState<number | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
 
-  // Show controls when hovered or selected
-  const showControls = isSelected || isHovered;
+  // Show controls when hovered or selected, but not when locked
+  const showControls = (isSelected || isHovered) && !isLocked;
 
   // Parse table data from HTML content
   const tableData = useMemo(() => {

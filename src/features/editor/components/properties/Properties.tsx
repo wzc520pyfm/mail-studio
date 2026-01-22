@@ -5,10 +5,10 @@
 "use client";
 
 import { memo } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Lock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useEditorStore, useSelectedNode } from "@/features/editor/stores";
+import { useEditorStore, useSelectedNode, useIsNodeLocked } from "@/features/editor/stores";
 import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 import { ContentEditor } from "./ContentEditor";
 import { ChildrenEditor } from "./ChildrenEditor";
@@ -20,6 +20,8 @@ const COMPONENTS_WITH_CHILDREN_EDITOR = ["mj-social", "mj-navbar", "mj-accordion
 export const Properties = memo(function Properties() {
   const removeNode = useEditorStore((s) => s.removeNode);
   const selectedNode = useSelectedNode();
+  const selectedId = useEditorStore((s) => s.selectedId);
+  const isLocked = useIsNodeLocked(selectedId || "");
 
   if (!selectedNode) {
     return (
@@ -48,19 +50,39 @@ export const Properties = memo(function Properties() {
       <div className="p-4 pr-10 lg:pr-4 border-b border-border">
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold truncate">{def?.name || selectedNode.type}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold truncate">{def?.name || selectedNode.type}</h2>
+              {isLocked && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-amber-100 text-amber-700">
+                  <Lock className="w-3 h-3" />
+                  Locked
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground mt-0.5">{selectedNode.type}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 mt-[-28px] flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {!isLocked && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 mt-[-28px] flex-shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Locked content warning */}
+      {isLocked && (
+        <div className="px-4 py-3 bg-amber-50 border-b border-amber-200">
+          <div className="flex items-center gap-2 text-amber-700 text-sm">
+            <Lock className="w-4 h-4 flex-shrink-0" />
+            <span>This element is part of a locked template section and cannot be edited.</span>
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-4">
@@ -69,15 +91,21 @@ export const Properties = memo(function Properties() {
             <ContentEditor
               node={selectedNode}
               isHtmlContent={selectedNode.type === "mj-table" || selectedNode.type === "mj-raw"}
+              isLocked={isLocked}
             />
           )}
 
           {/* Children Editor for components with child elements */}
-          {hasChildrenEditor && <ChildrenEditor node={selectedNode} />}
+          {hasChildrenEditor && <ChildrenEditor node={selectedNode} isLocked={isLocked} />}
 
           {/* Property Fields */}
           {def?.propsSchema.map((schema) => (
-            <PropertyField key={schema.key} schema={schema} node={selectedNode} />
+            <PropertyField
+              key={schema.key}
+              schema={schema}
+              node={selectedNode}
+              isLocked={isLocked}
+            />
           ))}
         </div>
       </ScrollArea>

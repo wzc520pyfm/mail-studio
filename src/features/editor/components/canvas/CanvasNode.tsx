@@ -7,8 +7,8 @@
 import { memo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Copy, Trash2 } from "lucide-react";
-import { useEditorStore, useUIStore } from "@/features/editor/stores";
+import { GripVertical, Copy, Trash2, Lock } from "lucide-react";
+import { useEditorStore, useUIStore, useIsNodeLocked } from "@/features/editor/stores";
 import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
@@ -49,12 +49,17 @@ export const CanvasNode = memo(function CanvasNode({
   const duplicateNode = useEditorStore((s) => s.duplicateNode);
   const globalIsDragging = useUIStore((s) => s.isDragging);
 
+  // Check if this node is locked
+  const isLocked = useIsNodeLocked(node.id);
+  const isDirectlyLocked = node.locked ?? false;
+
   const isSelected = selectedId === node.id;
   const isHovered = hoveredId === node.id && !globalIsDragging;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
     useSortable({
       id: node.id,
+      disabled: isLocked, // Disable sorting for locked nodes
       data: {
         type: "existing-node",
         nodeId: node.id,
@@ -62,6 +67,7 @@ export const CanvasNode = memo(function CanvasNode({
         parentId,
         parentAcceptTypes,
         index,
+        isLocked, // Pass locked state to drag handlers
       },
     });
 
@@ -109,17 +115,19 @@ export const CanvasNode = memo(function CanvasNode({
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (isLocked) return; // Prevent deletion of locked nodes
       removeNode(node.id);
     },
-    [node.id, removeNode]
+    [node.id, removeNode, isLocked]
   );
 
   const handleDuplicate = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (isLocked) return; // Prevent duplication of locked nodes
       duplicateNode(node.id);
     },
-    [node.id, duplicateNode]
+    [node.id, duplicateNode, isLocked]
   );
 
   const renderContent = () => {
@@ -159,11 +167,20 @@ export const CanvasNode = memo(function CanvasNode({
       style={style}
       className={cn(
         "relative group transition-all duration-150",
-        // Selection states
-        !isDragging && isSelected && "ring-2 ring-blue-500 ring-offset-2 rounded-sm z-10",
-        !isDragging && isHovered && !isSelected && "ring-2 ring-blue-300/50 rounded-sm",
+        // Selection states - use amber for locked nodes
+        !isDragging &&
+          isSelected &&
+          (isLocked
+            ? "ring-2 ring-amber-500 ring-offset-2 rounded-sm z-10"
+            : "ring-2 ring-blue-500 ring-offset-2 rounded-sm z-10"),
+        !isDragging &&
+          isHovered &&
+          !isSelected &&
+          (isLocked ? "ring-2 ring-amber-300/50 rounded-sm" : "ring-2 ring-blue-300/50 rounded-sm"),
         // Dragging states - subtle opacity to indicate dragging
-        isDragging && "opacity-75 z-50 scale-[1.02] shadow-lg"
+        isDragging && "opacity-75 z-50 scale-[1.02] shadow-lg",
+        // Locked visual indicator
+        isLocked && "relative"
       )}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
@@ -172,28 +189,43 @@ export const CanvasNode = memo(function CanvasNode({
       {/* Component Label */}
       {(isSelected || isHovered) && !isDragging && (
         <div className="absolute -top-7 left-0 z-[9999] flex items-center gap-1 animate-in fade-in slide-in-from-bottom-1 duration-150">
-          {/* Drag Handle */}
-          <button
-            {...attributes}
-            {...listeners}
+          {/* Drag Handle - disabled for locked nodes */}
+          {!isLocked ? (
+            <button
+              {...attributes}
+              {...listeners}
+              className={cn(
+                "p-1.5 rounded-md bg-blue-500 text-white shadow-md",
+                "cursor-grab active:cursor-grabbing",
+                "hover:bg-blue-600 transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-blue-300"
+              )}
+              title="Drag to reorder"
+            >
+              <GripVertical className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <div
+              className="p-1.5 rounded-md bg-amber-500 text-white shadow-md"
+              title="This content is locked and cannot be edited"
+            >
+              <Lock className="w-3.5 h-3.5" />
+            </div>
+          )}
+          <span
             className={cn(
-              "p-1.5 rounded-md bg-blue-500 text-white shadow-md",
-              "cursor-grab active:cursor-grabbing",
-              "hover:bg-blue-600 transition-colors",
-              "focus:outline-none focus:ring-2 focus:ring-blue-300"
+              "text-xs font-medium px-2 py-1 rounded-md shadow-md",
+              isLocked ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
             )}
-            title="Drag to reorder"
           >
-            <GripVertical className="w-3.5 h-3.5" />
-          </button>
-          <span className="text-xs font-medium px-2 py-1 rounded-md bg-blue-500 text-white shadow-md">
             {componentDefinitions[node.type]?.name || node.type}
+            {isDirectlyLocked && " (Locked)"}
           </span>
         </div>
       )}
 
-      {/* Actions */}
-      {isSelected && !isDragging && (
+      {/* Actions - hide for locked nodes */}
+      {isSelected && !isDragging && !isLocked && (
         <div className="absolute -top-7 right-0 z-[9999] flex items-center gap-1 animate-in fade-in slide-in-from-bottom-1 duration-150">
           <button
             onClick={handleDuplicate}

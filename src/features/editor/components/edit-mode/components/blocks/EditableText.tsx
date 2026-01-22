@@ -9,9 +9,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 interface EditableTextProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export function EditableText({ node }: EditableTextProps) {
+export function EditableText({ node, isLocked = false }: EditableTextProps) {
   const { updateNodeContent, updateNodeProps, selectedId } = useEditorStore();
   const [showToolbar, setShowToolbar] = useState(false);
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
@@ -85,7 +86,7 @@ export function EditableText({ node }: EditableTextProps) {
 
   return (
     <div className="relative" style={containerStyle}>
-      {(showToolbar || isSelected) && (
+      {!isLocked && (showToolbar || isSelected) && (
         <div className="absolute -top-10 left-0 z-50 flex items-center gap-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200">
           <button
             onMouseDown={(e) => e.preventDefault()}
@@ -220,12 +221,15 @@ export function EditableText({ node }: EditableTextProps) {
             el.innerHTML = initialContentRef.current;
           }
         }}
-        contentEditable
+        contentEditable={!isLocked}
         suppressContentEditableWarning
-        onInput={handleInput}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        className="outline-none min-h-[1.6em] px-2 py-1 rounded focus:ring-2 focus:ring-white/30 [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer"
+        onInput={isLocked ? undefined : handleInput}
+        onFocus={isLocked ? undefined : handleFocus}
+        onBlur={isLocked ? undefined : handleBlur}
+        className={cn(
+          "outline-none min-h-[1.6em] px-2 py-1 rounded focus:ring-2 focus:ring-white/30 [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer",
+          isLocked && "cursor-not-allowed"
+        )}
         style={style}
       />
     </div>

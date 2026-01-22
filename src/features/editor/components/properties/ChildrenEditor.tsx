@@ -19,9 +19,13 @@ import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 
 interface ChildrenEditorProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEditorProps) {
+export const ChildrenEditor = memo(function ChildrenEditor({
+  node,
+  isLocked = false,
+}: ChildrenEditorProps) {
   const updateNodeChildren = useEditorStore((s) => s.updateNodeChildren);
   const addChildNode = useEditorStore((s) => s.addChildNode);
   const removeNode = useEditorStore((s) => s.removeNode);
@@ -89,58 +93,64 @@ export const ChildrenEditor = memo(function ChildrenEditor({ node }: ChildrenEdi
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="text-xs">{childDef?.name || "Items"}</Label>
-        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddChild}>
-          <Plus className="w-3 h-3 mr-1" />
-          Add
-        </Button>
+        {!isLocked && (
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleAddChild}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add
+          </Button>
+        )}
       </div>
 
       {children.length === 0 ? (
         <div className="text-xs text-muted-foreground text-center py-4 border border-dashed rounded-lg">
-          No items yet. Click &quot;Add&quot; to create one.
+          {isLocked ? "No items." : 'No items yet. Click "Add" to create one.'}
         </div>
       ) : (
         <div className="space-y-2">
           {children.map((child, index) => (
             <div
               key={child.id}
-              className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg group"
+              className={`flex items-center gap-2 p-2 bg-muted/50 rounded-lg group ${isLocked ? "opacity-60" : ""}`}
             >
-              <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {!isLocked && (
+                <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              )}
               <button
                 className="flex-1 text-left text-sm truncate hover:text-primary transition-colors"
                 onClick={() => setSelectedId(child.id)}
               >
                 {getChildLabel(child, index)}
               </button>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleMoveChild(index, "up")}
-                  disabled={index === 0}
-                >
-                  <ChevronUp className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => handleMoveChild(index, "down")}
-                  disabled={index === children.length - 1}
-                >
-                  <ChevronDown className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
-                  onClick={() => handleRemoveChild(child.id)}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
+              {!isLocked && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleMoveChild(index, "up")}
+                    disabled={index === 0}
+                  >
+                    <ChevronUp className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleMoveChild(index, "down")}
+                    disabled={index === children.length - 1}
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive hover:text-destructive"
+                    onClick={() => handleRemoveChild(child.id)}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
