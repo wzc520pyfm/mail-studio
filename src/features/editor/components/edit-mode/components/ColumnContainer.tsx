@@ -253,7 +253,11 @@ export function ColumnContainer({
               />
             ))}
             {!isLocked && (
-              <AddBlockButton parentId={node.id} hasColoredParent={!!hasColoredParent} />
+              <div className="grid transition-all duration-200 grid-rows-[0fr] group-hover:grid-rows-[1fr]">
+                <div className="overflow-hidden">
+                  <AddBlockButton parentId={node.id} hasColoredParent={!!hasColoredParent} />
+                </div>
+              </div>
             )}
           </div>
         </SortableContext>

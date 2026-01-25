@@ -113,7 +113,13 @@ export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroC
         {node.children?.map((child) => (
           <EditBlock key={child.id} node={child} parentId={node.id} isParentLocked={isLocked} />
         ))}
-        {!isLocked && <AddBlockButton parentId={node.id} />}
+        {!isLocked && (
+          <div className="grid transition-all duration-200 grid-rows-[0fr] group-hover:grid-rows-[1fr]">
+            <div className="overflow-hidden">
+              <AddBlockButton parentId={node.id} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
