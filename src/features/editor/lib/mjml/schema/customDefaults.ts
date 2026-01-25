@@ -30,8 +30,9 @@ export const customDefaults: Partial<Record<MJMLComponentType, Record<string, un
     "border-radius": "50px",
   },
 
-  // "mj-section": {
-  // },
+  "mj-section": {
+    "background-color": "#ffffff",
+  },
 
   // "mj-column": {
   // },
