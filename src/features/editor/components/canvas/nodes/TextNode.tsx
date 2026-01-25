@@ -64,14 +64,12 @@ const FONT_SIZES = [
 
 // Floating toolbar component
 const FloatingToolbar = memo(function FloatingToolbar({
-  position,
   onFormat,
   onColorChange,
   onFontSizeChange,
   onRemoveFormat,
   onPopoverOpenChange,
 }: {
-  position: { top: number; left: number } | null;
   onFormat: (command: string, value?: string) => void;
   onColorChange: (color: string) => void;
   onFontSizeChange: (size: string) => void;
@@ -109,16 +107,9 @@ const FloatingToolbar = memo(function FloatingToolbar({
     [colorPickerOpen, fontSizeOpen, onPopoverOpenChange]
   );
 
-  if (!position) return null;
-
   return (
     <div
-      className="fixed z-[9999] flex items-center gap-0.5 p-1 bg-white rounded-lg shadow-xl border border-gray-200 animate-in fade-in-0 zoom-in-95 duration-150"
-      style={{
-        top: position.top,
-        left: position.left,
-        transform: "translateX(-50%)",
-      }}
+      className="absolute -top-10 left-0 z-[9999] flex items-center gap-0.5 p-1 bg-white rounded-lg shadow-xl border border-gray-200 animate-in fade-in-0 zoom-in-95 duration-150"
       onMouseDown={(e) => e.preventDefault()}
     >
       {/* Bold */}
@@ -328,10 +319,6 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
   const isSelected = selectedId === node.id;
   const [isEditing, setIsEditing] = useState(false);
   const isPopoverOpenRef = useRef(false);
-  const [toolbarPosition, setToolbarPosition] = useState<{
-    top: number;
-    left: number;
-  } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const savedSelectionRef = useRef<Range | null>(null);
   // Store initial content to avoid re-rendering issues
@@ -381,52 +368,32 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
     [node.props]
   );
 
-  // Save selection and show toolbar
-  const updateToolbarPosition = useCallback(() => {
-    // Don't update position if any popover is open - keep toolbar visible
-    if (isPopoverOpenRef.current) return;
-
+  // Save selection for formatting commands
+  const saveSelection = useCallback(() => {
     const selection = window.getSelection();
-    if (!selection || selection.isCollapsed || !contentRef.current) {
-      setToolbarPosition(null);
-      return;
+    if (selection && selection.rangeCount > 0 && contentRef.current) {
+      const range = selection.getRangeAt(0);
+      if (contentRef.current.contains(range.commonAncestorContainer)) {
+        savedSelectionRef.current = range.cloneRange();
+      }
     }
-
-    // Check if selection is within this node
-    const range = selection.getRangeAt(0);
-    if (!contentRef.current.contains(range.commonAncestorContainer)) {
-      setToolbarPosition(null);
-      return;
-    }
-
-    // Save the selection for later use
-    savedSelectionRef.current = range.cloneRange();
-
-    // Calculate toolbar position
-    const rect = range.getBoundingClientRect();
-    setToolbarPosition({
-      top: rect.top - 45,
-      left: rect.left + rect.width / 2,
-    });
   }, []);
 
-  // Handle selection change
+  // Handle selection change to save selection
   useEffect(() => {
     if (!isEditing) {
       return;
     }
 
     const handleSelectionChange = () => {
-      updateToolbarPosition();
+      saveSelection();
     };
 
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
-      // Reset toolbar position when editing ends (in cleanup to avoid synchronous setState in effect body)
-      setToolbarPosition(null);
     };
-  }, [isEditing, updateToolbarPosition]);
+  }, [isEditing, saveSelection]);
 
   // Restore selection before executing command
   const restoreSelection = useCallback(() => {
@@ -447,10 +414,8 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
       if (contentRef.current) {
         updateNodeContent(node.id, contentRef.current.innerHTML);
       }
-      // Update toolbar position after formatting
-      setTimeout(updateToolbarPosition, 0);
     },
-    [node.id, updateNodeContent, restoreSelection, updateToolbarPosition]
+    [node.id, updateNodeContent, restoreSelection]
   );
 
   // Handle text color change
@@ -510,7 +475,6 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
           updateNodeContent(node.id, contentRef.current.innerHTML);
         }
         setIsEditing(false);
-        setToolbarPosition(null);
       }, 150);
     },
     [node.id, updateNodeContent]
@@ -547,10 +511,9 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
 
   return (
     <div style={containerStyle} className="relative">
-      {/* Floating Toolbar */}
+      {/* Floating Toolbar - always visible when in edit mode */}
       {isEditing && (
         <FloatingToolbar
-          position={toolbarPosition}
           onFormat={handleFormat}
           onColorChange={handleColorChange}
           onFontSizeChange={handleFontSizeChange}
