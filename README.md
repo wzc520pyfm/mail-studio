@@ -1,5 +1,5 @@
 <a href="https://mail-studio-black.vercel.app/">
-  <img alt="A modern email editor, easily create beautiful and responsive email." src="public/mail-studio-preview.png">
+  <img alt="A modern email editor, easily create beautiful and responsive email." src="public/mail-studio-preview.jpg">
 </a>
 
 # Mail Studio
