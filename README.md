@@ -1,3 +1,7 @@
+<a href="https://mail-studio-black.vercel.app/">
+  <img alt="A modern email editor, easily create beautiful and responsive email." src="public/mail-studio-preview.png">
+</a>
+
 # Mail Studio
 
 A modern, visual email editor built with [MJML](https://mjml.io/) and [Next.js](https://nextjs.org/). Create beautiful, responsive email templates with an intuitive drag-and-drop interface.
@@ -7,35 +11,35 @@ A modern, visual email editor built with [MJML](https://mjml.io/) and [Next.js](
 ![MJML](https://img.shields.io/badge/MJML-4.18-orange?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
 
-## ✨ Features
+## Features
 
-### 🎨 Visual Editor
+### Visual Editor
 
 - **Drag & Drop** - Intuitive component placement with visual feedback
 - **Multiple View Modes** - Switch between Canvas, Edit, Code, and Preview modes
 - **Real-time Preview** - See your changes instantly as you edit
 - **Properties Panel** - Fine-tune every aspect of your components
 
-### 📧 Email Components
+### Email Components
 
 - **Layout** - Section, Column, Group, Wrapper
 - **Content** - Text, Image, Button, Divider, Spacer, Table
 - **Interactive** - Accordion, Carousel, Navbar
 - **Social** - Social icons with customizable links
 
-### 🚀 Developer Experience
+### Developer Experience
 
 - **Monaco Code Editor** - Full-featured code editing with syntax highlighting
 - **MJML Compilation** - Real-time MJML to HTML conversion
 - **Undo/Redo** - Full history support with keyboard shortcuts
 - **Keyboard Shortcuts** - Efficient workflow with hotkeys
 
-### 📬 Email Delivery
+### Email Delivery
 
 - **Send Test Emails** - Built-in email sending via Nodemailer or Resend
 - **Export HTML** - Get production-ready HTML output
 
-### 📋 Templates
+### Templates
 
 Pre-built templates to get you started:
 
@@ -44,7 +48,7 @@ Pre-built templates to get you started:
 - Marketing Promo
 - Account Notification
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework**: [Next.js 16](https://nextjs.org/)
 - **UI Library**: [React 19](https://react.dev/)
@@ -61,7 +65,7 @@ You can deploy this template to Vercel with the button below:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwzc520pyfm%2Fmail-studio)
 
-## 🚀 Getting Started
+## Running locally
 
 ### Prerequisites
 
@@ -101,7 +105,7 @@ pnpm format       # Format code with Prettier
 pnpm format:check # Check code formatting
 ```
 
-## 📖 Usage
+## Usage
 
 ### Editor Modes
 
@@ -121,7 +125,7 @@ pnpm format:check # Check code formatting
 | `Delete / Backspace` | Delete selected component |
 | `Escape`             | Deselect component        |
 
-## 🔧 Configuration
+## Configuration
 
 ### Email Sending
 
@@ -138,7 +142,7 @@ SMTP_USER=your_username
 SMTP_PASS=your_password
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 mail-studio/
@@ -167,7 +171,7 @@ mail-studio/
 └── package.json
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -177,11 +181,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [MJML](https://mjml.io/) - The framework that makes responsive emails easy
 - [Next.js](https://nextjs.org/) - The React framework for production
