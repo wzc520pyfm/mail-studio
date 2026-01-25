@@ -23,14 +23,14 @@ export const contentComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: false,
     defaultProps: {
       padding: "10px 25px",
-      "font-size": "16px",
+      "font-size": "13px",
       "line-height": "1.5",
-      color: "#333333",
+      color: "#000000",
     },
     defaultContent: "This is a text block. Click to edit.",
     propsSchema: [
-      { key: "color", label: "Text Color", type: "color", defaultValue: "#333333" },
-      { key: "font-size", label: "Font Size", type: "size", defaultValue: "16px" },
+      { key: "color", label: "Text Color", type: "color", defaultValue: "#000000" },
+      { key: "font-size", label: "Font Size", type: "size", defaultValue: "13px" },
       {
         key: "font-weight",
         label: "Font Weight",
@@ -133,14 +133,14 @@ export const contentComponents: Record<string, ComponentDefinition> = {
     category: "content",
     canHaveChildren: false,
     defaultProps: {
-      "border-color": "#e2e8f0",
-      "border-width": "1px",
+      "border-color": "#000000",
+      "border-width": "4px",
       "border-style": "solid",
       padding: "10px 25px",
     },
     propsSchema: [
-      { key: "border-color", label: "Color", type: "color", defaultValue: "#e2e8f0" },
-      { key: "border-width", label: "Width", type: "size", defaultValue: "1px" },
+      { key: "border-color", label: "Color", type: "color", defaultValue: "#000000" },
+      { key: "border-width", label: "Width", type: "size", defaultValue: "4px" },
       {
         key: "border-style",
         label: "Style",
@@ -165,11 +165,9 @@ export const contentComponents: Record<string, ComponentDefinition> = {
     icon: "Space",
     category: "content",
     canHaveChildren: false,
-    defaultProps: {
-      height: "30px",
-    },
+    defaultProps: {},
     propsSchema: [
-      { key: "height", label: "Height", type: "size", defaultValue: "30px" },
+      { key: "height", label: "Height", type: "size", defaultValue: "0px" },
       { key: "container-background-color", label: "Container Background", type: "color" },
       { key: "padding", label: "Padding", type: "size" },
       { key: "padding-top", label: "Padding Top", type: "size" },

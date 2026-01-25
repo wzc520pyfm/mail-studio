@@ -22,8 +22,8 @@ export const DividerNode = memo(function DividerNode({ node }: DividerNodeProps)
 
   const hrStyle = useMemo(
     () => ({
-      borderColor: (node.props["border-color"] as string) || "#e2e8f0",
-      borderWidth: (node.props["border-width"] as string) || "1px",
+      borderColor: (node.props["border-color"] as string) || "#000000",
+      borderWidth: (node.props["border-width"] as string) || "4px",
       borderStyle: (node.props["border-style"] as string) || "solid",
       width: (node.props["width"] as string) || "100%",
       margin: "0 auto",

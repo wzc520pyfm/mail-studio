@@ -36,13 +36,13 @@ export function EditableAccordion({ node }: EditableAccordionProps) {
         {
           id: generateId(),
           type: "mj-accordion-title",
-          props: { "background-color": "#f8fafc", padding: "15px" },
+          props: { padding: "16px", "font-size": "13px" },
           content: "New Accordion Title",
         },
         {
           id: generateId(),
           type: "mj-accordion-text",
-          props: { "background-color": "#ffffff", padding: "15px" },
+          props: { padding: "16px", "font-size": "13px" },
           content: "Accordion content goes here.",
         },
       ],
@@ -69,11 +69,20 @@ export function EditableAccordion({ node }: EditableAccordionProps) {
             const titleChild = element.children?.find((c) => c.type === "mj-accordion-title");
             const textChild = element.children?.find((c) => c.type === "mj-accordion-text");
             const isExpanded = expandedItems.has(element.id);
+            const titleBg = titleChild?.props["background-color"] as string;
+            const titlePadding = (titleChild?.props["padding"] as string) || "16px";
+            const titleFontSize = (titleChild?.props["font-size"] as string) || "13px";
+            const titleColor = titleChild?.props["color"] as string;
+            const textBg = textChild?.props["background-color"] as string;
+            const textPadding = (textChild?.props["padding"] as string) || "16px";
+            const textFontSize = (textChild?.props["font-size"] as string) || "13px";
+            const textColor = textChild?.props["color"] as string;
 
             return (
               <div key={element.id} className="group">
                 <div
-                  className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-gray-50"
+                  className="flex items-center justify-between cursor-pointer hover:opacity-90"
+                  style={{ backgroundColor: titleBg, padding: titlePadding }}
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleItem(element.id);
@@ -86,7 +95,9 @@ export function EditableAccordion({ node }: EditableAccordionProps) {
                         isExpanded && "rotate-90"
                       )}
                     />
-                    <span className="text-sm">{titleChild?.content || "Accordion Item"}</span>
+                    <span style={{ fontSize: titleFontSize, color: titleColor }}>
+                      {titleChild?.content || "Accordion Item"}
+                    </span>
                   </div>
                   <button
                     onClick={(e) => {
@@ -99,7 +110,15 @@ export function EditableAccordion({ node }: EditableAccordionProps) {
                   </button>
                 </div>
                 {isExpanded && (
-                  <div className="px-3 py-2 bg-gray-50 text-sm text-gray-600 border-t">
+                  <div
+                    className="border-t"
+                    style={{
+                      backgroundColor: textBg,
+                      padding: textPadding,
+                      fontSize: textFontSize,
+                      color: textColor,
+                    }}
+                  >
                     {textChild?.content || "Content"}
                   </div>
                 )}

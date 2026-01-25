@@ -22,7 +22,7 @@ export const ButtonNode = memo(function ButtonNode({ node }: ButtonNodeProps) {
   const containerStyle = useMemo(
     () => ({
       backgroundColor: node.props["container-background-color"] as string,
-      padding: node.props["padding"] as string,
+      padding: (node.props["padding"] as string) || "10px 25px",
       textAlign: (node.props["align"] as "left" | "center" | "right") || "center",
     }),
     [node.props]
@@ -30,23 +30,22 @@ export const ButtonNode = memo(function ButtonNode({ node }: ButtonNodeProps) {
 
   const buttonStyle = useMemo(
     () => ({
-      backgroundColor: (node.props["background-color"] as string) || "#2563eb",
+      backgroundColor: (node.props["background-color"] as string) || "#414141",
       color: (node.props["color"] as string) || "#ffffff",
-      fontSize: (node.props["font-size"] as string) || "16px",
-      fontWeight: node.props["font-weight"] as string,
+      fontSize: (node.props["font-size"] as string) || "13px",
+      fontWeight: (node.props["font-weight"] as string) || "normal",
       fontStyle: node.props["font-style"] as string,
       fontFamily: node.props["font-family"] as string,
-      borderRadius: (node.props["border-radius"] as string) || "6px",
-      padding: "15px 30px",
+      borderRadius: (node.props["border-radius"] as string) || "3px",
+      border: (node.props["border"] as string) || "none",
+      padding: (node.props["inner-padding"] as string) || "10px 25px",
       display: "inline-block",
       textDecoration: (node.props["text-decoration"] as string) || "none",
-      textTransform: node.props["text-transform"] as
-        | "none"
-        | "capitalize"
-        | "uppercase"
-        | "lowercase",
+      textTransform:
+        (node.props["text-transform"] as "none" | "capitalize" | "uppercase" | "lowercase") ||
+        "none",
       letterSpacing: node.props["letter-spacing"] as string,
-      lineHeight: node.props["line-height"] as string,
+      lineHeight: (node.props["line-height"] as string) || "120%",
       cursor: "pointer",
     }),
     [node.props]

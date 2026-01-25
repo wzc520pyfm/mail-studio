@@ -19,15 +19,15 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     category: "interactive",
     canHaveChildren: false,
     defaultProps: {
-      href: "#",
-      "background-color": "#000000",
+      "background-color": "#414141",
       color: "#ffffff",
-      "font-size": "16px",
-      "font-weight": "500",
-      padding: "15px 30px",
-      "border-radius": "50px",
+      "font-size": "13px",
+      "font-weight": "normal",
+      "inner-padding": "10px 25px",
+      padding: "10px 25px",
+      "border-radius": "3px",
     },
-    defaultContent: "Click me →",
+    defaultContent: "Click me",
     propsSchema: [
       { key: "href", label: "Link URL", type: "url", placeholder: "https://example.com" },
       {
@@ -39,9 +39,9 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
           { value: "_blank", label: "New Window" },
         ],
       },
-      { key: "background-color", label: "Background", type: "color", defaultValue: "#000000" },
+      { key: "background-color", label: "Background", type: "color", defaultValue: "#414141" },
       { key: "color", label: "Text Color", type: "color", defaultValue: "#ffffff" },
-      { key: "font-size", label: "Font Size", type: "size", defaultValue: "16px" },
+      { key: "font-size", label: "Font Size", type: "size", defaultValue: "13px" },
       {
         key: "font-weight",
         label: "Font Weight",
@@ -53,8 +53,8 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
       },
       { key: "font-family", label: "Font Family", type: "select", options: fontFamilyOptions },
       { key: "border", label: "Border", type: "text", placeholder: "1px solid #000" },
-      { key: "border-radius", label: "Border Radius", type: "size", defaultValue: "50px" },
-      { key: "inner-padding", label: "Inner Padding", type: "size", defaultValue: "15px 30px" },
+      { key: "border-radius", label: "Border Radius", type: "size", defaultValue: "3px" },
+      { key: "inner-padding", label: "Inner Padding", type: "size", defaultValue: "10px 25px" },
       { key: "padding", label: "Outer Padding", type: "size" },
       { key: "align", label: "Alignment", type: "alignment" },
       { key: "width", label: "Width", type: "size", placeholder: "auto or px" },
@@ -105,9 +105,9 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
       "ico-font-size": "30px",
     },
     defaultChildren: [
-      { type: "mj-navbar-link", props: { href: "#", color: "#333333" }, content: "Home" },
-      { type: "mj-navbar-link", props: { href: "#", color: "#333333" }, content: "About" },
-      { type: "mj-navbar-link", props: { href: "#", color: "#333333" }, content: "Contact" },
+      { type: "mj-navbar-link", props: { href: "#", color: "#000000" }, content: "Home" },
+      { type: "mj-navbar-link", props: { href: "#", color: "#000000" }, content: "About" },
+      { type: "mj-navbar-link", props: { href: "#", color: "#000000" }, content: "Contact" },
     ],
     propsSchema: [
       { key: "base-url", label: "Base URL", type: "url", placeholder: "https://example.com" },
@@ -141,8 +141,8 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     allowedParents: ["mj-navbar"],
     defaultProps: {
       href: "#",
-      color: "#333333",
-      "font-size": "14px",
+      color: "#000000",
+      "font-size": "13px",
       padding: "15px 10px",
     },
     defaultContent: "Link",
@@ -204,7 +204,7 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: true,
     allowedChildren: ["mj-accordion-element"],
     defaultProps: {
-      border: "1px solid #e2e8f0",
+      border: "2px solid black",
       padding: "10px 25px",
     },
     defaultChildren: [
@@ -214,12 +214,12 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
         children: [
           {
             type: "mj-accordion-title",
-            props: { "background-color": "#f8fafc", padding: "15px" },
+            props: { padding: "16px" },
             content: "Accordion Title 1",
           },
           {
             type: "mj-accordion-text",
-            props: { "background-color": "#ffffff", padding: "15px" },
+            props: { padding: "16px" },
             content: "This is the content of the first accordion item.",
           },
         ],
@@ -230,12 +230,12 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
         children: [
           {
             type: "mj-accordion-title",
-            props: { "background-color": "#f8fafc", padding: "15px" },
+            props: { padding: "16px" },
             content: "Accordion Title 2",
           },
           {
             type: "mj-accordion-text",
-            props: { "background-color": "#ffffff", padding: "15px" },
+            props: { padding: "16px" },
             content: "This is the content of the second accordion item.",
           },
         ],
@@ -303,10 +303,8 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: false,
     allowedParents: ["mj-accordion-element"],
     defaultProps: {
-      "background-color": "#f8fafc",
-      padding: "15px",
-      color: "#333333",
-      "font-size": "16px",
+      padding: "16px",
+      "font-size": "13px",
     },
     defaultContent: "Accordion Title",
     propsSchema: [
@@ -330,10 +328,8 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: false,
     allowedParents: ["mj-accordion-element"],
     defaultProps: {
-      "background-color": "#ffffff",
-      padding: "15px",
-      color: "#333333",
-      "font-size": "14px",
+      padding: "16px",
+      "font-size": "13px",
     },
     defaultContent: "Accordion content goes here.",
     propsSchema: [
@@ -359,7 +355,7 @@ export const interactiveComponents: Record<string, ComponentDefinition> = {
     allowedChildren: ["mj-carousel-image"],
     defaultProps: {
       align: "center",
-      "border-radius": "0px",
+      "border-radius": "6px",
       "icon-width": "44px",
     },
     defaultChildren: [

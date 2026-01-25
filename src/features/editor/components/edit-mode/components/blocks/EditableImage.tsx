@@ -17,14 +17,15 @@ export function EditableImage({ node, isLocked = false }: EditableImageProps) {
   const src = node.props["src"] as string;
   const alt = (node.props["alt"] as string) || "";
   const align = (node.props["align"] as string) || "center";
+  const padding = (node.props["padding"] as string) || "10px 25px";
   const containerBgColor = node.props["container-background-color"] as string;
 
   return (
     <div
-      className="py-2"
       style={{
         textAlign: align as "left" | "center" | "right",
         backgroundColor: containerBgColor,
+        padding,
       }}
     >
       {src ? (

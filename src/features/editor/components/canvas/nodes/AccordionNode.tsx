@@ -50,14 +50,20 @@ export const AccordionNode = memo(function AccordionNode({ node }: AccordionNode
               const titleChild = element.children?.find((c) => c.type === "mj-accordion-title");
               const textChild = element.children?.find((c) => c.type === "mj-accordion-text");
               const isExpanded = expandedItems.has(element.id);
-              const titleBg = (titleChild?.props["background-color"] as string) || "#f8fafc";
-              const textBg = (textChild?.props["background-color"] as string) || "#ffffff";
+              const titleBg = titleChild?.props["background-color"] as string;
+              const textBg = textChild?.props["background-color"] as string;
+              const titlePadding = (titleChild?.props["padding"] as string) || "16px";
+              const titleFontSize = (titleChild?.props["font-size"] as string) || "13px";
+              const titleColor = titleChild?.props["color"] as string;
+              const textPadding = (textChild?.props["padding"] as string) || "16px";
+              const textFontSize = (textChild?.props["font-size"] as string) || "13px";
+              const textColor = textChild?.props["color"] as string;
 
               return (
                 <div key={element.id}>
                   <div
-                    className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                    style={{ backgroundColor: titleBg }}
+                    className="flex items-center justify-between cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: titleBg, padding: titlePadding }}
                     onClick={(e) => toggleItem(element.id, e)}
                   >
                     {iconPosition === "left" && (
@@ -68,7 +74,7 @@ export const AccordionNode = memo(function AccordionNode({ node }: AccordionNode
                         )}
                       />
                     )}
-                    <span className="text-sm font-medium flex-1">
+                    <span className="flex-1" style={{ fontSize: titleFontSize, color: titleColor }}>
                       {titleChild?.content || "Accordion Item"}
                     </span>
                     {iconPosition === "right" && (
@@ -82,8 +88,13 @@ export const AccordionNode = memo(function AccordionNode({ node }: AccordionNode
                   </div>
                   {isExpanded && (
                     <div
-                      className="px-4 py-3 text-sm text-gray-600 border-t animate-in fade-in slide-in-from-top-1 duration-200"
-                      style={{ backgroundColor: textBg }}
+                      className="border-t animate-in fade-in slide-in-from-top-1 duration-200"
+                      style={{
+                        backgroundColor: textBg,
+                        padding: textPadding,
+                        fontSize: textFontSize,
+                        color: textColor,
+                      }}
                     >
                       {textChild?.content || "Accordion content"}
                     </div>

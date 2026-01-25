@@ -31,7 +31,6 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
     allowedChildren: ["mj-column", "mj-group"],
     defaultProps: {
       padding: "20px 0",
-      "background-color": "#ffffff",
     },
     propsSchema: [
       { key: "background-color", label: "Background", type: "color" },
@@ -102,13 +101,11 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
       "mj-table",
       "mj-raw",
     ],
-    defaultProps: {
-      padding: "10px",
-    },
+    defaultProps: {},
     propsSchema: [
       { key: "width", label: "Width", type: "size", placeholder: "e.g., 50%, 300px" },
       { key: "background-color", label: "Background", type: "color" },
-      { key: "padding", label: "Padding", type: "size", defaultValue: "10px" },
+      { key: "padding", label: "Padding", type: "size" },
       { key: "padding-top", label: "Padding Top", type: "size" },
       { key: "padding-bottom", label: "Padding Bottom", type: "size" },
       { key: "padding-left", label: "Padding Left", type: "size" },
@@ -173,7 +170,6 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
     allowedChildren: ["mj-section", "mj-hero"],
     defaultProps: {
       padding: "20px 0",
-      "background-color": "#f8fafc",
     },
     propsSchema: [
       { key: "background-color", label: "Background", type: "color" },
@@ -225,10 +221,9 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: true,
     allowedChildren: ["mj-text", "mj-image", "mj-button", "mj-divider", "mj-spacer"],
     defaultProps: {
-      mode: "fixed-height",
-      height: "400px",
-      "background-color": "#1e293b",
-      padding: "40px",
+      mode: "fluid-height",
+      "background-color": "#ffffff",
+      padding: "0px",
     },
     propsSchema: [
       {
@@ -240,7 +235,7 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
           { value: "fluid-height", label: "Fluid Height" },
         ],
       },
-      { key: "height", label: "Height", type: "size", defaultValue: "400px" },
+      { key: "height", label: "Height", type: "size", defaultValue: "0px" },
       { key: "width", label: "Width", type: "size", defaultValue: "600px" },
       { key: "background-color", label: "Background", type: "color" },
       { key: "background-url", label: "Background Image", type: "url" },

@@ -8,7 +8,7 @@ interface EditableSpacerProps {
 }
 
 export function EditableSpacer({ node }: EditableSpacerProps) {
-  const height = (node.props["height"] as string) || "30px";
+  const height = (node.props["height"] as string) || "0px";
   const containerBgColor = node.props["container-background-color"] as string;
 
   return (

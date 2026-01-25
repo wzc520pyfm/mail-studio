@@ -356,21 +356,21 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
   const containerStyle = useMemo(
     () => ({
       backgroundColor: node.props["container-background-color"] as string,
-      padding: node.props["padding"] as string,
+      padding: (node.props["padding"] as string) || "10px 25px",
     }),
     [node.props]
   );
 
   const textStyle = useMemo(
     () => ({
-      color: node.props["color"] as string,
-      fontSize: node.props["font-size"] as string,
+      color: (node.props["color"] as string) || "#000000",
+      fontSize: (node.props["font-size"] as string) || "13px",
       fontWeight: node.props["font-weight"] as string,
       fontFamily: node.props["font-family"] as string,
       fontStyle: node.props["font-style"] as string,
-      lineHeight: node.props["line-height"] as string,
+      lineHeight: (node.props["line-height"] as string) || "1.5",
       letterSpacing: node.props["letter-spacing"] as string,
-      textAlign: node.props["align"] as "left" | "center" | "right",
+      textAlign: (node.props["align"] as "left" | "center" | "right") || "left",
       textDecoration: node.props["text-decoration"] as string,
       textTransform: node.props["text-transform"] as
         | "none"

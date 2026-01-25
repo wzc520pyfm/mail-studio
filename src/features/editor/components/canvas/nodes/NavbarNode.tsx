@@ -15,7 +15,7 @@ interface NavbarNodeProps {
 
 export const NavbarNode = memo(function NavbarNode({ node }: NavbarNodeProps) {
   const children = node.children || [];
-  const baseColor = (node.props["base-url"] as string) || "#333333";
+  const baseColor = "#000000"; // MJML default color for navbar-link
 
   return (
     <div className="py-2">
@@ -29,11 +29,29 @@ export const NavbarNode = memo(function NavbarNode({ node }: NavbarNodeProps) {
           <div className="flex flex-wrap items-center gap-3">
             {children.map((child) => {
               const linkColor = (child.props.color as string) || baseColor;
+              const linkPadding = (child.props.padding as string) || "15px 10px";
+              const linkFontSize = (child.props["font-size"] as string) || "13px";
+              const linkFontWeight = child.props["font-weight"] as string;
+              const linkFontFamily = child.props["font-family"] as string;
+              const linkTextDecoration = (child.props["text-decoration"] as string) || "none";
+              const linkTextTransform = (child.props["text-transform"] as string) || "uppercase";
               return (
                 <span
                   key={child.id}
-                  className="px-3 py-1 text-sm font-medium rounded hover:bg-gray-50 transition-colors"
-                  style={{ color: linkColor }}
+                  className="rounded hover:bg-gray-50 transition-colors"
+                  style={{
+                    color: linkColor,
+                    padding: linkPadding,
+                    fontSize: linkFontSize,
+                    fontWeight: linkFontWeight,
+                    fontFamily: linkFontFamily,
+                    textDecoration: linkTextDecoration,
+                    textTransform: linkTextTransform as
+                      | "none"
+                      | "uppercase"
+                      | "lowercase"
+                      | "capitalize",
+                  }}
                 >
                   {child.content || "Link"}
                 </span>

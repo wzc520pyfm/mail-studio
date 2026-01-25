@@ -33,7 +33,7 @@ const columnAcceptTypes: MJMLComponentType[] = [
 
 export const ColumnNode = memo(function ColumnNode({ node }: ColumnNodeProps) {
   const bgColor = node.props["background-color"] as string;
-  const padding = (node.props["padding"] as string) || "10px";
+  const padding = node.props["padding"] as string;
   const isDraggingNewComponent = useUIStore((s) => s.isDraggingNewComponent);
   const { active } = useDndContext();
   const hasChildren = node.children && node.children.length > 0;

@@ -211,7 +211,7 @@ export function EditBlockContent({ node }: { node: EditorNode }) {
           <span
             className="inline-block px-4 py-2 text-sm rounded"
             style={{
-              backgroundColor: (node.props["background-color"] as string) || "#2563eb",
+              backgroundColor: (node.props["background-color"] as string) || "#414141",
               color: (node.props["color"] as string) || "#ffffff",
             }}
           >
@@ -226,7 +226,7 @@ export function EditBlockContent({ node }: { node: EditorNode }) {
       )}
       {node.type === "mj-spacer" && (
         <div className="py-2 text-center text-gray-400 text-xs">
-          Spacer ({node.props["height"] || "30px"})
+          Spacer ({node.props["height"] || "0px"})
         </div>
       )}
       {!["mj-text", "mj-image", "mj-button", "mj-divider", "mj-spacer"].includes(node.type) && (

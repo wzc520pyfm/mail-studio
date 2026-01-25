@@ -19,7 +19,7 @@ export function EditableNavbar({ node }: EditableNavbarProps) {
     const newLink: EditorNode = {
       id: generateId(),
       type: "mj-navbar-link",
-      props: { href: "#", color: "#333333" },
+      props: { href: "#", color: "#000000", "font-size": "13px", padding: "15px 10px" },
       content: "New Link",
     };
     addChildNode(node.id, newLink);
@@ -40,29 +40,34 @@ export function EditableNavbar({ node }: EditableNavbarProps) {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3">
-          {children.map((child) => (
-            <div key={child.id} className="group relative flex items-center">
-              <input
-                type="text"
-                value={child.content || ""}
-                onChange={(e) => {
-                  const { updateNodeContent } = useEditorStore.getState();
-                  updateNodeContent(child.id, e.target.value);
-                }}
-                className="px-3 py-1 text-sm border rounded hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeNode(child.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 ml-1 p-1 hover:bg-gray-100 rounded"
-              >
-                <Trash2 className="w-3 h-3 text-gray-400" />
-              </button>
-            </div>
-          ))}
+          {children.map((child) => {
+            const linkColor = (child.props.color as string) || "#000000";
+            const linkFontSize = (child.props["font-size"] as string) || "13px";
+            return (
+              <div key={child.id} className="group relative flex items-center">
+                <input
+                  type="text"
+                  value={child.content || ""}
+                  onChange={(e) => {
+                    const { updateNodeContent } = useEditorStore.getState();
+                    updateNodeContent(child.id, e.target.value);
+                  }}
+                  className="border rounded hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  style={{ color: linkColor, fontSize: linkFontSize, padding: "4px 12px" }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeNode(child.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 ml-1 p-1 hover:bg-gray-100 rounded"
+                >
+                  <Trash2 className="w-3 h-3 text-gray-400" />
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <button

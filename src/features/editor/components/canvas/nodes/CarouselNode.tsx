@@ -28,7 +28,7 @@ export const CarouselNode = memo(function CarouselNode({ node }: CarouselNodePro
     setActiveIndex((i) => (i < children.length - 1 ? i + 1 : 0));
   };
 
-  const thumbnails = (node.props.thumbnails as string) || "visible";
+  const thumbnails = (node.props.thumbnails as string) || "hidden";
 
   return (
     <div className="py-2">

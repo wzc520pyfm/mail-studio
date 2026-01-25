@@ -17,24 +17,29 @@ export function EditableButton({ node, isLocked = false }: EditableButtonProps) 
   const isSelected = selectedId === node.id;
   const initialContentRef = useRef(node.content || "Button");
 
-  const bgColor = (node.props["background-color"] as string) || "#2563eb";
+  const bgColor = (node.props["background-color"] as string) || "#414141";
   const textColor = (node.props["color"] as string) || "#ffffff";
-  const borderRadius = (node.props["border-radius"] as string) || "6px";
+  const borderRadius = (node.props["border-radius"] as string) || "3px";
   const align = (node.props["align"] as string) || "center";
   const containerBgColor = node.props["container-background-color"] as string;
+  const padding = (node.props["padding"] as string) || "10px 25px";
+  const innerPadding = (node.props["inner-padding"] as string) || "10px 25px";
+  const fontSize = (node.props["font-size"] as string) || "13px";
+  const fontWeight = (node.props["font-weight"] as string) || "normal";
   const fontStyle = node.props["font-style"] as string;
   const fontFamily = node.props["font-family"] as string;
   const textDecoration = (node.props["text-decoration"] as string) || "none";
-  const textTransform = node.props["text-transform"] as string;
+  const textTransform = (node.props["text-transform"] as string) || "none";
   const letterSpacing = node.props["letter-spacing"] as string;
-  const lineHeight = node.props["line-height"] as string;
+  const lineHeight = (node.props["line-height"] as string) || "120%";
 
   return (
     <div
-      className="relative py-2"
+      className="relative"
       style={{
         textAlign: align as "left" | "center" | "right",
         backgroundColor: containerBgColor,
+        padding,
       }}
     >
       {!isLocked && (showToolbar || isSelected) && (
@@ -99,11 +104,14 @@ export function EditableButton({ node, isLocked = false }: EditableButtonProps) 
                 updateNodeContent(node.id, e.currentTarget.textContent || "");
               }
         }
-        className={`inline-block px-6 py-3 font-medium outline-none ${isLocked ? "cursor-not-allowed" : "cursor-text"}`}
+        className={`inline-block outline-none ${isLocked ? "cursor-not-allowed" : "cursor-text"}`}
         style={{
           backgroundColor: bgColor,
           color: textColor,
           borderRadius,
+          padding: innerPadding,
+          fontSize,
+          fontWeight,
           fontStyle,
           fontFamily,
           textDecoration,

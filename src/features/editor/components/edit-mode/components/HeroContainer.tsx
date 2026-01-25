@@ -20,9 +20,9 @@ export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroC
   const isSelected = selectedId === node.id;
   const isDirectlyLocked = node.locked ?? false;
 
-  const bgColor = (node.props["background-color"] as string) || "#1e293b";
+  const bgColor = (node.props["background-color"] as string) || "#ffffff";
   const bgImage = node.props["background-url"] as string;
-  const height = (node.props["height"] as string) || "300px";
+  const height = (node.props["height"] as string) || "0px";
 
   return (
     <div
