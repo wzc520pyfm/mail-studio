@@ -55,6 +55,12 @@ Pre-built templates to get you started:
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
 - **UI Components**: [Radix UI](https://www.radix-ui.com/)
 
+## Deploy Your Own
+
+You can deploy this template to Vercel with the button below:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwzc520pyfm%2Fmail-studio)
+
 ## 🚀 Getting Started
 
 ### Prerequisites
