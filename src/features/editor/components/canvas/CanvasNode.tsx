@@ -176,7 +176,9 @@ export const CanvasNode = memo(function CanvasNode({
         !isDragging &&
           isHovered &&
           !isSelected &&
-          (isLocked ? "ring-2 ring-amber-300/50 rounded-sm" : "ring-2 ring-blue-300/50 rounded-sm"),
+          (isLocked
+            ? "ring-2 ring-amber-300/50 rounded-sm z-10"
+            : "ring-2 ring-blue-300/50 rounded-sm z-10"),
         // Dragging states - subtle opacity to indicate dragging
         isDragging && "opacity-75 z-50 scale-[1.02] shadow-lg",
         // Locked visual indicator
