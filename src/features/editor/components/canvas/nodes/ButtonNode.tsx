@@ -1,13 +1,12 @@
-/**
- * Button node renderer for the canvas
- */
-
 "use client";
 
 import { memo, useState, useCallback, useMemo } from "react";
+import { EditorContent } from "@tiptap/react";
 import { useEditorStore } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
+import { useTipTapEditor } from "../../tiptap/useTipTapEditor";
+import { getPlainTextExtensions } from "../../tiptap/extensions";
 
 interface ButtonNodeProps {
   node: EditorNode;
@@ -18,6 +17,26 @@ export const ButtonNode = memo(function ButtonNode({ node }: ButtonNodeProps) {
   const selectedId = useEditorStore((s) => s.selectedId);
   const isSelected = selectedId === node.id;
   const [isEditing, setIsEditing] = useState(false);
+
+  const extensions = useMemo(() => getPlainTextExtensions(), []);
+
+  const handleUpdate = useCallback(
+    (html: string) => {
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      updateNodeContent(node.id, temp.textContent || "");
+    },
+    [node.id, updateNodeContent]
+  );
+
+  const editor = useTipTapEditor({
+    content: node.content || "Button",
+    extensions,
+    editable: isEditing,
+    onUpdate: handleUpdate,
+    onFocus: () => setIsEditing(true),
+    onBlur: () => setTimeout(() => setIsEditing(false), 150),
+  });
 
   const containerStyle = useMemo(
     () => ({
@@ -52,32 +71,27 @@ export const ButtonNode = memo(function ButtonNode({ node }: ButtonNodeProps) {
   );
 
   const handleDoubleClick = useCallback(() => {
-    setIsEditing(true);
-  }, []);
+    if (!isEditing) {
+      setIsEditing(true);
+      setTimeout(() => editor?.commands.focus("end"), 0);
+    }
+  }, [isEditing, editor]);
 
-  const handleBlur = useCallback(
-    (e: React.FocusEvent<HTMLSpanElement>) => {
-      setIsEditing(false);
-      updateNodeContent(node.id, e.currentTarget.textContent || "");
-    },
-    [node.id, updateNodeContent]
-  );
+  if (!editor) return null;
 
   return (
     <div style={containerStyle}>
       <span
-        contentEditable={isEditing}
-        suppressContentEditableWarning
         onDoubleClick={handleDoubleClick}
-        onBlur={handleBlur}
         className={cn(
           "outline-none",
           isEditing && "ring-2 ring-blue-300",
-          !isEditing && isSelected && "cursor-pointer"
+          !isEditing && isSelected && "cursor-pointer",
+          "[&_.tiptap-editor]:outline-none [&_.tiptap-editor_p]:m-0"
         )}
         style={buttonStyle}
       >
-        {node.content || "Button"}
+        <EditorContent editor={editor} />
       </span>
     </div>
   );

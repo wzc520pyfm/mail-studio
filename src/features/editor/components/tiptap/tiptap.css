@@ -1,0 +1,71 @@
+.tiptap-editor {
+  outline: none;
+}
+
+.tiptap-editor p {
+  margin: 0;
+}
+
+.tiptap-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Table styles */
+.tiptap-table-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: auto;
+}
+
+.tiptap-table-editor td,
+.tiptap-table-editor th {
+  min-width: 60px;
+  padding: 8px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid #e5e7eb;
+}
+
+.tiptap-table-editor th {
+  font-weight: 600;
+  text-align: left;
+  background-color: #f9fafb;
+}
+
+.tiptap-table-editor td p,
+.tiptap-table-editor th p {
+  margin: 0;
+}
+
+.tiptap-table-editor .selectedCell {
+  background-color: #dbeafe;
+}
+
+.tiptap-table-editor .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid #3b82f6;
+}
+
+.tiptap-table-editor .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #3b82f6;
+  pointer-events: none;
+}

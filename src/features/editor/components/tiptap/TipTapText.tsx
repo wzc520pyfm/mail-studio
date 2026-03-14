@@ -1,24 +1,24 @@
 "use client";
 
-import { memo, useState, useCallback, useMemo, useRef } from "react";
+import { useMemo, useState, useCallback, useRef } from "react";
 import { EditorContent } from "@tiptap/react";
 import { useEditorStore } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
-import { useTipTapEditor } from "../../tiptap/useTipTapEditor";
-import { getRichTextExtensions } from "../../tiptap/extensions";
-import { TipTapToolbar } from "../../tiptap/TipTapToolbar";
+import { useTipTapEditor } from "./useTipTapEditor";
+import { getRichTextExtensions } from "./extensions";
+import { TipTapToolbar } from "./TipTapToolbar";
 
-interface TextNodeProps {
+interface TipTapTextProps {
   node: EditorNode;
+  isLocked?: boolean;
 }
 
-export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
-  const updateNodeContent = useEditorStore((s) => s.updateNodeContent);
-  const selectedId = useEditorStore((s) => s.selectedId);
-  const isSelected = selectedId === node.id;
-  const [isEditing, setIsEditing] = useState(false);
+export function TipTapText({ node, isLocked = false }: TipTapTextProps) {
+  const { updateNodeContent, selectedId } = useEditorStore();
+  const [showToolbar, setShowToolbar] = useState(false);
   const isPopoverOpenRef = useRef(false);
+  const isSelected = selectedId === node.id;
 
   const extensions = useMemo(() => getRichTextExtensions(), []);
 
@@ -30,22 +30,22 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
   );
 
   const handleFocus = useCallback(() => {
-    setIsEditing(true);
+    setShowToolbar(true);
   }, []);
 
   const handleBlur = useCallback(() => {
     if (isPopoverOpenRef.current) return;
     setTimeout(() => {
       if (!isPopoverOpenRef.current) {
-        setIsEditing(false);
+        setShowToolbar(false);
       }
-    }, 150);
+    }, 200);
   }, []);
 
   const editor = useTipTapEditor({
     content: node.content || "",
     extensions,
-    editable: isEditing,
+    editable: !isLocked,
     onUpdate: handleUpdate,
     onFocus: handleFocus,
     onBlur: handleBlur,
@@ -59,13 +59,13 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
     [node.props]
   );
 
-  const textStyle = useMemo(
+  const editorStyle = useMemo(
     () => ({
-      color: (node.props["color"] as string) || "#000000",
       fontSize: (node.props["font-size"] as string) || "13px",
       fontWeight: node.props["font-weight"] as string,
       fontFamily: node.props["font-family"] as string,
       fontStyle: node.props["font-style"] as string,
+      color: (node.props["color"] as string) || "#000000",
       lineHeight: (node.props["line-height"] as string) || "1.5",
       letterSpacing: node.props["letter-spacing"] as string,
       textAlign: (node.props["align"] as "left" | "center" | "right") || "left",
@@ -79,21 +79,12 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
     [node.props]
   );
 
-  const handleDoubleClick = useCallback(() => {
-    if (!isEditing) {
-      setIsEditing(true);
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 0);
-    }
-  }, [isEditing, editor]);
-
   if (!editor) return null;
 
   return (
-    <div style={containerStyle} className="relative">
-      {isEditing && (
-        <div className="absolute -top-10 left-0 z-[9999]">
+    <div className="relative" style={containerStyle}>
+      {!isLocked && (showToolbar || isSelected) && (
+        <div className="absolute -top-10 left-0 z-50">
           <TipTapToolbar
             editor={editor}
             onPopoverOpenChange={(open) => {
@@ -104,17 +95,16 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
       )}
 
       <div
-        onDoubleClick={handleDoubleClick}
         className={cn(
-          "min-h-[1em] transition-all",
-          "[&_.tiptap-editor_a]:text-blue-600 [&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer",
-          isEditing && "cursor-text bg-blue-50/50 ring-1 ring-blue-200",
-          !isEditing && isSelected && "cursor-pointer"
+          "min-h-[1.6em] px-2 py-1 rounded",
+          isLocked && "cursor-not-allowed",
+          "[&_.tiptap-editor]:outline-none",
+          "[&_.tiptap-editor_a]:text-blue-600 [&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer"
         )}
-        style={textStyle}
+        style={editorStyle}
       >
         <EditorContent editor={editor} />
       </div>
     </div>
   );
-});
+}

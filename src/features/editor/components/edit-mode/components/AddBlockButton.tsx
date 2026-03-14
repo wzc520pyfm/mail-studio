@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 interface AddBlockButtonProps {
   parentId: string;
   hasColoredParent?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 const blockTypes = [
@@ -44,9 +45,18 @@ const blockTypes = [
   { type: "mj-raw" as const, icon: Code, label: "Raw HTML", category: "content" },
 ];
 
-export function AddBlockButton({ parentId, hasColoredParent = false }: AddBlockButtonProps) {
+export function AddBlockButton({
+  parentId,
+  hasColoredParent = false,
+  onOpenChange,
+}: AddBlockButtonProps) {
   const { addNode, findNode } = useEditorStore();
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    onOpenChange?.(open);
+  };
 
   const getTargetParentId = () => {
     const parent = findNode(parentId);
@@ -74,7 +84,7 @@ export function AddBlockButton({ parentId, hasColoredParent = false }: AddBlockB
   const interactiveBlocks = blockTypes.filter((b) => b.category === "interactive");
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           className={cn(

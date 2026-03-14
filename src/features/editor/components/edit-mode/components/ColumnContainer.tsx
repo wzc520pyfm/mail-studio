@@ -49,6 +49,7 @@ export function ColumnContainer({
   isDragging: isColumnDragging,
 }: ColumnContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { selectedId, setSelectedId, removeNode, findNode, duplicateNode, updateNodeChildren } =
     useEditorStore();
   const isSelected = selectedId === node.id;
@@ -253,9 +254,18 @@ export function ColumnContainer({
               />
             ))}
             {!isLocked && (
-              <div className="grid transition-all duration-200 grid-rows-[0fr] group-hover:grid-rows-[1fr]">
-                <div className="overflow-hidden">
-                  <AddBlockButton parentId={node.id} hasColoredParent={!!hasColoredParent} />
+              <div
+                className={cn(
+                  "grid transition-all duration-200",
+                  isPopoverOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] group-hover:grid-rows-[1fr]"
+                )}
+              >
+                <div className={isPopoverOpen ? "" : "overflow-hidden"}>
+                  <AddBlockButton
+                    parentId={node.id}
+                    hasColoredParent={!!hasColoredParent}
+                    onOpenChange={setIsPopoverOpen}
+                  />
                 </div>
               </div>
             )}
