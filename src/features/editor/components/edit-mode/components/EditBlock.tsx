@@ -1,12 +1,37 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useEditorStore, useIsNodeLocked } from "@/features/editor/stores";
-import type { EditorNode } from "@/features/editor/types";
+import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
-import { GripVertical, Trash2, Lock } from "lucide-react";
+import {
+  GripVertical,
+  Trash2,
+  Lock,
+  Copy,
+  ArrowUp,
+  ArrowDown,
+  RefreshCw,
+  Type,
+  Image,
+  MousePointerClick,
+  Minus,
+  MoveVertical,
+  Table,
+  Code,
+} from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   EditableText,
   EditableImage,
@@ -21,6 +46,16 @@ import {
   EditableRaw,
 } from "./blocks";
 
+const TURN_INTO_OPTIONS: { type: MJMLComponentType; label: string; icon: React.ElementType }[] = [
+  { type: "mj-text", label: "Text", icon: Type },
+  { type: "mj-image", label: "Image", icon: Image },
+  { type: "mj-button", label: "Button", icon: MousePointerClick },
+  { type: "mj-divider", label: "Divider", icon: Minus },
+  { type: "mj-spacer", label: "Spacer", icon: MoveVertical },
+  { type: "mj-table", label: "Table", icon: Table },
+  { type: "mj-raw", label: "Raw HTML", icon: Code },
+];
+
 interface EditBlockProps {
   node: EditorNode;
   parentId: string;
@@ -32,17 +67,18 @@ interface EditBlockProps {
 
 export function EditBlock({
   node,
-  parentId,
+  parentId: _parentId,
   dragHandleProps,
   isDragging,
   hasColoredParent = false,
   isParentLocked = false,
 }: EditBlockProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { removeNode, selectedId, setSelectedId } = useEditorStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { removeNode, duplicateNode, moveNode, selectedId, setSelectedId, findParent, addNode } =
+    useEditorStore();
   const isSelected = selectedId === node.id;
 
-  // Check if this block is locked (directly or via parent)
   const isNodeLocked = useIsNodeLocked(node.id);
   const isLocked = isNodeLocked || isParentLocked;
   const isDirectlyLocked = node.locked ?? false;
@@ -52,9 +88,41 @@ export function EditBlock({
     removeNode(node.id);
   }, [node.id, removeNode, isLocked]);
 
+  const handleDuplicate = useCallback(() => {
+    if (isLocked) return;
+    duplicateNode(node.id);
+  }, [node.id, duplicateNode, isLocked]);
+
+  const handleMoveUp = useCallback(() => {
+    if (isLocked) return;
+    const parentInfo = findParent(node.id);
+    if (!parentInfo || parentInfo.index === 0) return;
+    moveNode(node.id, parentInfo.parent.id, parentInfo.index - 1);
+  }, [node.id, findParent, moveNode, isLocked]);
+
+  const handleMoveDown = useCallback(() => {
+    if (isLocked) return;
+    const parentInfo = findParent(node.id);
+    if (!parentInfo) return;
+    const siblings = parentInfo.parent.children;
+    if (!siblings || parentInfo.index >= siblings.length - 1) return;
+    moveNode(node.id, parentInfo.parent.id, parentInfo.index + 2);
+  }, [node.id, findParent, moveNode, isLocked]);
+
+  const handleTurnInto = useCallback(
+    (newType: MJMLComponentType) => {
+      if (isLocked) return;
+      const parentInfo = findParent(node.id);
+      if (!parentInfo) return;
+      removeNode(node.id);
+      addNode(parentInfo.parent.id, newType, parentInfo.index);
+    },
+    [node.id, findParent, removeNode, addNode, isLocked]
+  );
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation(); // Prevent bubbling to parent containers
+      e.stopPropagation();
       const target = e.target as HTMLElement;
       if (!target.closest('[contenteditable="true"]')) {
         setSelectedId(node.id);
@@ -62,6 +130,40 @@ export function EditBlock({
     },
     [node.id, setSelectedId]
   );
+
+  useEffect(() => {
+    if (!isSelected || isLocked) return;
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('[contenteditable="true"]') ||
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+      if ((e.key === "Delete" || e.key === "Backspace") && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        handleDelete();
+      }
+      if (e.key === "d" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleDuplicate();
+      }
+      if (e.key === "ArrowUp" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        handleMoveUp();
+      }
+      if (e.key === "ArrowDown" && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        handleMoveDown();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isSelected, isLocked, handleDelete, handleDuplicate, handleMoveUp, handleMoveDown]);
+
+  const showControls = isHovered || isSelected || menuOpen;
 
   return (
     <div
@@ -87,13 +189,15 @@ export function EditBlock({
         isDragging && "opacity-50"
       )}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        if (!menuOpen) setIsHovered(false);
+      }}
       onClick={handleClick}
     >
       <div
         className={cn(
-          "absolute -left-10 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 transition-opacity",
-          (isHovered || isSelected) && "opacity-100"
+          "absolute -left-10 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 transition-opacity",
+          showControls && "opacity-100"
         )}
       >
         {isLocked ? (
@@ -104,25 +208,65 @@ export function EditBlock({
             <Lock className="w-4 h-4" />
           </div>
         ) : (
-          <>
-            <button
-              className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
-              title="Drag to reorder"
-              {...dragHandleProps}
-            >
-              <GripVertical className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </>
+          <DropdownMenu
+            onOpenChange={(open) => {
+              setMenuOpen(open);
+              if (!open) setIsHovered(false);
+            }}
+          >
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                title="Drag to reorder · Click for options"
+                {...dragHandleProps}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="left" align="start" className="w-48">
+              <DropdownMenuItem onClick={handleDuplicate}>
+                <Copy className="w-4 h-4 mr-2" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMoveUp}>
+                <ArrowUp className="w-4 h-4 mr-2" />
+                Move Up
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMoveDown}>
+                <ArrowDown className="w-4 h-4 mr-2" />
+                Move Down
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Turn Into
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-40">
+                  {TURN_INTO_OPTIONS.filter((opt) => opt.type !== node.type).map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <DropdownMenuItem key={opt.type} onClick={() => handleTurnInto(opt.type)}>
+                        <Icon className="w-4 h-4 mr-2" />
+                        {opt.label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
@@ -161,7 +305,7 @@ export function SortableEditBlock({
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
-    disabled: isLocked, // Disable sorting for locked blocks
+    disabled: isLocked,
   });
 
   const style = {

@@ -13,6 +13,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { Extension } from "@tiptap/react";
 import type { Extensions } from "@tiptap/react";
+import { SlashCommands } from "./SlashCommand";
 
 const CustomTableCell = TableCell.extend({
   addAttributes() {
@@ -55,7 +56,10 @@ const SingleParagraph = Extension.create({
   },
 });
 
-export function getRichTextExtensions(placeholder?: string): Extensions {
+export function getRichTextExtensions(
+  placeholder?: string,
+  options?: { enableSlashCommands?: boolean }
+): Extensions {
   return [
     StarterKit.configure({
       heading: false,
@@ -80,6 +84,7 @@ export function getRichTextExtensions(placeholder?: string): Extensions {
     }),
     TextStyle,
     Color,
+    ...(options?.enableSlashCommands ? [SlashCommands] : []),
     ...(placeholder
       ? [
           Placeholder.configure({
