@@ -26,6 +26,47 @@ function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/**
+ * Clean TipTap-generated table HTML for email compatibility.
+ * TipTap wraps cell content in <p> tags and adds redundant attributes
+ * that cause rendering issues in email clients.
+ */
+function cleanTableContentForEmail(content: string): string {
+  const temp = document.createElement("div");
+  temp.innerHTML = `<table><tbody>${content}</tbody></table>`;
+
+  temp.querySelectorAll("td, th").forEach((cell) => {
+    if (cell.getAttribute("colspan") === "1") cell.removeAttribute("colspan");
+    if (cell.getAttribute("rowspan") === "1") cell.removeAttribute("rowspan");
+
+    const paragraphs = Array.from(cell.querySelectorAll(":scope > p"));
+    if (paragraphs.length > 0) {
+      const contents = paragraphs
+        .map((p) => p.innerHTML)
+        .filter((c) => c && c.trim() && c !== "<br>" && c !== "<br/>");
+      cell.innerHTML = contents.join("<br>");
+    }
+
+    const style = cell.getAttribute("style") || "";
+    if (!style.includes("padding")) {
+      (cell as HTMLElement).style.padding = "8px";
+    }
+  });
+
+  temp.querySelectorAll("th").forEach((th) => {
+    const style = th.getAttribute("style") || "";
+    if (!style.includes("border-bottom")) {
+      (th as HTMLElement).style.borderBottom = "1px solid #ddd";
+    }
+    if (!style.includes("text-align")) {
+      (th as HTMLElement).style.textAlign = "left";
+    }
+  });
+
+  const tbody = temp.querySelector("tbody");
+  return tbody ? tbody.innerHTML : content;
+}
+
 // Convert EditorNode tree to MJML string
 export function nodeToMjml(node: EditorNode, indent = 0): string {
   const spaces = "  ".repeat(indent);
@@ -67,7 +108,8 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
   if (content && !validChildren?.length) {
     // For HTML content tags, preserve the content as-is (with proper indentation)
     if (HTML_CONTENT_TAGS.includes(type)) {
-      const indentedContent = content
+      const processedContent = type === "mj-table" ? cleanTableContentForEmail(content) : content;
+      const indentedContent = processedContent
         .split("\n")
         .map((line) => `${spaces}  ${line}`)
         .join("\n");

@@ -199,37 +199,37 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
   const moveColumnLeft = useCallback(
     (colIndex: number) => {
       if (!editor || colIndex <= 0) return;
-      swapColumns(editor, colIndex, colIndex - 1, rowCount);
+      swapColumns(editor, colIndex, colIndex - 1);
       setSelectedCol(colIndex - 1);
     },
-    [editor, rowCount]
+    [editor]
   );
 
   const moveColumnRight = useCallback(
     (colIndex: number) => {
       if (!editor || colIndex >= columnCount - 1) return;
-      swapColumns(editor, colIndex, colIndex + 1, rowCount);
+      swapColumns(editor, colIndex, colIndex + 1);
       setSelectedCol(colIndex + 1);
     },
-    [editor, columnCount, rowCount]
+    [editor, columnCount]
   );
 
   const moveRowUp = useCallback(
     (rowIndex: number) => {
       if (!editor || rowIndex <= 0) return;
-      swapRows(editor, rowIndex, rowIndex - 1, columnCount);
+      swapRows(editor, rowIndex, rowIndex - 1);
       setSelectedRow(rowIndex - 1);
     },
-    [editor, columnCount]
+    [editor]
   );
 
   const moveRowDown = useCallback(
     (rowIndex: number) => {
       if (!editor || rowIndex >= rowCount - 1) return;
-      swapRows(editor, rowIndex, rowIndex + 1, columnCount);
+      swapRows(editor, rowIndex, rowIndex + 1);
       setSelectedRow(rowIndex + 1);
     },
-    [editor, rowCount, columnCount]
+    [editor, rowCount]
   );
 
   const sortColumn = useCallback(
@@ -720,7 +720,7 @@ function selectCellAt(editor: Editor, row: number, col: number) {
   });
 }
 
-function swapColumns(editor: Editor, col1: number, col2: number, _rowCount: number) {
+function swapColumns(editor: Editor, col1: number, col2: number) {
   const html = editor.getHTML();
   const temp = document.createElement("div");
   temp.innerHTML = html;
@@ -741,7 +741,7 @@ function swapColumns(editor: Editor, col1: number, col2: number, _rowCount: numb
   editor.commands.setContent(temp.innerHTML);
 }
 
-function swapRows(editor: Editor, row1: number, row2: number, _columnCount: number) {
+function swapRows(editor: Editor, row1: number, row2: number) {
   const html = editor.getHTML();
   const temp = document.createElement("div");
   temp.innerHTML = html;
