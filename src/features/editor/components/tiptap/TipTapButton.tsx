@@ -69,7 +69,6 @@ export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
         <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200">
           <select
             value={borderRadius}
-            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) => updateNodeProps(node.id, { "border-radius": e.target.value })}
             className="text-sm px-2 py-1 rounded border-0 bg-gray-50"
           >
@@ -81,7 +80,6 @@ export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
           <input
             type="color"
             value={bgColor}
-            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) => updateNodeProps(node.id, { "background-color": e.target.value })}
             className="w-6 h-6 rounded cursor-pointer"
             title="Background Color"
@@ -89,14 +87,12 @@ export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
           <input
             type="color"
             value={textColor}
-            onMouseDown={(e) => e.preventDefault()}
             onChange={(e) => updateNodeProps(node.id, { color: e.target.value })}
             className="w-6 h-6 rounded cursor-pointer"
             title="Text Color"
           />
           <div className="w-px h-5 bg-gray-200 mx-1" />
           <button
-            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               const url = prompt("Enter button URL:", (node.props["href"] as string) || "");
               if (url !== null) updateNodeProps(node.id, { href: url });
