@@ -49,6 +49,7 @@ export function ColumnContainer({
   isDragging: isColumnDragging,
 }: ColumnContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { selectedId, setSelectedId, removeNode, findNode, duplicateNode, updateNodeChildren } =
     useEditorStore();
   const isSelected = selectedId === node.id;
@@ -145,8 +146,15 @@ export function ColumnContainer({
         setSelectedId(node.id);
       }}
     >
-      {(isHovered || isSelected) && (
-        <div className="absolute -top-2 right-1 z-10 flex items-center gap-1">
+      {(isHovered || isSelected || isMenuOpen) && (
+        <div
+          className="absolute -top-2 right-1 z-20 flex items-center gap-1"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedId(node.id);
+          }}
+        >
           {isLocked ? (
             <div
               className={cn(
@@ -194,7 +202,7 @@ export function ColumnContainer({
                   className={cn("w-3 h-3", hasColoredParent ? "text-gray-700" : "text-gray-500")}
                 />
               </button>
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={setIsMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className={cn(
