@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useEditorStore, useIsNodeLocked } from "@/features/editor/stores";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
@@ -75,6 +75,8 @@ export function EditBlock({
 }: EditBlockProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const hadDragMotionRef = useRef(false);
   const { removeNode, duplicateNode, moveNode, selectedId, setSelectedId, findParent, addNode } =
     useEditorStore();
   const isSelected = selectedId === node.id;
@@ -209,9 +211,12 @@ export function EditBlock({
           </div>
         ) : (
           <DropdownMenu
+            open={menuOpen}
             onOpenChange={(open) => {
-              setMenuOpen(open);
-              if (!open) setIsHovered(false);
+              if (!open) {
+                setMenuOpen(false);
+                setIsHovered(false);
+              }
             }}
           >
             <DropdownMenuTrigger asChild>
@@ -219,6 +224,31 @@ export function EditBlock({
                 className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
                 title="Drag to reorder · Click for options"
                 {...dragHandleProps}
+                onPointerDown={(e) => {
+                  pointerStartRef.current = { x: e.clientX, y: e.clientY };
+                  hadDragMotionRef.current = false;
+                  const handler = dragHandleProps?.onPointerDown as
+                    | ((e: React.PointerEvent) => void)
+                    | undefined;
+                  handler?.(e);
+                  e.preventDefault();
+                }}
+                onPointerMove={(e) => {
+                  if (pointerStartRef.current) {
+                    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+                    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+                    if (dx > 3 || dy > 3) {
+                      hadDragMotionRef.current = true;
+                    }
+                  }
+                }}
+                onPointerUp={() => {
+                  if (pointerStartRef.current && !hadDragMotionRef.current) {
+                    setMenuOpen((prev) => !prev);
+                  }
+                  pointerStartRef.current = null;
+                  hadDragMotionRef.current = false;
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <GripVertical className="w-4 h-4" />
