@@ -5,6 +5,7 @@ import { EditorContent } from "@tiptap/react";
 import { useEditorStore } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { Link } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useTipTapEditor } from "./useTipTapEditor";
 import { getPlainTextExtensions } from "./extensions";
 
@@ -16,6 +17,8 @@ interface TipTapButtonProps {
 export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
   const { updateNodeContent, updateNodeProps, selectedId } = useEditorStore();
   const [showToolbar, setShowToolbar] = useState(false);
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
   const isSelected = selectedId === node.id;
 
   const extensions = useMemo(() => getPlainTextExtensions(), []);
@@ -53,6 +56,7 @@ export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
   const textTransform = (node.props["text-transform"] as string) || "none";
   const letterSpacing = node.props["letter-spacing"] as string;
   const lineHeight = (node.props["line-height"] as string) || "120%";
+  const href = (node.props["href"] as string) || "";
 
   if (!editor) return null;
 
@@ -92,16 +96,64 @@ export function TipTapButton({ node, isLocked = false }: TipTapButtonProps) {
             title="Text Color"
           />
           <div className="w-px h-5 bg-gray-200 mx-1" />
-          <button
-            onClick={() => {
-              const url = prompt("Enter button URL:", (node.props["href"] as string) || "");
-              if (url !== null) updateNodeProps(node.id, { href: url });
+          <Popover
+            open={linkPopoverOpen}
+            onOpenChange={(open) => {
+              setLinkPopoverOpen(open);
+              if (open) {
+                setLinkUrl(href);
+              }
             }}
-            className="p-1.5 rounded hover:bg-gray-100"
-            title="Edit Link"
           >
-            <Link className="w-4 h-4" />
-          </button>
+            <PopoverTrigger asChild>
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                className="p-1.5 rounded hover:bg-gray-100"
+                title="Edit Link"
+              >
+                <Link className="w-4 h-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-3" align="center" sideOffset={8}>
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-700">Button URL</div>
+                <input
+                  type="url"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      updateNodeProps(node.id, { href: linkUrl });
+                      setLinkPopoverOpen(false);
+                    }
+                  }}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setLinkUrl(href);
+                      setLinkPopoverOpen(false);
+                    }}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateNodeProps(node.id, { href: linkUrl });
+                      setLinkPopoverOpen(false);
+                    }}
+                    className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
 
