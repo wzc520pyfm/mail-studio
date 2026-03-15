@@ -435,7 +435,7 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       {/* Table editor */}
       <div
         ref={tableWrapperRef}
-        className="pt-6 relative"
+        className="relative pt-[10px]"
         onClick={() => {
           setSelectedRow(null);
           setSelectedCol(null);
@@ -443,7 +443,7 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       >
         {/* Floating column selectors */}
         {showControls && colPositions.length > 0 && (
-          <div className="absolute top-1 left-0 right-0 z-20 pointer-events-none">
+          <div className="absolute -top-5 left-0 right-0 z-20 pointer-events-none">
             {colPositions.map((pos, colIndex) => (
               <div
                 key={colIndex}
