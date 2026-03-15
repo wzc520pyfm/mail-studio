@@ -112,6 +112,9 @@ export function getTableExtensions(): Extensions {
     Link.configure({
       openOnClick: false,
     }),
+    TextAlign.configure({
+      types: ["paragraph"],
+    }),
     TextStyle,
     Color,
     Table.configure({

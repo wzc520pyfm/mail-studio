@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { EditorContent } from "@tiptap/react";
+import { EditorContent, posToDOMRect } from "@tiptap/react";
 import { useEditorStore } from "@/features/editor/stores";
+import { TipTapToolbar } from "./TipTapToolbar";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
 import {
@@ -63,6 +64,9 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
   const [colPositions, setColPositions] = useState<{ left: number; width: number }[]>([]);
   const [rowPositions, setRowPositions] = useState<number[]>([]);
   const [isToolbarMenuOpen, setIsToolbarMenuOpen] = useState(false);
+  const [hasSelection, setHasSelection] = useState(false);
+  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number } | null>(null);
+  const isPopoverOpenRef = useRef(false);
 
   const isAnyMenuOpen = selectedCol !== null || selectedRow !== null || isToolbarMenuOpen;
   const showControls = (isSelected || isHovered || isAnyMenuOpen) && !isLocked;
@@ -82,6 +86,33 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
     editable: !isLocked,
     onUpdate: handleUpdate,
   });
+
+  // Show formatting toolbar when text is selected inside table cells (same as TipTapText)
+  useEffect(() => {
+    if (!editor) return;
+    const updateSelection = () => {
+      const { from, to } = editor.state.selection;
+      const selected = from !== to;
+      setHasSelection(selected);
+      if (selected) {
+        const rect = posToDOMRect(editor.view, from, to);
+        setToolbarPos({ top: rect.top - 48, left: rect.left + rect.width / 2 });
+      }
+    };
+    editor.on("selectionUpdate", updateSelection);
+    editor.on("blur", () => {
+      if (!isPopoverOpenRef.current) {
+        setTimeout(() => {
+          if (!isPopoverOpenRef.current) {
+            setHasSelection(false);
+          }
+        }, 200);
+      }
+    });
+    return () => {
+      editor.off("selectionUpdate", updateSelection);
+    };
+  }, [editor]);
 
   // Calculate column/row positions for floating selectors
   useEffect(() => {
@@ -315,6 +346,21 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
         setSelectedCol(null);
       }}
     >
+      {/* Floating formatting toolbar when text is selected in a cell */}
+      {!isLocked && hasSelection && toolbarPos && (
+        <div
+          className="fixed z-50"
+          style={{ top: toolbarPos.top, left: toolbarPos.left, transform: "translateX(-50%)" }}
+        >
+          <TipTapToolbar
+            editor={editor}
+            onPopoverOpenChange={(open) => {
+              isPopoverOpenRef.current = open;
+            }}
+          />
+        </div>
+      )}
+
       {/* Top toolbar */}
       <div
         className={cn(
