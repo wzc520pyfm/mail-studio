@@ -12,6 +12,7 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCw,
+  Plus,
   Type,
   Image,
   MousePointerClick,
@@ -32,6 +33,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BlockTypeMenuContent } from "./AddBlockButton";
 import {
   EditableText,
   EditableImage,
@@ -67,7 +70,7 @@ interface EditBlockProps {
 
 export function EditBlock({
   node,
-  parentId: _parentId,
+  parentId,
   dragHandleProps,
   isDragging,
   hasColoredParent = false,
@@ -75,6 +78,7 @@ export function EditBlock({
 }: EditBlockProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [addBlockMenuOpen, setAddBlockMenuOpen] = useState(false);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const hadDragMotionRef = useRef(false);
   const { removeNode, duplicateNode, moveNode, selectedId, setSelectedId, findParent, addNode } =
@@ -122,6 +126,16 @@ export function EditBlock({
     [node.id, findParent, removeNode, addNode, isLocked]
   );
 
+  const handleAddBlock = useCallback(
+    (type: MJMLComponentType) => {
+      const parentInfo = findParent(node.id);
+      if (!parentInfo) return;
+      addNode(parentInfo.parent.id, type, parentInfo.index + 1);
+      setAddBlockMenuOpen(false);
+    },
+    [node.id, findParent, addNode]
+  );
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -165,7 +179,7 @@ export function EditBlock({
     return () => window.removeEventListener("keydown", handler);
   }, [isSelected, isLocked, handleDelete, handleDuplicate, handleMoveUp, handleMoveDown]);
 
-  const showControls = isHovered || isSelected || menuOpen;
+  const showControls = isHovered || isSelected || menuOpen || addBlockMenuOpen;
 
   return (
     <div
@@ -198,7 +212,7 @@ export function EditBlock({
     >
       <div
         className={cn(
-          "absolute -left-10 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 transition-opacity",
+          "absolute -left-14 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 transition-opacity",
           showControls && "opacity-100"
         )}
       >
@@ -210,93 +224,115 @@ export function EditBlock({
             <Lock className="w-4 h-4" />
           </div>
         ) : (
-          <DropdownMenu
-            open={menuOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setMenuOpen(false);
-                setIsHovered(false);
-              }
-            }}
-          >
-            <DropdownMenuTrigger asChild>
-              <button
-                className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
-                title="Drag to reorder · Click for options"
-                {...dragHandleProps}
-                onPointerDown={(e) => {
-                  pointerStartRef.current = { x: e.clientX, y: e.clientY };
-                  hadDragMotionRef.current = false;
-                  const handler = dragHandleProps?.onPointerDown as
-                    | ((e: React.PointerEvent) => void)
-                    | undefined;
-                  handler?.(e);
-                  e.preventDefault();
-                }}
-                onPointerMove={(e) => {
-                  if (pointerStartRef.current) {
-                    const dx = Math.abs(e.clientX - pointerStartRef.current.x);
-                    const dy = Math.abs(e.clientY - pointerStartRef.current.y);
-                    if (dx > 3 || dy > 3) {
-                      hadDragMotionRef.current = true;
+          <>
+            <Popover
+              open={addBlockMenuOpen}
+              onOpenChange={(open) => {
+                setAddBlockMenuOpen(open);
+                if (!open) setIsHovered(false);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <button
+                  className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                  title="Add block below"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" side="left" align="start">
+                <BlockTypeMenuContent onSelect={handleAddBlock} />
+              </PopoverContent>
+            </Popover>
+            <DropdownMenu
+              open={menuOpen}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setMenuOpen(false);
+                  setIsHovered(false);
+                }
+              }}
+            >
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="p-1 rounded cursor-grab active:cursor-grabbing touch-none hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                  title="Drag to reorder · Click for options"
+                  {...dragHandleProps}
+                  onPointerDown={(e) => {
+                    pointerStartRef.current = { x: e.clientX, y: e.clientY };
+                    hadDragMotionRef.current = false;
+                    const handler = dragHandleProps?.onPointerDown as
+                      | ((e: React.PointerEvent) => void)
+                      | undefined;
+                    handler?.(e);
+                    e.preventDefault();
+                  }}
+                  onPointerMove={(e) => {
+                    if (pointerStartRef.current) {
+                      const dx = Math.abs(e.clientX - pointerStartRef.current.x);
+                      const dy = Math.abs(e.clientY - pointerStartRef.current.y);
+                      if (dx > 3 || dy > 3) {
+                        hadDragMotionRef.current = true;
+                      }
                     }
-                  }
-                }}
-                onPointerUp={() => {
-                  if (pointerStartRef.current && !hadDragMotionRef.current) {
-                    setMenuOpen((prev) => !prev);
-                  }
-                  pointerStartRef.current = null;
-                  hadDragMotionRef.current = false;
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GripVertical className="w-4 h-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="left" align="start" className="w-48">
-              <DropdownMenuItem onClick={handleDuplicate}>
-                <Copy className="w-4 h-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMoveUp}>
-                <ArrowUp className="w-4 h-4 mr-2" />
-                Move Up
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleMoveDown}>
-                <ArrowDown className="w-4 h-4 mr-2" />
-                Move Down
-              </DropdownMenuItem>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Turn Into
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-40">
-                  {TURN_INTO_OPTIONS.filter((opt) => opt.type !== node.type).map((opt) => {
-                    const Icon = opt.icon;
-                    return (
-                      <DropdownMenuItem key={opt.type} onClick={() => handleTurnInto(opt.type)}>
-                        <Icon className="w-4 h-4 mr-2" />
-                        {opt.label}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete();
-                }}
-                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  }}
+                  onPointerUp={() => {
+                    if (pointerStartRef.current && !hadDragMotionRef.current) {
+                      setMenuOpen((prev) => !prev);
+                    }
+                    pointerStartRef.current = null;
+                    hadDragMotionRef.current = false;
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="left" align="start" className="w-48">
+                <DropdownMenuItem onClick={handleDuplicate}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleMoveUp}>
+                  <ArrowUp className="w-4 h-4 mr-2" />
+                  Move Up
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleMoveDown}>
+                  <ArrowDown className="w-4 h-4 mr-2" />
+                  Move Down
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Turn Into
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    {TURN_INTO_OPTIONS.filter((opt) => opt.type !== node.type).map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <DropdownMenuItem key={opt.type} onClick={() => handleTurnInto(opt.type)}>
+                          <Icon className="w-4 h-4 mr-2" />
+                          {opt.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
       </div>
 

@@ -24,9 +24,10 @@ interface AddBlockButtonProps {
   parentId: string;
   hasColoredParent?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
+  alwaysVisible?: boolean;
 }
 
-const blockTypes = [
+export const blockTypes = [
   { type: "mj-text" as const, icon: Type, label: "Text", category: "content" },
   { type: "mj-image" as const, icon: Image, label: "Image", category: "content" },
   { type: "mj-button" as const, icon: MousePointerClick, label: "Button", category: "interactive" },
@@ -45,10 +46,59 @@ const blockTypes = [
   { type: "mj-raw" as const, icon: Code, label: "Raw HTML", category: "content" },
 ];
 
+export function BlockTypeMenuContent({
+  onSelect,
+}: {
+  onSelect: (type: MJMLComponentType) => void;
+}) {
+  const contentBlocks = blockTypes.filter((b) => b.category === "content");
+  const interactiveBlocks = blockTypes.filter((b) => b.category === "interactive");
+
+  return (
+    <div className="space-y-2">
+      <div>
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+          Content
+        </div>
+        <div className="space-y-0.5">
+          {contentBlocks.map(({ type, icon: Icon, label }) => (
+            <button
+              key={type}
+              onClick={() => onSelect(type)}
+              className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Icon className="w-4 h-4 text-gray-500" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="border-t pt-2">
+        <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
+          Interactive
+        </div>
+        <div className="space-y-0.5">
+          {interactiveBlocks.map(({ type, icon: Icon, label }) => (
+            <button
+              key={type}
+              onClick={() => onSelect(type)}
+              className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Icon className="w-4 h-4 text-gray-500" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AddBlockButton({
   parentId,
   hasColoredParent = false,
   onOpenChange,
+  alwaysVisible = false,
 }: AddBlockButtonProps) {
   const { addNode, findNode } = useEditorStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -80,16 +130,13 @@ export function AddBlockButton({
     setIsOpen(false);
   };
 
-  const contentBlocks = blockTypes.filter((b) => b.category === "content");
-  const interactiveBlocks = blockTypes.filter((b) => b.category === "interactive");
-
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           className={cn(
             "w-full py-2 flex items-center justify-center gap-2 rounded-lg transition-all",
-            "opacity-0 hover:opacity-100 focus:opacity-100",
+            !alwaysVisible && "opacity-0 hover:opacity-100 focus:opacity-100",
             !hasColoredParent && "text-gray-400 hover:bg-gray-100 hover:text-gray-600",
             !hasColoredParent && isOpen && "opacity-100 bg-gray-100",
             hasColoredParent && "text-white/60 hover:bg-white/10 hover:text-white/90",
@@ -101,42 +148,7 @@ export function AddBlockButton({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="start">
-        <div className="space-y-2">
-          <div>
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
-              Content
-            </div>
-            <div className="space-y-0.5">
-              {contentBlocks.map(({ type, icon: Icon, label }) => (
-                <button
-                  key={type}
-                  onClick={() => handleAddBlock(type)}
-                  className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <Icon className="w-4 h-4 text-gray-500" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="border-t pt-2">
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 mb-1">
-              Interactive
-            </div>
-            <div className="space-y-0.5">
-              {interactiveBlocks.map(({ type, icon: Icon, label }) => (
-                <button
-                  key={type}
-                  onClick={() => handleAddBlock(type)}
-                  className="w-full flex items-center gap-3 px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <Icon className="w-4 h-4 text-gray-500" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <BlockTypeMenuContent onSelect={handleAddBlock} />
       </PopoverContent>
     </Popover>
   );

@@ -16,7 +16,6 @@ interface HeroContainerProps {
 
 export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { selectedId, setSelectedId, removeNode, duplicateNode } = useEditorStore();
   const isSelected = selectedId === node.id;
   const isDirectlyLocked = node.locked ?? false;
@@ -114,17 +113,8 @@ export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroC
         {node.children?.map((child) => (
           <EditBlock key={child.id} node={child} parentId={node.id} isParentLocked={isLocked} />
         ))}
-        {!isLocked && (
-          <div
-            className={cn(
-              "grid transition-all duration-200",
-              isPopoverOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] group-hover:grid-rows-[1fr]"
-            )}
-          >
-            <div className={isPopoverOpen ? "" : "overflow-hidden"}>
-              <AddBlockButton parentId={node.id} onOpenChange={setIsPopoverOpen} />
-            </div>
-          </div>
+        {!isLocked && (!node.children || node.children.length === 0) && (
+          <AddBlockButton parentId={node.id} alwaysVisible />
         )}
       </div>
     </div>

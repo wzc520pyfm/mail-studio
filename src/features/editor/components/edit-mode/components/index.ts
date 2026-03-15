@@ -13,4 +13,4 @@ export { EditBlock, SortableEditBlock, EditBlockContent } from "./EditBlock";
 
 // Utility components
 export { AddSectionButton } from "./AddSectionButton";
-export { AddBlockButton } from "./AddBlockButton";
+export { AddBlockButton, BlockTypeMenuContent, blockTypes } from "./AddBlockButton";
