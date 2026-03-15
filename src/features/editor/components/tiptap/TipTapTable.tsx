@@ -7,12 +7,9 @@ import { TipTapToolbar } from "./TipTapToolbar";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
 import {
-  Plus,
   Trash2,
   Code,
-  RowsIcon,
-  ColumnsIcon,
-  MoreHorizontal,
+  Plus,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
@@ -63,12 +60,11 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
   const tableWrapperRef = useRef<HTMLDivElement>(null);
   const [colPositions, setColPositions] = useState<{ left: number; width: number }[]>([]);
   const [rowPositions, setRowPositions] = useState<number[]>([]);
-  const [isToolbarMenuOpen, setIsToolbarMenuOpen] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number } | null>(null);
   const isPopoverOpenRef = useRef(false);
 
-  const isAnyMenuOpen = selectedCol !== null || selectedRow !== null || isToolbarMenuOpen;
+  const isAnyMenuOpen = selectedCol !== null || selectedRow !== null;
   const showControls = (isSelected || isHovered || isAnyMenuOpen) && !isLocked;
 
   const extensions = useMemo(() => getTableExtensions(), []);
@@ -163,14 +159,6 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
   }, [node.content]);
 
   // Custom table operations via ProseMirror
-  const addRow = useCallback(() => {
-    editor?.chain().focus().addRowAfter().run();
-  }, [editor]);
-
-  const addColumn = useCallback(() => {
-    editor?.chain().focus().addColumnAfter().run();
-  }, [editor]);
-
   const deleteSelectedRow = useCallback(
     (rowIndex: number) => {
       if (!editor || rowCount <= 1) return;
@@ -292,11 +280,6 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
     setIsHtmlMode(false);
   }, [node.id, htmlContent, updateNodeContent]);
 
-  const handleEnterHtmlMode = useCallback(() => {
-    setHtmlContent(node.content || "");
-    setIsHtmlMode(true);
-  }, [node.content]);
-
   if (isHtmlMode) {
     return (
       <div className="relative">
@@ -361,77 +344,6 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
         </div>
       )}
 
-      {/* Top toolbar */}
-      <div
-        className={cn(
-          "absolute -top-1 left-0 z-20 flex items-center gap-1 transition-opacity",
-          showControls ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addRow();
-          }}
-          className="p-1 rounded shadow-sm border bg-white/95 border-gray-200 hover:bg-gray-50"
-          title="Add Row"
-        >
-          <div className="flex items-center gap-0.5">
-            <RowsIcon className="w-3 h-3 text-gray-500" />
-            <Plus className="w-2.5 h-2.5 text-gray-500" />
-          </div>
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            addColumn();
-          }}
-          className="p-1 rounded shadow-sm border bg-white/95 border-gray-200 hover:bg-gray-50"
-          title="Add Column"
-        >
-          <div className="flex items-center gap-0.5">
-            <ColumnsIcon className="w-3 h-3 text-gray-500" />
-            <Plus className="w-2.5 h-2.5 text-gray-500" />
-          </div>
-        </button>
-        <DropdownMenu onOpenChange={setIsToolbarMenuOpen}>
-          <DropdownMenuTrigger asChild>
-            <button
-              onClick={(e) => e.stopPropagation()}
-              className="p-1 rounded shadow-sm border bg-white/95 border-gray-200 hover:bg-gray-50"
-            >
-              <MoreHorizontal className="w-3 h-3 text-gray-500" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem className="text-xs" disabled>
-              Table ({rowCount} x {columnCount})
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs" onClick={addRow}>
-              <RowsIcon className="w-3 h-3 mr-2" />
-              Add Row
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-xs" onClick={addColumn}>
-              <ColumnsIcon className="w-3 h-3 mr-2" />
-              Add Column
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-xs"
-              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
-            >
-              Toggle Header Row
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-xs" onClick={handleEnterHtmlMode}>
-              <Code className="w-3 h-3 mr-2" />
-              Edit HTML
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Table editor */}
       <div
         ref={tableWrapperRef}
@@ -443,12 +355,12 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       >
         {/* Floating column selectors */}
         {showControls && colPositions.length > 0 && (
-          <div className="absolute -top-5 left-0 right-0 z-20 pointer-events-none">
+          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
             {colPositions.map((pos, colIndex) => (
               <div
                 key={colIndex}
                 className="absolute pointer-events-auto"
-                style={{ left: pos.left, transform: "translateX(-50%)" }}
+                style={{ left: pos.left, transform: "translate(-50%, -50%)" }}
               >
                 {selectedCol === colIndex ? (
                   <ColumnMenu
