@@ -10,6 +10,8 @@ import {
   Trash2,
   Code,
   Plus,
+  MoreHorizontal,
+  MoreVertical,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
@@ -39,6 +41,19 @@ interface TipTapTableProps {
   isLocked?: boolean;
 }
 
+interface AxisPosition {
+  start: number;
+  center: number;
+  end: number;
+}
+
+interface TableFrame {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+}
+
 const CELL_COLORS = [
   { label: "Default", value: "" },
   { label: "Light Gray", value: "#f3f4f6" },
@@ -57,9 +72,12 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
   const [htmlContent, setHtmlContent] = useState(node.content || "");
   const [selectedCol, setSelectedCol] = useState<number | null>(null);
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const tableWrapperRef = useRef<HTMLDivElement>(null);
-  const [colPositions, setColPositions] = useState<{ left: number; width: number }[]>([]);
-  const [rowPositions, setRowPositions] = useState<number[]>([]);
+  const [colPositions, setColPositions] = useState<AxisPosition[]>([]);
+  const [rowPositions, setRowPositions] = useState<AxisPosition[]>([]);
+  const [tableFrame, setTableFrame] = useState<TableFrame | null>(null);
   const [hasSelection, setHasSelection] = useState(false);
   const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number } | null>(null);
   const isPopoverOpenRef = useRef(false);
@@ -122,32 +140,62 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       if (!table) return;
 
       const wrapperRect = wrapper.getBoundingClientRect();
+      const tableRect = table.getBoundingClientRect();
+
+      setTableFrame({
+        top: tableRect.top - wrapperRect.top,
+        left: tableRect.left - wrapperRect.left,
+        right: tableRect.right - wrapperRect.left,
+        bottom: tableRect.bottom - wrapperRect.top,
+      });
 
       const firstRow = table.querySelector("tr");
       if (firstRow) {
         const cells = firstRow.querySelectorAll("th, td");
-        const positions: { left: number; width: number }[] = [];
+        const positions: AxisPosition[] = [];
         cells.forEach((cell) => {
           const rect = cell.getBoundingClientRect();
           positions.push({
-            left: rect.left - wrapperRect.left + rect.width / 2,
-            width: rect.width,
+            start: rect.left - wrapperRect.left,
+            center: rect.left - wrapperRect.left + rect.width / 2,
+            end: rect.right - wrapperRect.left,
           });
         });
         setColPositions(positions);
       }
 
       const rows = table.querySelectorAll("tr");
-      const rPositions: number[] = [];
+      const rPositions: AxisPosition[] = [];
       rows.forEach((row) => {
         const rect = row.getBoundingClientRect();
-        rPositions.push(rect.top - wrapperRect.top + rect.height / 2);
+        rPositions.push({
+          start: rect.top - wrapperRect.top,
+          center: rect.top - wrapperRect.top + rect.height / 2,
+          end: rect.bottom - wrapperRect.top,
+        });
       });
       setRowPositions(rPositions);
     };
 
     requestAnimationFrame(calculate);
   }, [showControls, node.content]);
+
+  const handlePointerMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!tableWrapperRef.current || !tableFrame) return;
+
+      const wrapperRect = tableWrapperRef.current.getBoundingClientRect();
+      const x = event.clientX - wrapperRect.left;
+      const y = event.clientY - wrapperRect.top;
+
+      const nextCol = colPositions.findIndex((pos) => x >= pos.start && x <= pos.end);
+      const nextRow = rowPositions.findIndex((pos) => y >= pos.start && y <= pos.end);
+
+      setHoveredCol(nextCol >= 0 ? nextCol : null);
+      setHoveredRow(nextRow >= 0 ? nextRow : null);
+    },
+    [colPositions, rowPositions, tableFrame]
+  );
 
   // Table dimension helpers
   const { rowCount, columnCount } = useMemo(() => {
@@ -318,6 +366,9 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
 
   if (!editor) return null;
 
+  const activeCol = selectedCol ?? hoveredCol;
+  const activeRow = selectedRow ?? hoveredRow;
+
   return (
     <div
       className="relative"
@@ -325,6 +376,8 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       onMouseLeave={() => {
         if (isAnyMenuOpen) return;
         setIsHovered(false);
+        setHoveredCol(null);
+        setHoveredRow(null);
         setSelectedRow(null);
         setSelectedCol(null);
       }}
@@ -348,90 +401,142 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
       <div
         ref={tableWrapperRef}
         className="relative pt-[10px]"
+        onMouseMove={handlePointerMove}
         onClick={() => {
           setSelectedRow(null);
           setSelectedCol(null);
         }}
       >
         {/* Floating column selectors */}
-        {showControls && colPositions.length > 0 && (
-          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            {colPositions.map((pos, colIndex) => (
-              <div
-                key={colIndex}
-                className="absolute pointer-events-auto"
-                style={{ left: pos.left, transform: "translate(-50%, -50%)" }}
-              >
-                {selectedCol === colIndex ? (
-                  <ColumnMenu
-                    colIndex={colIndex}
-                    columnCount={columnCount}
-                    onMoveLeft={() => moveColumnLeft(colIndex)}
-                    onMoveRight={() => moveColumnRight(colIndex)}
-                    onInsertLeft={() => insertColumnBefore(colIndex)}
-                    onInsertRight={() => insertColumnAfter(colIndex)}
-                    onDelete={() => deleteSelectedColumn(colIndex)}
-                    onSortAsc={() => sortColumn(colIndex, "asc")}
-                    onSortDesc={() => sortColumn(colIndex, "desc")}
-                    onSetAlignment={(align) => setColumnAlignment(colIndex, align)}
-                    onSetColor={(color) => setColumnColor(colIndex, color)}
-                    onClose={() => {
-                      setSelectedCol(null);
-                      setIsHovered(false);
-                    }}
-                  />
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCol(colIndex);
-                      setSelectedRow(null);
-                    }}
-                    className="w-8 h-1.5 bg-gray-300 hover:bg-blue-400 rounded-full transition-colors cursor-pointer shadow-sm"
-                    title="Select column"
-                  />
+        {showControls && tableFrame && activeCol !== null && colPositions[activeCol] && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div
+              className="absolute pointer-events-auto"
+              style={{
+                left: colPositions[activeCol].center,
+                top: tableFrame.top,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <ColumnMenu
+                colIndex={activeCol}
+                columnCount={columnCount}
+                handleWidth={Math.max(
+                  colPositions[activeCol].end - colPositions[activeCol].start,
+                  0
                 )}
-              </div>
-            ))}
+                onMoveLeft={() => moveColumnLeft(activeCol)}
+                onMoveRight={() => moveColumnRight(activeCol)}
+                onInsertLeft={() => insertColumnBefore(activeCol)}
+                onInsertRight={() => insertColumnAfter(activeCol)}
+                onDelete={() => deleteSelectedColumn(activeCol)}
+                onSortAsc={() => sortColumn(activeCol, "asc")}
+                onSortDesc={() => sortColumn(activeCol, "desc")}
+                onSetAlignment={(align) => setColumnAlignment(activeCol, align)}
+                onSetColor={(color) => setColumnColor(activeCol, color)}
+                onOpenChange={(open) => {
+                  if (open) {
+                    setSelectedCol(activeCol);
+                    setSelectedRow(null);
+                    return;
+                  }
+                  setSelectedCol(null);
+                }}
+              />
+            </div>
           </div>
         )}
 
         {/* Floating row selectors */}
-        {showControls && rowPositions.length > 0 && (
-          <div className="absolute top-0 left-0 z-20 pointer-events-none">
-            {rowPositions.map((pos, rowIndex) => (
-              <div
-                key={rowIndex}
-                className="absolute pointer-events-auto"
-                style={{ top: pos, transform: "translateY(-50%)" }}
-              >
-                {selectedRow === rowIndex ? (
-                  <RowMenu
-                    rowIndex={rowIndex}
-                    rowCount={rowCount}
-                    onMoveUp={() => moveRowUp(rowIndex)}
-                    onMoveDown={() => moveRowDown(rowIndex)}
-                    onInsertAbove={() => insertRowBefore(rowIndex)}
-                    onInsertBelow={() => insertRowAfter(rowIndex)}
-                    onDelete={() => deleteSelectedRow(rowIndex)}
-                    onClose={() => {
-                      setSelectedRow(null);
-                      setIsHovered(false);
-                    }}
-                  />
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRow(rowIndex);
-                      setSelectedCol(null);
-                    }}
-                    className="w-1.5 h-8 bg-gray-300 hover:bg-blue-400 rounded-full transition-colors cursor-pointer shadow-sm"
-                    title="Select row"
-                  />
+        {showControls && tableFrame && activeRow !== null && rowPositions[activeRow] && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div
+              className="absolute pointer-events-auto"
+              style={{
+                left: tableFrame.left,
+                top: rowPositions[activeRow].center,
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <RowMenu
+                rowIndex={activeRow}
+                rowCount={rowCount}
+                handleHeight={Math.max(
+                  rowPositions[activeRow].end - rowPositions[activeRow].start,
+                  0
                 )}
+                onMoveUp={() => moveRowUp(activeRow)}
+                onMoveDown={() => moveRowDown(activeRow)}
+                onInsertAbove={() => insertRowBefore(activeRow)}
+                onInsertBelow={() => insertRowAfter(activeRow)}
+                onDelete={() => deleteSelectedRow(activeRow)}
+                onOpenChange={(open) => {
+                  if (open) {
+                    setSelectedRow(activeRow);
+                    setSelectedCol(null);
+                    return;
+                  }
+                  setSelectedRow(null);
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Add column / row buttons following hover position */}
+        {showControls && tableFrame && activeRow !== null && rowPositions[activeRow] && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div
+              className="absolute pointer-events-auto"
+              style={{
+                left: tableFrame.right,
+                top: tableFrame.top,
+                height: Math.max(tableFrame.bottom - tableFrame.top, 0),
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="relative h-full w-3.5 rounded-full bg-[#efefee]">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    insertColumnAfter(Math.max(columnCount - 1, 0));
+                  }}
+                  className="absolute left-1/2 top-1/2 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[#8b8f97] transition hover:text-[#5f6368]"
+                  title="Add column"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
               </div>
-            ))}
+            </div>
+          </div>
+        )}
+
+        {showControls && tableFrame && activeCol !== null && colPositions[activeCol] && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div
+              className="absolute pointer-events-auto"
+              style={{
+                left: tableFrame.left,
+                top: tableFrame.bottom,
+                width: Math.max(tableFrame.right - tableFrame.left, 0),
+                transform: "translateY(-50%)",
+              }}
+            >
+              <div className="relative h-3.5 w-full rounded-full bg-[#efefee]">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    insertRowAfter(Math.max(rowCount - 1, 0));
+                  }}
+                  className="absolute left-1/2 top-1/2 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[#8b8f97] transition hover:text-[#5f6368]"
+                  title="Add row"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -448,6 +553,7 @@ export function TipTapTable({ node, isLocked = false }: TipTapTableProps) {
 interface ColumnMenuProps {
   colIndex: number;
   columnCount: number;
+  handleWidth: number;
   onMoveLeft: () => void;
   onMoveRight: () => void;
   onInsertLeft: () => void;
@@ -457,12 +563,13 @@ interface ColumnMenuProps {
   onSortDesc: () => void;
   onSetAlignment: (align: string) => void;
   onSetColor: (color: string) => void;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 function ColumnMenu({
   colIndex,
   columnCount,
+  handleWidth,
   onMoveLeft,
   onMoveRight,
   onInsertLeft,
@@ -472,20 +579,16 @@ function ColumnMenu({
   onSortDesc,
   onSetAlignment,
   onSetColor,
-  onClose,
+  onOpenChange,
 }: ColumnMenuProps) {
   return (
-    <DropdownMenu
-      defaultOpen
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
+    <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-0.5 bg-white rounded shadow-lg border border-blue-300 p-0.5">
-          <ChevronLeft className="w-3 h-3 text-blue-600" />
-          <Trash2 className="w-3 h-3 text-red-500" />
-          <ChevronRight className="w-3 h-3 text-blue-600" />
+        <button
+          className="flex h-3.5 items-center justify-center rounded-full bg-[#efefee] text-[#5f6368] transition hover:bg-[#e7e7e6]"
+          style={{ width: handleWidth }}
+        >
+          <MoreHorizontal className="h-2.5 w-2.5" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-48">
@@ -582,36 +685,34 @@ function ColumnMenu({
 interface RowMenuProps {
   rowIndex: number;
   rowCount: number;
+  handleHeight: number;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onInsertAbove: () => void;
   onInsertBelow: () => void;
   onDelete: () => void;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 function RowMenu({
   rowIndex,
   rowCount,
+  handleHeight,
   onMoveUp,
   onMoveDown,
   onInsertAbove,
   onInsertBelow,
   onDelete,
-  onClose,
+  onOpenChange,
 }: RowMenuProps) {
   return (
-    <DropdownMenu
-      defaultOpen
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-    >
+    <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
-        <button className="flex flex-col items-center gap-0.5 bg-white rounded shadow-lg border border-blue-300 p-0.5">
-          <ChevronUp className="w-3 h-3 text-blue-600" />
-          <Trash2 className="w-3 h-3 text-red-500" />
-          <ChevronDown className="w-3 h-3 text-blue-600" />
+        <button
+          className="flex w-3.5 items-center justify-center rounded-full bg-[#efefee] text-[#5f6368] transition hover:bg-[#e7e7e6]"
+          style={{ height: handleHeight }}
+        >
+          <MoreVertical className="h-2.5 w-2.5" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44">
