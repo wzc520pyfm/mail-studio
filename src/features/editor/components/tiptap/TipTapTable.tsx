@@ -587,6 +587,8 @@ function ColumnMenu({
         <button
           className="flex h-3.5 items-center justify-center rounded-full bg-[#efefee] text-[#5f6368] transition hover:bg-[#e7e7e6]"
           style={{ width: handleWidth }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <MoreHorizontal className="h-2.5 w-2.5" />
         </button>
@@ -711,6 +713,8 @@ function RowMenu({
         <button
           className="flex w-3.5 items-center justify-center rounded-full bg-[#efefee] text-[#5f6368] transition hover:bg-[#e7e7e6]"
           style={{ height: handleHeight }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <MoreVertical className="h-2.5 w-2.5" />
         </button>
