@@ -188,8 +188,20 @@ function removeLockedAttributes(mjmlString: string): string {
   return mjmlString.replace(/\s+data-locked="true"/g, "");
 }
 
+// Structured compilation error with line info
+export interface MjmlCompileError {
+  line: number;
+  message: string;
+  tagName: string;
+  formattedMessage: string;
+}
+
 // Compile MJML to HTML
-export function compileMjml(mjmlString: string): { html: string; errors: string[] } {
+export function compileMjml(mjmlString: string): {
+  html: string;
+  errors: string[];
+  compileErrors: MjmlCompileError[];
+} {
   try {
     // Remove data-locked attributes before compilation to avoid MJML validation errors
     const cleanMjml = removeLockedAttributes(mjmlString);
@@ -201,11 +213,26 @@ export function compileMjml(mjmlString: string): { html: string; errors: string[
     return {
       html: result.html,
       errors: result.errors?.map((e) => e.formattedMessage) || [],
+      compileErrors:
+        result.errors?.map((e) => ({
+          line: e.line,
+          message: e.message,
+          tagName: e.tagName,
+          formattedMessage: e.formattedMessage,
+        })) || [],
     };
   } catch (error) {
     return {
       html: "",
       errors: [(error as Error).message],
+      compileErrors: [
+        {
+          line: 1,
+          message: (error as Error).message,
+          tagName: "",
+          formattedMessage: (error as Error).message,
+        },
+      ],
     };
   }
 }

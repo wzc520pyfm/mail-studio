@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Editor, { loader, OnMount, BeforeMount } from "@monaco-editor/react";
 import { Loader2 } from "lucide-react";
 import * as monaco from "monaco-editor";
@@ -24,7 +24,12 @@ loader.config({ monaco });
 
 export function CodeEditor() {
   // Code synchronization state and actions
-  const { code, isDirty, error, handleChange, handleSync, handleReset } = useCodeSync();
+  const { code, isDirty, error, compileErrors, handleChange, handleSync, handleReset } =
+    useCodeSync();
+
+  // Refs for Monaco editor and monaco instance (for setting markers)
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<typeof monaco | null>(null);
 
   // Locked regions management
   const { lockedWarning, setupLockedRegions, updateDecorations } = useLockedRegions();
@@ -40,11 +45,39 @@ export function CodeEditor() {
     }
   }, [code, updateDecorations]);
 
+  // Set Monaco model markers when compilation errors change
+  useEffect(() => {
+    const editor = editorRef.current;
+    const monacoInstance = monacoRef.current;
+    if (!editor || !monacoInstance) return;
+
+    const model = editor.getModel();
+    if (!model) return;
+
+    const markers: monaco.editor.IMarkerData[] = compileErrors.map((err) => {
+      const line = err.line > 0 ? err.line : 1;
+      return {
+        severity: monacoInstance.MarkerSeverity.Error,
+        message: err.formattedMessage || err.message,
+        startLineNumber: line,
+        startColumn: 1,
+        endLineNumber: line,
+        endColumn: model.getLineMaxColumn(line),
+      };
+    });
+
+    monacoInstance.editor.setModelMarkers(model, "mjml", markers);
+  }, [compileErrors]);
+
   // Handle Monaco editor mount
   const handleEditorMount: OnMount = useCallback(
-    (editor, monaco) => {
+    (editor, monacoInstance) => {
+      // Store refs for marker updates
+      editorRef.current = editor;
+      monacoRef.current = monacoInstance;
+
       // Setup locked regions protection
-      setupLockedRegions(editor, monaco);
+      setupLockedRegions(editor, monacoInstance);
 
       // Focus editor when mounted
       editor.focus();
@@ -63,7 +96,11 @@ export function CodeEditor() {
       <CodeEditorToolbar isDirty={isDirty} onReset={handleReset} onSync={handleSync} />
 
       {/* Error and Warning Banners */}
-      <CodeEditorBanners error={error} lockedWarning={lockedWarning} />
+      <CodeEditorBanners
+        error={error}
+        lockedWarning={lockedWarning}
+        compileErrorCount={compileErrors.length}
+      />
 
       {/* Monaco Editor */}
       <div className="flex-1">

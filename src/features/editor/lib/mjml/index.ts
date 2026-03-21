@@ -25,7 +25,7 @@ export {
   parseMjml,
   parseHtmlToMjml,
 } from "./compiler";
-export type { ParseMjmlResult } from "./compiler";
+export type { ParseMjmlResult, MjmlCompileError } from "./compiler";
 
 // Templates
 export { templates, emptyDocument, cloneDocumentWithNewIds } from "./templates";

@@ -5,7 +5,8 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useEditorStore } from "@/features/editor/stores";
-import { generateMjml, parseMjmlToNode } from "@/features/editor/lib/mjml";
+import { generateMjml, parseMjmlToNode, compileMjml } from "@/features/editor/lib/mjml";
+import type { MjmlCompileError } from "@/features/editor/lib/mjml";
 
 interface UseCodeSyncResult {
   /** Current code value (edited or generated) */
@@ -14,6 +15,8 @@ interface UseCodeSyncResult {
   isDirty: boolean;
   /** Parse error message if any */
   error: string | null;
+  /** Structured compilation errors with line numbers */
+  compileErrors: MjmlCompileError[];
   /** Handle code changes from editor */
   handleChange: (value: string | undefined) => void;
   /** Sync edited code to document store */
@@ -36,6 +39,7 @@ export function useCodeSync(): UseCodeSyncResult {
 
   const [editedCode, setEditedCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [compileErrors, setCompileErrors] = useState<MjmlCompileError[]>([]);
 
   // Generate MJML from document using useMemo (derived state)
   const generatedMjml = useMemo(
@@ -67,10 +71,25 @@ export function useCodeSync(): UseCodeSyncResult {
     return () => clearTimeout(timer);
   }, [code, isDirty, setDocument]);
 
+  // Run MJML compilation to detect compilation errors with line numbers
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const { compileErrors: errors } = compileMjml(code);
+        setCompileErrors(errors);
+      } catch {
+        setCompileErrors([]);
+      }
+    }, 600); // Slightly longer debounce than auto-sync
+
+    return () => clearTimeout(timer);
+  }, [code]);
+
   const handleChange = useCallback((value: string | undefined) => {
     if (value !== undefined) {
       setEditedCode(value);
       setError(null);
+      setCompileErrors([]);
     }
   }, []);
 
@@ -92,12 +111,14 @@ export function useCodeSync(): UseCodeSyncResult {
   const handleReset = useCallback(() => {
     setEditedCode(null);
     setError(null);
+    setCompileErrors([]);
   }, []);
 
   return {
     code,
     isDirty,
     error,
+    compileErrors,
     handleChange,
     handleSync,
     handleReset,

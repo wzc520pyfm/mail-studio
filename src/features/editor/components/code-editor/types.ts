@@ -47,6 +47,7 @@ export interface CodeEditorToolbarProps {
 export interface CodeEditorBannersProps {
   error: string | null;
   lockedWarning: string | null;
+  compileErrorCount: number;
 }
 
 /**
