@@ -22,6 +22,7 @@ import {
   AlertCircle,
   FolderOpen,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -179,9 +180,12 @@ export const Toolbar = memo(function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "canvas" ? "secondary" : "ghost"}
+                variant={editorMode === "canvas" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
+                className={cn(
+                  "h-7 md:h-8 w-7 md:w-auto md:px-3",
+                  editorMode === "canvas" && "shadow-sm font-semibold"
+                )}
                 onClick={() => setEditorMode("canvas")}
               >
                 <LayoutGrid className="w-4 h-4 md:mr-1.5" />
@@ -194,9 +198,12 @@ export const Toolbar = memo(function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "edit" ? "secondary" : "ghost"}
+                variant={editorMode === "edit" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
+                className={cn(
+                  "h-7 md:h-8 w-7 md:w-auto md:px-3",
+                  editorMode === "edit" && "shadow-sm font-semibold"
+                )}
                 onClick={() => setEditorMode("edit")}
               >
                 <PenLine className="w-4 h-4 md:mr-1.5" />
@@ -209,9 +216,12 @@ export const Toolbar = memo(function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "preview" ? "secondary" : "ghost"}
+                variant={editorMode === "preview" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
+                className={cn(
+                  "h-7 md:h-8 w-7 md:w-auto md:px-3",
+                  editorMode === "preview" && "shadow-sm font-semibold"
+                )}
                 onClick={() => setEditorMode("preview")}
               >
                 <Eye className="w-4 h-4 md:mr-1.5" />
@@ -224,9 +234,12 @@ export const Toolbar = memo(function Toolbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={editorMode === "code" ? "secondary" : "ghost"}
+                variant={editorMode === "code" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 md:h-8 w-7 md:w-auto md:px-3"
+                className={cn(
+                  "h-7 md:h-8 w-7 md:w-auto md:px-3",
+                  editorMode === "code" && "shadow-sm font-semibold"
+                )}
                 onClick={() => setEditorMode("code")}
               >
                 <Code2 className="w-4 h-4 md:mr-1.5" />
