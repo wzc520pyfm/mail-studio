@@ -151,7 +151,7 @@ export const Toolbar = memo(function Toolbar() {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="h-12 md:h-14 border-b border-border bg-background px-2 md:px-4 flex items-center justify-between gap-1 md:gap-2">
+      <div className="h-12 md:h-14 border-b border-border bg-background px-2 md:px-4 flex items-center justify-between gap-1 md:gap-2 relative">
         {/* Left Section - Logo */}
         <div className="flex items-center gap-1.5 md:gap-3 flex-shrink-0">
           <div className="flex items-center gap-1.5">
@@ -175,8 +175,8 @@ export const Toolbar = memo(function Toolbar() {
           </div>
         </div>
 
-        {/* Center Section - View Controls */}
-        <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 flex-shrink-0">
+        {/* Center Section - View Controls (absolute center to avoid shift from right section) */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -252,38 +252,41 @@ export const Toolbar = memo(function Toolbar() {
 
         {/* Right Section - Actions */}
         <div className="flex items-center gap-0.5 md:gap-1.5 flex-shrink-0">
-          {/* Device Toggle (only in preview) */}
-          {editorMode === "preview" && (
-            <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={previewMode === "desktop" ? "secondary" : "ghost"}
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setPreviewMode("desktop")}
-                  >
-                    <Monitor className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Desktop View</TooltipContent>
-              </Tooltip>
+          {/* Device Toggle (only in preview, always occupies space to prevent layout shift) */}
+          <div
+            className={cn(
+              "flex items-center gap-0.5 bg-muted rounded-lg p-0.5",
+              editorMode !== "preview" && "invisible"
+            )}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={previewMode === "desktop" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setPreviewMode("desktop")}
+                >
+                  <Monitor className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Desktop View</TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={previewMode === "mobile" ? "secondary" : "ghost"}
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setPreviewMode("mobile")}
-                  >
-                    <Smartphone className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Mobile View</TooltipContent>
-              </Tooltip>
-            </div>
-          )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={previewMode === "mobile" ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setPreviewMode("mobile")}
+                >
+                  <Smartphone className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Mobile View</TooltipContent>
+            </Tooltip>
+          </div>
 
           {/* Undo/Redo - Always visible */}
           <div className="flex items-center">
