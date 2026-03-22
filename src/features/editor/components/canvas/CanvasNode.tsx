@@ -13,6 +13,7 @@ import { componentDefinitions } from "@/features/editor/lib/mjml/schema";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
 import { SectionNode } from "./SectionNode";
+import { WrapperNode } from "./WrapperNode";
 import { ColumnNode } from "./ColumnNode";
 import {
   TextNode,
@@ -134,6 +135,8 @@ export const CanvasNode = memo(function CanvasNode({
     switch (node.type) {
       case "mj-section":
         return <SectionNode node={node} />;
+      case "mj-wrapper":
+        return <WrapperNode node={node} />;
       case "mj-column":
         return <ColumnNode node={node} />;
       case "mj-text":

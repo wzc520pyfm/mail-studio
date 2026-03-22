@@ -9,6 +9,7 @@ export * from "./blocks";
 export { SectionContainer, SortableSectionContainer } from "./SectionContainer";
 export { ColumnContainer, SortableColumnContainer } from "./ColumnContainer";
 export { HeroContainer } from "./HeroContainer";
+export { WrapperContainer } from "./WrapperContainer";
 export { EditBlock, SortableEditBlock, EditBlockContent } from "./EditBlock";
 
 // Utility components

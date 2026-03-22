@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useEditorStore, useIsNodeLocked } from "@/features/editor/stores";
-import type { EditorNode } from "@/features/editor/types";
+import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { generateId } from "@/features/editor/lib/mjml";
 import { cn } from "@/lib/utils";
 import {
@@ -20,34 +20,30 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
-  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Copy, Trash2, Columns, LayoutGrid, Plus, Lock } from "lucide-react";
-import { SortableColumnContainer } from "./ColumnContainer";
-import { HeroContainer } from "./HeroContainer";
-import { WrapperContainer } from "./WrapperContainer";
+import { GripVertical, Copy, Trash2, LayoutGrid, Plus, Lock, Square } from "lucide-react";
+import { SortableSectionContainer } from "./SectionContainer";
 
-interface SectionContainerProps {
+interface WrapperContainerProps {
   node: EditorNode;
   dragHandleProps?: Record<string, unknown>;
   isDragging?: boolean;
 }
 
-export function SectionContainer({ node, dragHandleProps, isDragging }: SectionContainerProps) {
+export function WrapperContainer({ node, dragHandleProps, isDragging }: WrapperContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { selectedId, setSelectedId, removeNode, duplicateNode, addChildNode, updateNodeChildren } =
     useEditorStore();
   const isSelected = selectedId === node.id;
-  const [activeColumnId, setActiveColumnId] = useState<UniqueIdentifier | null>(null);
+  const [activeSectionId, setActiveSectionId] = useState<UniqueIdentifier | null>(null);
 
-  // Check if this section is locked
+  // Check if this wrapper is locked
   const isLocked = useIsNodeLocked(node.id);
   const isDirectlyLocked = node.locked ?? false;
 
-  const columnSensors = useSensors(
+  const sectionSensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
     }),
@@ -56,19 +52,19 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     })
   );
 
-  const columnIds = node.children?.map((col) => col.id) || [];
+  const sectionIds = node.children?.map((section) => section.id) || [];
 
-  const handleColumnDragStart = (event: DragStartEvent) => {
-    setActiveColumnId(event.active.id);
+  const handleSectionDragStart = (event: DragStartEvent) => {
+    setActiveSectionId(event.active.id);
   };
 
-  const handleColumnDragEnd = (event: DragEndEvent) => {
+  const handleSectionDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveColumnId(null);
+    setActiveSectionId(null);
 
     if (over && active.id !== over.id) {
-      const oldIndex = columnIds.indexOf(active.id as string);
-      const newIndex = columnIds.indexOf(over.id as string);
+      const oldIndex = sectionIds.indexOf(active.id as string);
+      const newIndex = sectionIds.indexOf(over.id as string);
 
       if (oldIndex !== -1 && newIndex !== -1 && node.children) {
         const newChildren = arrayMove(node.children, oldIndex, newIndex);
@@ -77,34 +73,30 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     }
   };
 
-  const activeColumn = activeColumnId
-    ? node.children?.find((col) => col.id === activeColumnId)
+  const activeSection = activeSectionId
+    ? node.children?.find((section) => section.id === activeSectionId)
     : null;
 
-  // Handle Hero type
-  if (node.type === "mj-hero") {
-    return <HeroContainer node={node} dragHandleProps={dragHandleProps} isLocked={isLocked} />;
-  }
-
-  // Handle Wrapper type
-  if (node.type === "mj-wrapper") {
-    return (
-      <WrapperContainer node={node} dragHandleProps={dragHandleProps} isDragging={isDragging} />
-    );
-  }
-
-  const handleAddColumn = () => {
-    const newColumn: EditorNode = {
+  const handleAddSection = () => {
+    const newSection: EditorNode = {
       id: generateId(),
-      type: "mj-column",
-      props: {},
-      children: [],
+      type: "mj-section" as MJMLComponentType,
+      props: { padding: "20px 0", "background-color": "#ffffff" },
+      children: [
+        {
+          id: generateId(),
+          type: "mj-column" as MJMLComponentType,
+          props: { width: "100%" },
+          children: [],
+        },
+      ],
     };
-    addChildNode(node.id, newColumn);
+    addChildNode(node.id, newSection);
   };
 
   const bgColor = (node.props["background-color"] as string) || "transparent";
-  const columnCount = node.children?.length || 0;
+  const bgUrl = node.props["background-url"] as string | undefined;
+  const sectionCount = node.children?.length || 0;
 
   return (
     <div
@@ -113,9 +105,9 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
         isSelected
           ? isLocked
             ? "ring-2 ring-amber-400 ring-offset-2"
-            : "ring-2 ring-blue-400 ring-offset-2"
+            : "ring-2 ring-purple-400 ring-offset-2"
           : "",
-        isHovered && !isSelected && (isLocked ? "ring-2 ring-amber-200" : "ring-2 ring-gray-200"),
+        isHovered && !isSelected && (isLocked ? "ring-2 ring-amber-200" : "ring-2 ring-purple-200"),
         isDragging && "opacity-50"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -125,21 +117,22 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
         setSelectedId(node.id);
       }}
     >
+      {/* Toolbar */}
       {(isHovered || isSelected) && (
         <div
           className={cn(
             "absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2 py-1 rounded-lg shadow-sm border",
-            isLocked ? "bg-amber-50 border-amber-200" : "bg-white border-gray-200"
+            isLocked ? "bg-amber-50 border-amber-200" : "bg-white border-purple-200"
           )}
         >
           {isLocked ? (
             <>
-              <div className="p-1 text-amber-600" title="This section is locked">
+              <div className="p-1 text-amber-600" title="This wrapper is locked">
                 <Lock className="w-3.5 h-3.5" />
               </div>
               <span className="text-xs text-amber-600 font-medium mr-1">
-                <LayoutGrid className="w-3 h-3 inline mr-1" />
-                Section {isDirectlyLocked && "(Locked)"}
+                <Square className="w-3 h-3 inline mr-1" />
+                Wrapper {isDirectlyLocked && "(Locked)"}
               </span>
             </>
           ) : (
@@ -153,20 +146,20 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   <GripVertical className="w-3.5 h-3.5" />
                 </button>
               )}
-              <span className="text-xs text-gray-500 font-medium mr-1">
-                <LayoutGrid className="w-3 h-3 inline mr-1" />
-                Section
+              <span className="text-xs text-purple-600 font-medium mr-1">
+                <Square className="w-3 h-3 inline mr-1" />
+                Wrapper
               </span>
               <div className="w-px h-4 bg-gray-200" />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleAddColumn();
+                  handleAddSection();
                 }}
                 className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                title="Add Column"
+                title="Add Section"
               >
-                <Columns className="w-3.5 h-3.5" />
+                <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={(e) => {
@@ -174,7 +167,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   duplicateNode(node.id);
                 }}
                 className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                title="Duplicate Section"
+                title="Duplicate Wrapper"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -184,7 +177,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   removeNode(node.id);
                 }}
                 className="p-1 rounded hover:bg-red-100 text-gray-500 hover:text-red-500"
-                title="Delete Section"
+                title="Delete Wrapper"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -193,40 +186,36 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
         </div>
       )}
 
+      {/* Wrapper Content */}
       <div
-        className="min-h-[80px] rounded-lg"
+        className="min-h-[80px] rounded-lg border-2 border-dashed border-purple-200"
         style={{
           backgroundColor: bgColor !== "transparent" ? bgColor : undefined,
+          backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+          backgroundSize: (node.props["background-size"] as string) || "auto",
+          backgroundRepeat: (node.props["background-repeat"] as string) || "repeat",
         }}
       >
-        {columnCount > 0 ? (
+        {sectionCount > 0 ? (
           <DndContext
-            sensors={columnSensors}
+            sensors={sectionSensors}
             collisionDetection={closestCenter}
-            onDragStart={handleColumnDragStart}
-            onDragEnd={handleColumnDragEnd}
+            onDragStart={handleSectionDragStart}
+            onDragEnd={handleSectionDragEnd}
           >
-            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-              <div
-                className={cn(
-                  "grid gap-2 p-2",
-                  columnCount === 1 && "grid-cols-1",
-                  columnCount === 2 && "grid-cols-2",
-                  columnCount === 3 && "grid-cols-3",
-                  columnCount >= 4 && "grid-cols-4"
-                )}
-              >
-                {node.children?.map((column) => (
-                  <SortableColumnContainer key={column.id} node={column} parentId={node.id} />
+            <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2 p-3">
+                {node.children?.map((section) => (
+                  <SortableSectionContainer key={section.id} node={section} />
                 ))}
               </div>
             </SortableContext>
             <DragOverlay>
-              {activeColumn ? (
+              {activeSection ? (
                 <div className="bg-white rounded-lg shadow-xl border-2 border-blue-400 opacity-90 p-4">
                   <div className="text-center text-gray-500 text-sm">
-                    <Columns className="w-5 h-5 mx-auto mb-1" />
-                    Column ({activeColumn.children?.length || 0} blocks)
+                    <LayoutGrid className="w-5 h-5 mx-auto mb-1" />
+                    Section ({activeSection.children?.length || 0} columns)
                   </div>
                 </div>
               ) : null}
@@ -237,42 +226,16 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleAddColumn();
+                handleAddSection();
               }}
               className="flex items-center gap-1 hover:text-gray-600"
             >
               <Plus className="w-4 h-4" />
-              Add Column
+              Add Section
             </button>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// Sortable wrapper for SectionContainer
-export function SortableSectionContainer({ node }: { node: EditorNode }) {
-  const isLocked = useIsNodeLocked(node.id);
-
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: node.id,
-    disabled: isLocked, // Disable sorting for locked nodes
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <SectionContainer
-        node={node}
-        dragHandleProps={isLocked ? undefined : { ...attributes, ...listeners }}
-        isDragging={isDragging}
-      />
     </div>
   );
 }

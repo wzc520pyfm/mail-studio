@@ -169,6 +169,7 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
     canHaveChildren: true,
     allowedChildren: ["mj-section", "mj-hero"],
     defaultProps: {
+      "background-color": "#ffffff",
       padding: "20px 0",
     },
     propsSchema: [
