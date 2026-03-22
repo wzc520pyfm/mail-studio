@@ -84,11 +84,29 @@ const customCollisionDetection: CollisionDetection = (args) => {
   const activeParentId = activeData?.parentId;
 
   if (isDraggingNewComponent) {
+    const componentType = activeData?.componentType as MJMLComponentType | undefined;
     // For new components, use pointerWithin to find the deepest container
     const pointerCollisions = pointerWithin(args);
-    if (pointerCollisions.length > 0) {
+    if (pointerCollisions.length > 0 && componentType) {
+      // Filter to only compatible drop targets — prevents drops being swallowed
+      // by nested containers that don't accept this component type
+      // (e.g. dragging mj-column over a column's DroppableContainer inside a group)
+      const compatible = pointerCollisions.filter((collision) => {
+        const data = collision.data?.droppableContainer?.data?.current;
+        if (!data) return true;
+        const acceptTypes = data.acceptTypes as MJMLComponentType[] | undefined;
+        const parentAcceptTypes = data.parentAcceptTypes as MJMLComponentType[] | undefined;
+        // For drop containers & empty zones: check acceptTypes
+        if (acceptTypes) return acceptTypes.includes(componentType);
+        // For existing nodes: check parentAcceptTypes
+        if (parentAcceptTypes) return parentAcceptTypes.includes(componentType);
+        return true;
+      });
+      if (compatible.length > 0) return compatible;
+      // If no compatible targets, return all (handleDragEnd will reject)
       return pointerCollisions;
     }
+    if (pointerCollisions.length > 0) return pointerCollisions;
     // Fallback to rect intersection
     return rectIntersection(args);
   } else {

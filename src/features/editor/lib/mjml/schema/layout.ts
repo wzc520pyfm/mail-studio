@@ -138,7 +138,6 @@ export const layoutComponents: Record<string, ComponentDefinition> = {
     },
     propsSchema: [
       { key: "width", label: "Width", type: "size", placeholder: "e.g., 100%, 600px" },
-      { key: "background-color", label: "Background", type: "color" },
       {
         key: "direction",
         label: "Direction",

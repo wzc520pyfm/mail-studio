@@ -25,26 +25,24 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Copy, Trash2, Columns, LayoutGrid, Plus, Lock } from "lucide-react";
+import { GripVertical, Copy, Trash2, Columns, Group, Plus, Lock } from "lucide-react";
 import { SortableColumnContainer } from "./ColumnContainer";
-import { SortableGroupContainer } from "./GroupContainer";
-import { HeroContainer } from "./HeroContainer";
-import { WrapperContainer } from "./WrapperContainer";
 
-interface SectionContainerProps {
+interface GroupContainerProps {
   node: EditorNode;
+  parentId: string;
   dragHandleProps?: Record<string, unknown>;
   isDragging?: boolean;
 }
 
-export function SectionContainer({ node, dragHandleProps, isDragging }: SectionContainerProps) {
+export function GroupContainer({ node, dragHandleProps, isDragging }: GroupContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { selectedId, setSelectedId, removeNode, duplicateNode, addChildNode, updateNodeChildren } =
     useEditorStore();
   const isSelected = selectedId === node.id;
   const [activeColumnId, setActiveColumnId] = useState<UniqueIdentifier | null>(null);
 
-  // Check if this section is locked
+  // Check if this group is locked
   const isLocked = useIsNodeLocked(node.id);
   const isDirectlyLocked = node.locked ?? false;
 
@@ -82,18 +80,6 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     ? node.children?.find((col) => col.id === activeColumnId)
     : null;
 
-  // Handle Hero type
-  if (node.type === "mj-hero") {
-    return <HeroContainer node={node} dragHandleProps={dragHandleProps} isLocked={isLocked} />;
-  }
-
-  // Handle Wrapper type
-  if (node.type === "mj-wrapper") {
-    return (
-      <WrapperContainer node={node} dragHandleProps={dragHandleProps} isDragging={isDragging} />
-    );
-  }
-
   const handleAddColumn = () => {
     const newColumn: EditorNode = {
       id: generateId(),
@@ -104,19 +90,18 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
     addChildNode(node.id, newColumn);
   };
 
-  const bgColor = (node.props["background-color"] as string) || "transparent";
   const columnCount = node.children?.length || 0;
 
   return (
     <div
       className={cn(
-        "relative group rounded-lg transition-all",
+        "relative group rounded-lg transition-all border-2 border-dashed border-green-200",
         isSelected
           ? isLocked
             ? "ring-2 ring-amber-400 ring-offset-2"
-            : "ring-2 ring-blue-400 ring-offset-2"
+            : "ring-2 ring-green-400 ring-offset-2"
           : "",
-        isHovered && !isSelected && (isLocked ? "ring-2 ring-amber-200" : "ring-2 ring-gray-200"),
+        isHovered && !isSelected && (isLocked ? "ring-2 ring-amber-200" : "ring-2 ring-green-200"),
         isDragging && "opacity-50"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -130,17 +115,17 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
         <div
           className={cn(
             "absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 px-2 py-1 rounded-lg shadow-sm border",
-            isLocked ? "bg-amber-50 border-amber-200" : "bg-white border-gray-200"
+            isLocked ? "bg-amber-50 border-amber-200" : "bg-white border-green-200"
           )}
         >
           {isLocked ? (
             <>
-              <div className="p-1 text-amber-600" title="This section is locked">
+              <div className="p-1 text-amber-600" title="This group is locked">
                 <Lock className="w-3.5 h-3.5" />
               </div>
               <span className="text-xs text-amber-600 font-medium mr-1">
-                <LayoutGrid className="w-3 h-3 inline mr-1" />
-                Section {isDirectlyLocked && "(Locked)"}
+                <Group className="w-3 h-3 inline mr-1" />
+                Group {isDirectlyLocked && "(Locked)"}
               </span>
             </>
           ) : (
@@ -154,9 +139,9 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   <GripVertical className="w-3.5 h-3.5" />
                 </button>
               )}
-              <span className="text-xs text-gray-500 font-medium mr-1">
-                <LayoutGrid className="w-3 h-3 inline mr-1" />
-                Section
+              <span className="text-xs text-green-600 font-medium mr-1">
+                <Group className="w-3 h-3 inline mr-1" />
+                Group
               </span>
               <div className="w-px h-4 bg-gray-200" />
               <button
@@ -175,7 +160,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   duplicateNode(node.id);
                 }}
                 className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-                title="Duplicate Section"
+                title="Duplicate Group"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -185,7 +170,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   removeNode(node.id);
                 }}
                 className="p-1 rounded hover:bg-red-100 text-gray-500 hover:text-red-500"
-                title="Delete Section"
+                title="Delete Group"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -194,12 +179,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
         </div>
       )}
 
-      <div
-        className="min-h-[80px] rounded-lg"
-        style={{
-          backgroundColor: bgColor !== "transparent" ? bgColor : undefined,
-        }}
-      >
+      <div className="min-h-[60px] rounded-lg">
         {columnCount > 0 ? (
           <DndContext
             sensors={columnSensors}
@@ -217,18 +197,14 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
                   columnCount >= 4 && "grid-cols-4"
                 )}
               >
-                {node.children?.map((child) =>
-                  child.type === "mj-group" ? (
-                    <SortableGroupContainer key={child.id} node={child} parentId={node.id} />
-                  ) : (
-                    <SortableColumnContainer key={child.id} node={child} parentId={node.id} />
-                  )
-                )}
+                {node.children?.map((column) => (
+                  <SortableColumnContainer key={column.id} node={column} parentId={node.id} />
+                ))}
               </div>
             </SortableContext>
             <DragOverlay>
               {activeColumn ? (
-                <div className="bg-white rounded-lg shadow-xl border-2 border-blue-400 opacity-90 p-4">
+                <div className="bg-white rounded-lg shadow-xl border-2 border-green-400 opacity-90 p-4">
                   <div className="text-center text-gray-500 text-sm">
                     <Columns className="w-5 h-5 mx-auto mb-1" />
                     Column ({activeColumn.children?.length || 0} blocks)
@@ -238,7 +214,7 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
             </DragOverlay>
           </DndContext>
         ) : (
-          <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+          <div className="flex items-center justify-center h-16 text-gray-400 text-sm">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -256,13 +232,13 @@ export function SectionContainer({ node, dragHandleProps, isDragging }: SectionC
   );
 }
 
-// Sortable wrapper for SectionContainer
-export function SortableSectionContainer({ node }: { node: EditorNode }) {
+// Sortable wrapper for GroupContainer
+export function SortableGroupContainer({ node, parentId }: { node: EditorNode; parentId: string }) {
   const isLocked = useIsNodeLocked(node.id);
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
-    disabled: isLocked, // Disable sorting for locked nodes
+    disabled: isLocked,
   });
 
   const style = {
@@ -273,8 +249,9 @@ export function SortableSectionContainer({ node }: { node: EditorNode }) {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <SectionContainer
+      <GroupContainer
         node={node}
+        parentId={parentId}
         dragHandleProps={isLocked ? undefined : { ...attributes, ...listeners }}
         isDragging={isDragging}
       />

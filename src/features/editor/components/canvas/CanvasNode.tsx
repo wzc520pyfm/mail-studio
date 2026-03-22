@@ -14,6 +14,8 @@ import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
 import { SectionNode } from "./SectionNode";
 import { WrapperNode } from "./WrapperNode";
+import { HeroNode } from "./HeroNode";
+import { GroupNode } from "./GroupNode";
 import { ColumnNode } from "./ColumnNode";
 import {
   TextNode,
@@ -57,38 +59,37 @@ export const CanvasNode = memo(function CanvasNode({
   const isSelected = selectedId === node.id;
   const isHovered = hoveredId === node.id && !globalIsDragging;
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
-    useSortable({
-      id: node.id,
-      disabled: isLocked, // Disable sorting for locked nodes
-      data: {
-        type: "existing-node",
-        nodeId: node.id,
-        nodeType: node.type,
-        parentId,
-        parentAcceptTypes,
-        index,
-        isLocked, // Pass locked state to drag handlers
-      },
-    });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: node.id,
+    disabled: isLocked, // Disable sorting for locked nodes
+    data: {
+      type: "existing-node",
+      nodeId: node.id,
+      nodeType: node.type,
+      parentId,
+      parentAcceptTypes,
+      index,
+      isLocked, // Pass locked state to drag handlers
+    },
+  });
 
-  // Calculate column-specific styles for proper flex layout
-  const isColumn = node.type === "mj-column";
-  const explicitWidth = isColumn ? (node.props["width"] as string) : undefined;
-  // If column has explicit width, use it; otherwise use flex: 1 to share space equally
+  // Calculate column/group-specific styles for proper flex layout
+  const isFlexChild = node.type === "mj-column" || node.type === "mj-group";
+  const explicitWidth = isFlexChild ? (node.props["width"] as string) : undefined;
+  // If column/group has explicit width, use it; otherwise use flex: 1 to share space equally
   const hasExplicitWidth = explicitWidth && explicitWidth !== "";
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition || "transform 200ms ease",
-    // Apply flex properties for columns so they properly participate in section's flex layout
-    ...(isColumn &&
+    // Apply flex properties for columns/groups so they properly participate in section's flex layout
+    ...(isFlexChild &&
       hasExplicitWidth && {
         flex: `0 0 ${explicitWidth}`,
         maxWidth: explicitWidth,
         minWidth: 0,
       }),
-    ...(isColumn &&
+    ...(isFlexChild &&
       !hasExplicitWidth && {
         flex: "1 1 0%", // Equal share with siblings
         minWidth: 0,
@@ -137,6 +138,10 @@ export const CanvasNode = memo(function CanvasNode({
         return <SectionNode node={node} />;
       case "mj-wrapper":
         return <WrapperNode node={node} />;
+      case "mj-hero":
+        return <HeroNode node={node} />;
+      case "mj-group":
+        return <GroupNode node={node} />;
       case "mj-column":
         return <ColumnNode node={node} />;
       case "mj-text":

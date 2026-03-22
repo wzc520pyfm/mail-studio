@@ -1,5 +1,5 @@
 /**
- * Section node renderer with droppable children
+ * Group node renderer with droppable column children
  */
 
 "use client";
@@ -13,37 +13,35 @@ import { DroppableContainer } from "./DroppableContainer";
 import { EmptyDropZone } from "./EmptyDropZone";
 import { CanvasNode } from "./CanvasNode";
 
-interface SectionNodeProps {
+interface GroupNodeProps {
   node: EditorNode;
 }
 
-const sectionAcceptTypes: MJMLComponentType[] = ["mj-column", "mj-group"];
+const groupAcceptTypes: MJMLComponentType[] = ["mj-column"];
 
-export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps) {
-  const bgColor = node.props["background-color"] as string;
-  const padding = (node.props["padding"] as string) || "20px 0";
+export const GroupNode = memo(function GroupNode({ node }: GroupNodeProps) {
+  const direction = (node.props["direction"] as string) || "ltr";
   const isDraggingNewComponent = useUIStore((s) => s.isDraggingNewComponent);
   const { active } = useDndContext();
   const hasChildren = node.children && node.children.length > 0;
 
-  // Check if we're dragging a NEW column component (not reordering existing ones)
+  // Check if we're dragging a NEW column component
   const activeData = active?.data.current;
   const activeType = (activeData?.componentType || activeData?.nodeType) as
     | MJMLComponentType
     | undefined;
   const isDraggingNewColumn =
-    isDraggingNewComponent && activeType && sectionAcceptTypes.includes(activeType);
+    isDraggingNewComponent && activeType && groupAcceptTypes.includes(activeType);
 
-  // Show drop zone when empty OR when dragging a NEW column (not during reorder)
+  // Show drop zone when empty OR when dragging a NEW column
   const showDropZone = !hasChildren || isDraggingNewColumn;
 
   return (
-    <DroppableContainer nodeId={node.id} acceptTypes={sectionAcceptTypes}>
+    <DroppableContainer nodeId={node.id} acceptTypes={groupAcceptTypes}>
       <div
-        className="flex flex-wrap"
+        className="flex flex-wrap min-h-[60px]"
         style={{
-          backgroundColor: bgColor,
-          padding,
+          direction: direction as "ltr" | "rtl",
         }}
       >
         <SortableContext
@@ -56,7 +54,7 @@ export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps)
               node={child}
               index={index}
               parentId={node.id}
-              parentAcceptTypes={sectionAcceptTypes}
+              parentAcceptTypes={groupAcceptTypes}
             />
           ))}
         </SortableContext>
@@ -65,7 +63,7 @@ export const SectionNode = memo(function SectionNode({ node }: SectionNodeProps)
             nodeId={node.id}
             message={hasChildren ? "Drop here to add" : "Drop a Column here"}
             small
-            acceptTypes={sectionAcceptTypes}
+            acceptTypes={groupAcceptTypes}
             index={node.children?.length ?? 0}
           />
         )}

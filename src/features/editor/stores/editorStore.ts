@@ -241,8 +241,8 @@ export const useEditorStore = create<EditorStore>()(
 
           const newNode = createNode(type);
 
-          // If adding a section, add a column by default
-          if (type === "mj-section") {
+          // If adding a section or group, add a column by default
+          if (type === "mj-section" || type === "mj-group") {
             newNode.children = [createNode("mj-column")];
           }
 

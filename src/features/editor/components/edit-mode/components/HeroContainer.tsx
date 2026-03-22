@@ -4,8 +4,26 @@ import { useState } from "react";
 import { useEditorStore } from "@/features/editor/stores";
 import type { EditorNode } from "@/features/editor/types";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+  UniqueIdentifier,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import { GripVertical, Copy, Trash2, LayoutTemplate, Lock } from "lucide-react";
-import { EditBlock } from "./EditBlock";
+import { SortableEditBlock, EditBlockContent } from "./EditBlock";
 import { AddBlockButton } from "./AddBlockButton";
 
 interface HeroContainerProps {
@@ -16,13 +34,49 @@ interface HeroContainerProps {
 
 export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const { selectedId, setSelectedId, removeNode, duplicateNode } = useEditorStore();
+  const { selectedId, setSelectedId, removeNode, duplicateNode, updateNodeChildren } =
+    useEditorStore();
   const isSelected = selectedId === node.id;
   const isDirectlyLocked = node.locked ?? false;
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
   const bgColor = (node.props["background-color"] as string) || "#ffffff";
   const bgImage = node.props["background-url"] as string;
+  const bgPosition = (node.props["background-position"] as string) || "center center";
   const height = (node.props["height"] as string) || "0px";
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const childIds = node.children?.map((child) => child.id) || [];
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over && active.id !== over.id) {
+      const oldIndex = childIds.indexOf(active.id as string);
+      const newIndex = childIds.indexOf(over.id as string);
+
+      if (oldIndex !== -1 && newIndex !== -1 && node.children) {
+        const newChildren = arrayMove(node.children, oldIndex, newIndex);
+        updateNodeChildren(node.id, newChildren);
+      }
+    }
+  };
+
+  const activeNode = activeId ? node.children?.find((child) => child.id === activeId) : null;
+  const hasChildren = node.children && node.children.length > 0;
 
   return (
     <div
@@ -106,15 +160,39 @@ export function HeroContainer({ node, dragHandleProps, isLocked = false }: HeroC
           backgroundColor: bgColor,
           backgroundImage: bgImage ? `url(${bgImage})` : undefined,
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: bgPosition,
           minHeight: height,
         }}
       >
-        {node.children?.map((child) => (
-          <EditBlock key={child.id} node={child} parentId={node.id} isParentLocked={isLocked} />
-        ))}
-        {!isLocked && (!node.children || node.children.length === 0) && (
-          <AddBlockButton parentId={node.id} alwaysVisible />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={childIds} strategy={verticalListSortingStrategy}>
+            <div className="w-full space-y-1">
+              {node.children?.map((child) => (
+                <SortableEditBlock
+                  key={child.id}
+                  node={child}
+                  parentId={node.id}
+                  hasColoredParent={true}
+                  isParentLocked={isLocked}
+                />
+              ))}
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeNode ? (
+              <div className="bg-white rounded-lg shadow-lg border-2 border-blue-400 opacity-90">
+                <EditBlockContent node={activeNode} />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+        {!isLocked && (
+          <AddBlockButton parentId={node.id} hasColoredParent alwaysVisible={!hasChildren} />
         )}
       </div>
     </div>
