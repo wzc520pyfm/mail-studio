@@ -151,11 +151,20 @@ function generateHeadContent(headSettings?: HeadSettings): string {
     parts.push(`    <mj-breakpoint width="${escapeAttr(headSettings.breakpoint)}" />`);
   }
 
-  // Default attributes
-  parts.push(`    <mj-attributes>
+  // mj-attributes (use custom if provided, otherwise defaults)
+  if (headSettings?.attributes) {
+    const attrLines = headSettings.attributes
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const indented = attrLines.map((l) => `      ${l}`).join("\n");
+    parts.push(`    <mj-attributes>\n${indented}\n    </mj-attributes>`);
+  } else {
+    parts.push(`    <mj-attributes>
       <mj-all font-family="Arial, sans-serif" />
       <mj-text font-size="16px" line-height="1.5" color="#333333" />
     </mj-attributes>`);
+  }
 
   // mj-style (custom styles + defaults)
   const defaultStyles = ".link-nostyle { color: inherit; text-decoration: none; }";
@@ -270,9 +279,18 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
   };
 
   try {
+    // Extract mj-attributes block before DOM parsing to avoid self-closing
+    // custom element issues (e.g. <mj-body /> inside mj-attributes breaks querySelector)
+    let cleanedMjml = mjmlString;
+    const attributesMatch = mjmlString.match(/<mj-attributes>([\s\S]*?)<\/mj-attributes>/);
+    if (attributesMatch) {
+      headSettings.attributes = attributesMatch[1].trim();
+      cleanedMjml = mjmlString.replace(/<mj-attributes>[\s\S]*?<\/mj-attributes>/, "");
+    }
+
     const parser = new DOMParser();
     // Use text/html for better error tolerance
-    const doc = parser.parseFromString(mjmlString, "text/html");
+    const doc = parser.parseFromString(cleanedMjml, "text/html");
 
     // Try to find mjml element (case-insensitive)
     let mjmlElement = doc.querySelector("mjml");
@@ -287,8 +305,8 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
       return { document: null, headSettings, errors };
     }
 
-    // Parse head settings
-    const headElement = mjmlElement.querySelector("mj-head");
+    // Parse head settings (use :scope > to only match direct children)
+    const headElement = mjmlElement.querySelector(":scope > mj-head");
     if (headElement) {
       // Parse title
       const titleElement = headElement.querySelector("mj-title");
@@ -327,8 +345,8 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
       headSettings.styles = styles.replace(/\.link-nostyle\s*\{[^}]*\}/g, "").trim();
     }
 
-    // Parse body
-    const bodyElement = mjmlElement.querySelector("mj-body");
+    // Parse body (use :scope > to only match direct children, not mj-body inside mj-attributes)
+    const bodyElement = mjmlElement.querySelector(":scope > mj-body");
     if (!bodyElement) {
       errors.push("No <mj-body> element found");
       return { document: null, headSettings, errors };

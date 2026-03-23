@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useEditorStore } from "@/features/editor/stores";
-import { generateMjml, parseMjmlToNode, compileMjml } from "@/features/editor/lib/mjml";
+import { generateMjml, parseMjml, compileMjml } from "@/features/editor/lib/mjml";
 import type { MjmlCompileError } from "@/features/editor/lib/mjml";
 
 interface UseCodeSyncResult {
@@ -36,6 +36,7 @@ export function useCodeSync(): UseCodeSyncResult {
   const document = useEditorStore((s) => s.document);
   const headSettings = useEditorStore((s) => s.headSettings);
   const setDocument = useEditorStore((s) => s.setDocument);
+  const updateHeadSettings = useEditorStore((s) => s.updateHeadSettings);
 
   const [editedCode, setEditedCode] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,9 +58,10 @@ export function useCodeSync(): UseCodeSyncResult {
 
     const timer = setTimeout(() => {
       try {
-        const node = parseMjmlToNode(code);
-        if (node) {
-          setDocument(node);
+        const result = parseMjml(code);
+        if (result.document) {
+          setDocument(result.document);
+          updateHeadSettings(result.headSettings);
           setError(null);
           // Keep isDirty true to show the modified indicator
         }
@@ -69,7 +71,7 @@ export function useCodeSync(): UseCodeSyncResult {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
-  }, [code, isDirty, setDocument]);
+  }, [code, isDirty, setDocument, updateHeadSettings]);
 
   // Run MJML compilation to detect compilation errors with line numbers
   useEffect(() => {
@@ -95,9 +97,10 @@ export function useCodeSync(): UseCodeSyncResult {
 
   const handleSync = useCallback(() => {
     try {
-      const node = parseMjmlToNode(code);
-      if (node) {
-        setDocument(node);
+      const result = parseMjml(code);
+      if (result.document) {
+        setDocument(result.document);
+        updateHeadSettings(result.headSettings);
         setEditedCode(null);
         setError(null);
       } else {
@@ -106,7 +109,7 @@ export function useCodeSync(): UseCodeSyncResult {
     } catch (err) {
       setError((err as Error).message);
     }
-  }, [code, setDocument]);
+  }, [code, setDocument, updateHeadSettings]);
 
   const handleReset = useCallback(() => {
     setEditedCode(null);

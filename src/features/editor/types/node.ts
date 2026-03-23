@@ -67,6 +67,7 @@ export interface HeadSettings {
   fonts?: FontDefinition[];
   styles?: string;
   breakpoint?: string;
+  attributes?: string;
 }
 
 // Template
