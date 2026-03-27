@@ -27,6 +27,9 @@ interface UIState {
   isDraggingNewComponent: boolean;
   dragOverId: string | null;
 
+  // Canvas email area width
+  canvasWidth: number;
+
   // Mobile panel state
   isSidebarOpen: boolean;
   isPropertiesOpen: boolean;
@@ -45,6 +48,7 @@ interface UIActions {
   setDragOverId: (id: string | null) => void;
   toggleCode: () => void;
   togglePreview: () => void;
+  setCanvasWidth: (width: number) => void;
   setSidebarOpen: (open: boolean) => void;
   setPropertiesOpen: (open: boolean) => void;
   toggleSidebar: () => void;
@@ -69,6 +73,7 @@ export const useUIStore = create<UIStore>()(
       isDragging: false,
       isDraggingNewComponent: false,
       dragOverId: null,
+      canvasWidth: 600,
       isSidebarOpen: false,
       isPropertiesOpen: false,
 
@@ -86,6 +91,7 @@ export const useUIStore = create<UIStore>()(
       setDragOverId: (id) => set({ dragOverId: id }),
       toggleCode: () => set((state) => ({ showCode: !state.showCode })),
       togglePreview: () => set((state) => ({ showPreview: !state.showPreview })),
+      setCanvasWidth: (width) => set({ canvasWidth: width }),
       setSidebarOpen: (open) => set({ isSidebarOpen: open }),
       setPropertiesOpen: (open) => set({ isPropertiesOpen: open }),
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
@@ -96,6 +102,7 @@ export const useUIStore = create<UIStore>()(
       partialize: (state) => ({
         editorMode: state.editorMode,
         previewMode: state.previewMode,
+        canvasWidth: state.canvasWidth,
       }),
     }
   )

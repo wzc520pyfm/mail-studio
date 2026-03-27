@@ -7,13 +7,14 @@
 import { memo, useCallback } from "react";
 import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { cn } from "@/lib/utils";
-import { Github } from "lucide-react";
 import { Breadcrumb } from "./Breadcrumb";
 import { CanvasBody } from "./CanvasBody";
+import { CanvasWidthControl } from "../CanvasWidthControl";
 
 export const Canvas = memo(function Canvas() {
   const document = useEditorStore((s) => s.document);
   const isDragging = useUIStore((s) => s.isDragging);
+  const canvasWidth = useUIStore((s) => s.canvasWidth);
   const setSelectedId = useEditorStore((s) => s.setSelectedId);
 
   // Clear selection when clicking on empty canvas area
@@ -40,15 +41,18 @@ export const Canvas = memo(function Canvas() {
         >
           <div
             className={cn(
-              "bg-white shadow-lg rounded-lg transition-shadow duration-200 w-full max-w-[600px]",
+              "bg-white shadow-lg rounded-lg transition-shadow duration-200 w-full",
               isDragging && "shadow-xl ring-2 ring-blue-100"
             )}
-            style={{ minHeight: "400px" }}
+            style={{ maxWidth: `${canvasWidth}px`, minHeight: "400px" }}
           >
             <CanvasBody node={document} />
           </div>
         </div>
       </div>
+
+      {/* Canvas Width Control */}
+      <CanvasWidthControl />
 
       {/* Drag hint */}
       {isDragging && (
@@ -56,17 +60,6 @@ export const Canvas = memo(function Canvas() {
           Release to drop the component
         </div>
       )}
-
-      {/* GitHub link */}
-      <a
-        href="https://github.com/wzc520pyfm/mail-studio"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute bottom-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted"
-        title="View on GitHub"
-      >
-        <Github className="w-5 h-5" />
-      </a>
     </div>
   );
 });
