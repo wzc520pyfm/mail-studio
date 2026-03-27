@@ -7,7 +7,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useEditorStore, useUIStore } from "@/features/editor/stores";
+import { useEditorStore } from "@/features/editor/stores";
 import type { EditorNode, MJMLComponentType } from "@/features/editor/types";
 import { generateId } from "@/features/editor/lib/mjml";
 import {
@@ -30,14 +30,13 @@ import {
 } from "@dnd-kit/sortable";
 import { LayoutGrid } from "lucide-react";
 import { SortableSectionContainer, AddSectionButton } from "./components";
-import { CanvasWidthControl } from "../CanvasWidthControl";
+import { ResizableEmailContainer } from "./ResizableEmailContainer";
 
 export function EditMode() {
   const document = useEditorStore((s) => s.document);
   const addChildNode = useEditorStore((s) => s.addChildNode);
   const updateNodeChildren = useEditorStore((s) => s.updateNodeChildren);
   const setSelectedId = useEditorStore((s) => s.setSelectedId);
-  const canvasWidth = useUIStore((s) => s.canvasWidth);
   const [activeSectionId, setActiveSectionId] = useState<UniqueIdentifier | null>(null);
 
   // Clear selection when clicking on empty area
@@ -105,46 +104,37 @@ export function EditMode() {
 
   return (
     <div className="h-full bg-white flex flex-col" onClick={handleBackgroundClick}>
-      <div className="flex-1 overflow-auto" onClick={handleBackgroundClick}>
-        <div
-          className="mx-auto py-12 px-8"
-          style={{ maxWidth: `${canvasWidth + 50}px` }}
-          onClick={handleBackgroundClick}
+      <ResizableEmailContainer onClick={handleBackgroundClick}>
+        {/* Email Header */}
+        <EmailHeader />
+
+        {/* Email Body */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleSectionDragStart}
+          onDragEnd={handleSectionDragEnd}
         >
-          {/* Email Header */}
-          <EmailHeader />
-
-          {/* Email Body */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleSectionDragStart}
-            onDragEnd={handleSectionDragEnd}
-          >
-            <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {document.children?.map((section) => (
-                  <SortableSectionContainer key={section.id} node={section} />
-                ))}
-                <AddSectionButton onAddSection={handleAddSection} />
-              </div>
-            </SortableContext>
-            <DragOverlay>
-              {activeSection ? (
-                <div className="bg-white rounded-lg shadow-xl border-2 border-blue-400 opacity-90 p-4">
-                  <div className="text-center text-gray-500 text-sm">
-                    <LayoutGrid className="w-5 h-5 mx-auto mb-1" />
-                    Section ({activeSection.children?.length || 0} columns)
-                  </div>
+          <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {document.children?.map((section) => (
+                <SortableSectionContainer key={section.id} node={section} />
+              ))}
+              <AddSectionButton onAddSection={handleAddSection} />
+            </div>
+          </SortableContext>
+          <DragOverlay>
+            {activeSection ? (
+              <div className="bg-white rounded-lg shadow-xl border-2 border-blue-400 opacity-90 p-4">
+                <div className="text-center text-gray-500 text-sm">
+                  <LayoutGrid className="w-5 h-5 mx-auto mb-1" />
+                  Section ({activeSection.children?.length || 0} columns)
                 </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-        </div>
-      </div>
-
-      {/* Canvas Width Control */}
-      <CanvasWidthControl />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </ResizableEmailContainer>
     </div>
   );
 }

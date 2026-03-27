@@ -29,7 +29,7 @@ export const Canvas = memo(function Canvas() {
   );
 
   return (
-    <div className="h-full bg-muted/50 flex flex-col relative">
+    <div className="h-full bg-muted/50 flex flex-col">
       {/* Breadcrumb - absolute positioned to avoid layout shifts */}
       <Breadcrumb />
 

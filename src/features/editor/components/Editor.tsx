@@ -4,7 +4,7 @@
 
 "use client";
 
-import { memo, useState, useCallback, useRef } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -148,6 +148,19 @@ export const Editor = memo(function Editor() {
   const setPropertiesOpen = useUIStore((s) => s.setPropertiesOpen);
   const selectedNode = useSelectedNode();
   const isMediumScreen = useIsMediumScreen();
+  const document = useEditorStore((s) => s.document);
+  const setCanvasWidth = useUIStore((s) => s.setCanvasWidth);
+
+  // Sync canvasWidth from mj-body width when document changes externally
+  // (e.g., template load, import, code editor)
+  useEffect(() => {
+    if (document.type === "mj-body" && document.props?.width) {
+      const parsed = parseInt(document.props.width as string, 10);
+      if (!isNaN(parsed) && parsed >= 320 && parsed <= 960) {
+        setCanvasWidth(parsed);
+      }
+    }
+  }, [document.props?.width, document.type, setCanvasWidth]);
 
   const [, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<MJMLComponentType | null>(null);
