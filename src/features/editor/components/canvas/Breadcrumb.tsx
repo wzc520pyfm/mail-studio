@@ -45,7 +45,7 @@ export const Breadcrumb = memo(function Breadcrumb() {
   }
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 px-4 py-2 bg-background/95 backdrop-blur-sm border-b border-border flex items-center gap-1 text-sm overflow-x-auto">
+    <div className="px-4 py-2 bg-background border-b border-border flex items-center gap-1 text-sm overflow-x-auto">
       <BreadcrumbItem node={document} isLast={breadcrumbPath.length === 1} />
       {breadcrumbPath.slice(1).map((node, index) => (
         <div key={node.id} className="flex items-center gap-1">

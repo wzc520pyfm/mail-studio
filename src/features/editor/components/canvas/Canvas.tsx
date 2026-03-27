@@ -29,21 +29,15 @@ export const Canvas = memo(function Canvas() {
   );
 
   return (
-    <div className="h-full bg-muted/50 flex flex-col">
-      {/* Breadcrumb - absolute positioned to avoid layout shifts */}
+    <div className="h-full bg-white flex flex-col">
+      {/* Breadcrumb */}
       <Breadcrumb />
 
       {/* Canvas Area */}
       <div className="flex-1 overflow-auto" onClick={handleCanvasClick}>
-        <div
-          className="min-h-full flex items-start justify-center pt-12 px-4 sm:px-6 lg:px-8 pb-20 lg:pb-8"
-          onClick={handleCanvasClick}
-        >
+        <div className="min-h-full flex justify-center py-12" onClick={handleCanvasClick}>
           <div
-            className={cn(
-              "bg-white shadow-lg rounded-lg transition-shadow duration-200 w-full",
-              isDragging && "shadow-xl ring-2 ring-blue-100"
-            )}
+            className={cn("w-full", isDragging && "ring-2 ring-blue-100")}
             style={{ maxWidth: `${canvasWidth}px`, minHeight: "400px" }}
           >
             <CanvasBody node={document} />
