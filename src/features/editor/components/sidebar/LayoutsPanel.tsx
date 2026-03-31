@@ -65,6 +65,7 @@ export const LayoutsPanel = memo(function LayoutsPanel() {
   const detachLayout = useLayoutStore((s) => s.detachLayout);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detachDialogOpen, setDetachDialogOpen] = useState(false);
   const [pendingLayout, setPendingLayout] = useState<EmailLayout | null>(null);
 
   const handleSelectLayout = useCallback(
@@ -105,7 +106,12 @@ export const LayoutsPanel = memo(function LayoutsPanel() {
   }, []);
 
   const handleDetach = useCallback(() => {
+    setDetachDialogOpen(true);
+  }, []);
+
+  const handleConfirmDetach = useCallback(() => {
     detachLayout();
+    setDetachDialogOpen(false);
   }, [detachLayout]);
 
   return (
@@ -178,6 +184,39 @@ export const LayoutsPanel = memo(function LayoutsPanel() {
           })}
         </div>
       </ScrollArea>
+
+      {/* Detach Layout Warning Dialog */}
+      <Dialog open={detachDialogOpen} onOpenChange={setDetachDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Detach Layout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to detach{" "}
+              <span className="font-medium text-foreground">
+                {emailLayouts.find((l) => l.id === activeLayoutId)?.name}
+              </span>
+              ?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-md bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive space-y-1">
+            <p>
+              All fixed regions (header, footer, etc.) from this layout will be{" "}
+              <strong>permanently removed</strong>. Only your editable content will be kept.
+            </p>
+            <p>This action can be undone with Ctrl+Z.</p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDetachDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDetach}>
+              Detach
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Switch Layout Confirmation Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
