@@ -44,6 +44,12 @@ export interface EditorNode {
    * Used for template regions that should remain unchanged.
    */
   locked?: boolean;
+  /**
+   * Identifies which layout slot this node belongs to.
+   * Only set on top-level user content sections when a layout is active.
+   * Managed automatically by the layout system.
+   */
+  layoutSlot?: string;
 }
 
 // Default child node definition (without id, recursive)

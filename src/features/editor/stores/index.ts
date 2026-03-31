@@ -23,6 +23,17 @@ export {
   isNodeOrAncestorLocked,
 } from "./editorStore";
 
+// Layout store
+export {
+  useLayoutStore,
+  // Selectors
+  selectActiveLayoutId,
+  // Derived hooks
+  useActiveLayoutId,
+  useActiveLayout,
+  useHasActiveLayout,
+} from "./layoutStore";
+
 // UI store
 export {
   useUIStore,

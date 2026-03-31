@@ -25,5 +25,8 @@ export type {
   SocialPlatform,
 } from "./component";
 
+// Layout types
+export type { LayoutRegion, LayoutFixedRegion, LayoutSlotRegion, EmailLayout } from "./layout";
+
 // UI types
 export type { EditorMode, PreviewMode, SidebarTab, DragItem } from "./ui";

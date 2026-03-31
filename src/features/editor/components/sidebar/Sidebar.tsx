@@ -10,6 +10,7 @@ import { useUIStore } from "@/features/editor/stores";
 import type { SidebarTab } from "@/features/editor/types";
 import { ComponentsPanel } from "./ComponentsPanel";
 import { TemplatesPanel } from "./TemplatesPanel";
+import { LayoutsPanel } from "./LayoutsPanel";
 
 interface SidebarProps {
   idPrefix?: string;
@@ -27,12 +28,15 @@ export const Sidebar = memo(function Sidebar({ idPrefix = "" }: SidebarProps) {
         className="flex-1 flex flex-col overflow-y-auto"
       >
         <div className="px-3 pt-3 pb-2">
-          <TabsList className="w-full grid grid-cols-2">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="components" className="text-xs">
               Components
             </TabsTrigger>
             <TabsTrigger value="templates" className="text-xs">
               Templates
+            </TabsTrigger>
+            <TabsTrigger value="layouts" className="text-xs">
+              Layouts
             </TabsTrigger>
           </TabsList>
         </div>
@@ -43,6 +47,10 @@ export const Sidebar = memo(function Sidebar({ idPrefix = "" }: SidebarProps) {
 
         <TabsContent value="templates" className="flex-1 mt-0 overflow-hidden">
           <TemplatesPanel />
+        </TabsContent>
+
+        <TabsContent value="layouts" className="flex-1 mt-0 overflow-hidden">
+          <LayoutsPanel />
         </TabsContent>
       </Tabs>
     </div>

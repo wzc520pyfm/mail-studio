@@ -9,7 +9,7 @@ export type EditorMode = "canvas" | "edit" | "preview" | "code";
 export type PreviewMode = "desktop" | "mobile";
 
 // Sidebar tabs
-export type SidebarTab = "components" | "templates";
+export type SidebarTab = "components" | "templates" | "layouts";
 
 // Drag item type
 export interface DragItem {
