@@ -145,6 +145,12 @@ interface LayoutActions {
   switchLayout: (layoutId: string) => void;
 
   /**
+   * Replace the entire document with a new layout and its default content.
+   * Discards all existing user content.
+   */
+  replaceWithLayout: (layoutId: string) => void;
+
+  /**
    * Detach the active layout.
    * Removes locked regions and clears all layout metadata.
    * The document becomes a free-form editable document.
@@ -207,6 +213,20 @@ export const useLayoutStore = create<LayoutStore>()((set, get) => ({
 
     // Build new document with the new layout + preserved content
     const newDocument = buildDocumentFromLayout(layout, slotContent);
+
+    // Update editor store
+    editorStore.setDocument(newDocument);
+    set({ activeLayoutId: layoutId });
+  },
+
+  replaceWithLayout: (layoutId: string) => {
+    const layout = getLayoutById(layoutId);
+    if (!layout) return;
+
+    const editorStore = useEditorStore.getState();
+
+    // Build new document with empty slot content → all slots get defaults
+    const newDocument = buildDocumentFromLayout(layout, new Map());
 
     // Update editor store
     editorStore.setDocument(newDocument);

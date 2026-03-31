@@ -62,6 +62,7 @@ export const LayoutsPanel = memo(function LayoutsPanel() {
   const activeLayoutId = useActiveLayoutId();
   const applyLayout = useLayoutStore((s) => s.applyLayout);
   const switchLayout = useLayoutStore((s) => s.switchLayout);
+  const replaceWithLayout = useLayoutStore((s) => s.replaceWithLayout);
   const detachLayout = useLayoutStore((s) => s.detachLayout);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -94,11 +95,11 @@ export const LayoutsPanel = memo(function LayoutsPanel() {
 
   const handleReplaceAll = useCallback(() => {
     if (pendingLayout) {
-      applyLayout(pendingLayout.id);
+      replaceWithLayout(pendingLayout.id);
     }
     setDialogOpen(false);
     setPendingLayout(null);
-  }, [pendingLayout, applyLayout]);
+  }, [pendingLayout, replaceWithLayout]);
 
   const handleCancel = useCallback(() => {
     setDialogOpen(false);
