@@ -8,13 +8,13 @@
 
 import type { EmailLayout } from "@/features/editor/types";
 
-// ============ Layout: Corporate Blue ============
-const corporateBlue: EmailLayout = {
-  id: "corporate-blue",
-  name: "Corporate Blue",
+// ============ Layout: Sunrise ============
+const sunrise: EmailLayout = {
+  id: "sunrise",
+  name: "Sunrise",
   category: "business",
   bodyProps: {
-    "background-color": "#f0f4f8",
+    "background-color": "#fef5ef",
     width: "600px",
   },
   regions: [
@@ -24,8 +24,8 @@ const corporateBlue: EmailLayout = {
         id: "layout-header",
         type: "mj-section",
         props: {
-          "background-color": "#1e3a5f",
-          padding: "24px 20px",
+          "background-color": "#fef5ef",
+          padding: "28px 32px",
         },
         locked: true,
         children: [
@@ -35,61 +35,16 @@ const corporateBlue: EmailLayout = {
             props: {},
             children: [
               {
-                id: "layout-header-logo",
+                id: "layout-header-brand",
                 type: "mj-text",
                 props: {
                   "font-size": "22px",
-                  "font-weight": "bold",
+                  "font-weight": "800",
                   align: "center",
-                  color: "#ffffff",
+                  color: "#b5502e",
+                  "letter-spacing": "3px",
                 },
-                content: "ACME Corp",
-              },
-              {
-                id: "layout-header-nav",
-                type: "mj-navbar",
-                props: {
-                  hamburger: "hamburger",
-                  align: "center",
-                },
-                children: [
-                  {
-                    id: "layout-nav-1",
-                    type: "mj-navbar-link",
-                    props: {
-                      href: "#",
-                      color: "#cbd5e1",
-                      "font-size": "13px",
-                      "text-transform": "uppercase",
-                      padding: "0 14px",
-                    },
-                    content: "Products",
-                  },
-                  {
-                    id: "layout-nav-2",
-                    type: "mj-navbar-link",
-                    props: {
-                      href: "#",
-                      color: "#cbd5e1",
-                      "font-size": "13px",
-                      "text-transform": "uppercase",
-                      padding: "0 14px",
-                    },
-                    content: "About",
-                  },
-                  {
-                    id: "layout-nav-3",
-                    type: "mj-navbar-link",
-                    props: {
-                      href: "#",
-                      color: "#cbd5e1",
-                      "font-size": "13px",
-                      "text-transform": "uppercase",
-                      padding: "0 14px",
-                    },
-                    content: "Contact",
-                  },
-                ],
+                content: "STARTER",
               },
             ],
           },
@@ -106,7 +61,7 @@ const corporateBlue: EmailLayout = {
           type: "mj-section",
           props: {
             "background-color": "#ffffff",
-            padding: "30px 20px",
+            padding: "40px 32px",
           },
           children: [
             {
@@ -118,9 +73,9 @@ const corporateBlue: EmailLayout = {
                   id: "default-main-text",
                   type: "mj-text",
                   props: {
-                    "font-size": "16px",
-                    color: "#374151",
-                    "line-height": "1.6",
+                    "font-size": "15px",
+                    color: "#1a1a1a",
+                    "line-height": "1.7",
                   },
                   content: "Start writing your email content here...",
                 },
@@ -136,8 +91,8 @@ const corporateBlue: EmailLayout = {
         id: "layout-footer",
         type: "mj-section",
         props: {
-          "background-color": "#1e3a5f",
-          padding: "20px",
+          "background-color": "#fef5ef",
+          padding: "24px 32px",
         },
         locked: true,
         children: [
@@ -150,12 +105,13 @@ const corporateBlue: EmailLayout = {
                 id: "layout-footer-text",
                 type: "mj-text",
                 props: {
-                  "font-size": "12px",
+                  "font-size": "11px",
                   align: "center",
-                  color: "#94a3b8",
+                  color: "#8c7162",
+                  "line-height": "1.7",
                 },
                 content:
-                  '© 2025 ACME Corp · <a href="#" style="color: #94a3b8;">Unsubscribe</a> · <a href="#" style="color: #94a3b8;">Privacy Policy</a>',
+                  '<a href="#" style="color: #b5502e; text-decoration: underline;">Unsubscribe</a> &nbsp;\u00b7&nbsp; <a href="#" style="color: #b5502e; text-decoration: underline;">Privacy</a> &nbsp;\u00b7&nbsp; <a href="#" style="color: #b5502e; text-decoration: underline;">View Online</a>',
               },
             ],
           },
@@ -280,13 +236,13 @@ const modernMinimal: EmailLayout = {
   ],
 };
 
-// ============ Layout: Bold Red ============
-const boldRed: EmailLayout = {
-  id: "bold-red",
-  name: "Bold Red",
+// ============ Layout: Luxe Dark ============
+const luxeDark: EmailLayout = {
+  id: "luxe-dark",
+  name: "Luxe Dark",
   category: "marketing",
   bodyProps: {
-    "background-color": "#1a1a1a",
+    "background-color": "#13111a",
     width: "600px",
   },
   regions: [
@@ -296,28 +252,79 @@ const boldRed: EmailLayout = {
         id: "layout-header",
         type: "mj-section",
         props: {
-          "background-color": "#dc2626",
-          padding: "28px 20px",
+          "background-color": "#1c1928",
+          padding: "28px 32px 24px",
         },
         locked: true,
         children: [
           {
-            id: "layout-header-col",
+            id: "layout-header-col-logo",
             type: "mj-column",
-            props: {},
+            props: { width: "50%" },
             children: [
               {
                 id: "layout-header-logo",
                 type: "mj-text",
                 props: {
-                  "font-size": "26px",
-                  "font-weight": "bold",
-                  align: "center",
-                  color: "#ffffff",
-                  "text-transform": "uppercase",
-                  "letter-spacing": "4px",
+                  "font-size": "22px",
+                  "font-weight": "700",
+                  align: "left",
+                  color: "#e2b96f",
+                  "letter-spacing": "3px",
+                  "font-family": "Georgia, serif",
                 },
-                content: "BRAND",
+                content: "LUXE",
+              },
+            ],
+          },
+          {
+            id: "layout-header-col-tagline",
+            type: "mj-column",
+            props: { width: "50%" },
+            children: [
+              {
+                id: "layout-header-tagline",
+                type: "mj-text",
+                props: {
+                  "font-size": "11px",
+                  align: "right",
+                  color: "#6b6580",
+                  "padding-top": "8px",
+                  "text-transform": "uppercase",
+                  "letter-spacing": "2px",
+                },
+                content: "Premium Collection",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      type: "fixed",
+      node: {
+        id: "layout-header-accent",
+        type: "mj-section",
+        props: {
+          "background-color": "#1c1928",
+          padding: "0 32px",
+        },
+        locked: true,
+        children: [
+          {
+            id: "layout-header-accent-col",
+            type: "mj-column",
+            props: {},
+            children: [
+              {
+                id: "layout-header-accent-line",
+                type: "mj-divider",
+                props: {
+                  "border-color": "#e2b96f",
+                  "border-width": "2px",
+                  padding: "0",
+                  width: "60px",
+                },
               },
             ],
           },
@@ -333,8 +340,8 @@ const boldRed: EmailLayout = {
           id: "default-hero",
           type: "mj-section",
           props: {
-            "background-color": "#2a2a2a",
-            padding: "40px 20px",
+            "background-color": "#1c1928",
+            padding: "36px 32px 20px",
           },
           children: [
             {
@@ -346,44 +353,32 @@ const boldRed: EmailLayout = {
                   id: "default-hero-text",
                   type: "mj-text",
                   props: {
-                    "font-size": "28px",
-                    "font-weight": "bold",
+                    "font-size": "26px",
+                    "font-weight": "700",
                     align: "center",
-                    color: "#ffffff",
+                    color: "#f1eff6",
+                    "line-height": "1.3",
+                    "font-family": "Georgia, serif",
                   },
                   content: "Your headline goes here",
+                },
+                {
+                  id: "default-hero-sub",
+                  type: "mj-text",
+                  props: {
+                    "font-size": "14px",
+                    align: "center",
+                    color: "#8b839e",
+                    "line-height": "1.6",
+                    "padding-top": "8px",
+                  },
+                  content: "A short subtitle to accompany your headline",
                 },
               ],
             },
           ],
         },
       ],
-    },
-    {
-      type: "fixed",
-      node: {
-        id: "layout-divider",
-        type: "mj-section",
-        props: {
-          "background-color": "#dc2626",
-          padding: "0",
-        },
-        locked: true,
-        children: [
-          {
-            id: "layout-divider-col",
-            type: "mj-column",
-            props: {},
-            children: [
-              {
-                id: "layout-divider-spacer",
-                type: "mj-spacer",
-                props: { height: "4px" },
-              },
-            ],
-          },
-        ],
-      },
     },
     {
       type: "slot",
@@ -394,8 +389,8 @@ const boldRed: EmailLayout = {
           id: "default-main",
           type: "mj-section",
           props: {
-            "background-color": "#2a2a2a",
-            padding: "30px 20px",
+            "background-color": "#241f32",
+            padding: "32px 32px",
           },
           children: [
             {
@@ -407,9 +402,9 @@ const boldRed: EmailLayout = {
                   id: "default-main-text",
                   type: "mj-text",
                   props: {
-                    "font-size": "16px",
-                    color: "#d1d5db",
-                    "line-height": "1.6",
+                    "font-size": "15px",
+                    color: "#c4bdd4",
+                    "line-height": "1.7",
                   },
                   content: "Write your main content here...",
                 },
@@ -422,11 +417,41 @@ const boldRed: EmailLayout = {
     {
       type: "fixed",
       node: {
+        id: "layout-footer-accent",
+        type: "mj-section",
+        props: {
+          "background-color": "#16131e",
+          padding: "0 32px",
+        },
+        locked: true,
+        children: [
+          {
+            id: "layout-footer-accent-col",
+            type: "mj-column",
+            props: {},
+            children: [
+              {
+                id: "layout-footer-accent-line",
+                type: "mj-divider",
+                props: {
+                  "border-color": "#2d2840",
+                  "border-width": "1px",
+                  padding: "0",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      type: "fixed",
+      node: {
         id: "layout-footer",
         type: "mj-section",
         props: {
-          "background-color": "#111111",
-          padding: "20px",
+          "background-color": "#16131e",
+          padding: "20px 32px 28px",
         },
         locked: true,
         children: [
@@ -436,15 +461,30 @@ const boldRed: EmailLayout = {
             props: {},
             children: [
               {
+                id: "layout-footer-brand",
+                type: "mj-text",
+                props: {
+                  "font-size": "14px",
+                  "font-weight": "600",
+                  align: "center",
+                  color: "#e2b96f",
+                  "letter-spacing": "2px",
+                  "padding-bottom": "8px",
+                  "font-family": "Georgia, serif",
+                },
+                content: "LUXE",
+              },
+              {
                 id: "layout-footer-text",
                 type: "mj-text",
                 props: {
                   "font-size": "11px",
                   align: "center",
-                  color: "#6b7280",
+                  color: "#5a5370",
+                  "line-height": "1.7",
                 },
                 content:
-                  'BRAND Inc. · <a href="#" style="color: #6b7280;">Unsubscribe</a> · <a href="#" style="color: #6b7280;">Preferences</a>',
+                  '<a href="#" style="color: #b8b0cc; text-decoration: none;">Unsubscribe</a> &nbsp;·&nbsp; <a href="#" style="color: #b8b0cc; text-decoration: none;">Preferences</a> &nbsp;·&nbsp; <a href="#" style="color: #b8b0cc; text-decoration: none;">View Online</a>',
               },
             ],
           },
@@ -455,7 +495,7 @@ const boldRed: EmailLayout = {
 };
 
 // ============ Exports ============
-export const emailLayouts: EmailLayout[] = [corporateBlue, modernMinimal, boldRed];
+export const emailLayouts: EmailLayout[] = [sunrise, modernMinimal, luxeDark];
 
 export function getLayoutById(id: string): EmailLayout | undefined {
   return emailLayouts.find((l) => l.id === id);

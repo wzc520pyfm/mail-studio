@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 const categoryColors: Record<string, string> = {
   business: "from-blue-500/20 to-blue-600/10",
   creative: "from-gray-400/20 to-gray-500/10",
-  marketing: "from-red-500/20 to-red-600/10",
+  marketing: "from-amber-500/20 to-amber-600/10",
 };
 
 // Layout card mini-preview: renders a simplified visual representation of the regions
