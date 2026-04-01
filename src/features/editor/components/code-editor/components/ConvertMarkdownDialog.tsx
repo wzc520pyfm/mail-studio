@@ -70,9 +70,9 @@ export function ConvertMarkdownDialog({ open, onOpenChange }: ConvertMarkdownDia
         </DialogHeader>
 
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-200/80 space-y-1">
-            <p className="font-medium text-amber-400">
+          <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-600/80 space-y-1">
+            <p className="font-medium text-amber-600">
               This operation will replace your current document
             </p>
             <p>
