@@ -1,11 +1,12 @@
 /**
- * Code Editor - Monaco-based MJML source code editor
+ * Code Editor - Dual-language editor supporting MJML and Markdown
  *
- * A full-featured MJML code editor with:
- * - Syntax highlighting for MJML
- * - Locked region protection (data-locked="true")
- * - Live preview synchronization
- * - Error handling and validation
+ * Switches between:
+ * - MJML mode: Full-featured MJML source code editor (existing behavior)
+ * - Markdown mode: Markdown editor powered by emailmd
+ *
+ * The language is controlled by uiStore.codeLanguage.
+ * A tab bar at the top allows switching between the two languages.
  */
 
 "use client";
@@ -15,14 +16,16 @@ import Editor, { loader, OnMount, BeforeMount } from "@monaco-editor/react";
 import { Loader2 } from "lucide-react";
 import * as monaco from "monaco-editor";
 
+import { useUIStore } from "@/features/editor/stores";
 import { useCodeSync, useLockedRegions } from "./hooks";
-import { CodeEditorToolbar, CodeEditorBanners } from "./components";
+import { CodeEditorToolbar, CodeEditorBanners, CodeLanguageTabs } from "./components";
 import { initializeMonacoForMjml, defaultEditorOptions } from "./utils";
+import { MarkdownCodeEditor } from "./MarkdownCodeEditor";
 
 // 配置 Monaco Editor 使用本地资源，避免请求 CDN
 loader.config({ monaco });
 
-export function CodeEditor() {
+function MjmlCodeEditor() {
   // Code synchronization state and actions
   const { code, isDirty, error, compileErrors, handleChange, handleSync, handleReset } =
     useCodeSync();
@@ -119,6 +122,22 @@ export function CodeEditor() {
           }
           options={defaultEditorOptions}
         />
+      </div>
+    </div>
+  );
+}
+
+export function CodeEditor() {
+  const codeLanguage = useUIStore((s) => s.codeLanguage);
+
+  return (
+    <div className="h-full w-full flex flex-col">
+      {/* Language Tabs */}
+      <CodeLanguageTabs />
+
+      {/* Editor Content */}
+      <div className="flex-1 min-h-0">
+        {codeLanguage === "markdown" ? <MarkdownCodeEditor /> : <MjmlCodeEditor />}
       </div>
     </div>
   );

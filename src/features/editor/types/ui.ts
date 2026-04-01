@@ -5,6 +5,9 @@
 // Editor view modes
 export type EditorMode = "canvas" | "edit" | "preview" | "code";
 
+// Code editor language modes
+export type CodeLanguage = "mjml" | "markdown";
+
 // Preview device modes
 export type PreviewMode = "desktop" | "mobile";
 

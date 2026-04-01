@@ -4,7 +4,7 @@
 
 "use client";
 
-import { memo, useState, useCallback, useRef, useEffect } from "react";
+import { memo, useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -149,7 +149,16 @@ export const Editor = memo(function Editor() {
   const selectedNode = useSelectedNode();
   const isMediumScreen = useIsMediumScreen();
   const document = useEditorStore((s) => s.document);
+  const themeVars = useEditorStore((s) => s.themeVars);
   const setCanvasWidth = useUIStore((s) => s.setCanvasWidth);
+
+  // Generate CSS custom properties for TipTap editors from markdown theme
+  const themeVarsCss = useMemo(() => {
+    const entries = Object.entries(themeVars);
+    if (entries.length === 0) return null;
+    const vars = entries.map(([k, v]) => `${k}: ${v};`).join(" ");
+    return `.tiptap-editor { ${vars} }`;
+  }, [themeVars]);
 
   // Sync canvasWidth from mj-body width when document changes externally
   // (e.g., template load, import, code editor)
@@ -360,6 +369,7 @@ export const Editor = memo(function Editor() {
       collisionDetection={customCollisionDetection}
     >
       <div className="h-screen flex flex-col bg-background">
+        {themeVarsCss && <style dangerouslySetInnerHTML={{ __html: themeVarsCss }} />}
         <Toolbar />
 
         {/* Main Content Area */}

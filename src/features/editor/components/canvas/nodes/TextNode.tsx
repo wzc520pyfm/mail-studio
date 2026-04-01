@@ -107,7 +107,7 @@ export const TextNode = memo(function TextNode({ node }: TextNodeProps) {
         onDoubleClick={handleDoubleClick}
         className={cn(
           "min-h-[1em] transition-all",
-          "[&_.tiptap-editor_a]:text-blue-600 [&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer",
+          "[&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer",
           isEditing && "cursor-text bg-blue-50/50 ring-1 ring-blue-200",
           !isEditing && isSelected && "cursor-pointer"
         )}

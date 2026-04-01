@@ -21,10 +21,10 @@ import {
   PenLine,
   AlertCircle,
   FolderOpen,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -67,8 +67,12 @@ export const Toolbar = memo(function Toolbar() {
   const setPreviewMode = useUIStore((s) => s.setPreviewMode);
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
 
+  const setCodeLanguage = useUIStore((s) => s.setCodeLanguage);
+  const markdownBuffer = useUIStore((s) => s.markdownBuffer);
+  const setMarkdownBuffer = useUIStore((s) => s.setMarkdownBuffer);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const importTypeRef = useRef<"mjml" | "html">("mjml");
+  const importTypeRef = useRef<"mjml" | "html" | "markdown">("mjml");
 
   const handleUndo = useCallback(() => {
     if (canUndo) undo();
@@ -108,6 +112,19 @@ export const Toolbar = memo(function Toolbar() {
     fileInputRef.current?.click();
   }, []);
 
+  const handleImportMarkdown = useCallback(() => {
+    importTypeRef.current = "markdown";
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleExportMarkdown = useCallback(() => {
+    downloadFile(markdownBuffer, "email.md", "text/markdown");
+  }, [markdownBuffer]);
+
+  const handleCopyMarkdown = useCallback(async () => {
+    await navigator.clipboard.writeText(markdownBuffer);
+  }, [markdownBuffer]);
+
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -118,27 +135,34 @@ export const Toolbar = memo(function Toolbar() {
         const content = e.target?.result as string;
         if (!content) return;
 
-        let result;
-        if (importTypeRef.current === "mjml") {
-          result = parseMjml(content);
+        if (importTypeRef.current === "markdown") {
+          // Load markdown into buffer and switch to markdown mode
+          setMarkdownBuffer(content);
+          setCodeLanguage("markdown");
+          setEditorMode("code");
         } else {
-          result = parseHtmlToMjml(content);
-        }
-
-        if (result.document) {
-          setDocument(result.document);
-          // Update head settings if any were parsed
-          if (result.headSettings) {
-            updateHeadSettings(result.headSettings);
+          let result;
+          if (importTypeRef.current === "mjml") {
+            result = parseMjml(content);
+          } else {
+            result = parseHtmlToMjml(content);
           }
 
-          // Show any warnings/info
-          if (result.errors.length > 0) {
-            // Use a simple alert for now, could be improved with a toast
-            alert(result.errors.join("\n"));
+          if (result.document) {
+            setDocument(result.document);
+            // Update head settings if any were parsed
+            if (result.headSettings) {
+              updateHeadSettings(result.headSettings);
+            }
+
+            // Show any warnings/info
+            if (result.errors.length > 0) {
+              // Use a simple alert for now, could be improved with a toast
+              alert(result.errors.join("\n"));
+            }
+          } else {
+            alert(`Import failed:\n${result.errors.join("\n")}`);
           }
-        } else {
-          alert(`Import failed:\n${result.errors.join("\n")}`);
         }
       };
       reader.readAsText(file);
@@ -146,7 +170,7 @@ export const Toolbar = memo(function Toolbar() {
       // Reset file input so the same file can be imported again
       event.target.value = "";
     },
-    [setDocument, updateHeadSettings]
+    [setDocument, updateHeadSettings, setMarkdownBuffer, setCodeLanguage, setEditorMode]
   );
 
   return (
@@ -246,7 +270,7 @@ export const Toolbar = memo(function Toolbar() {
                 <span className="hidden md:inline text-xs">Code</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>MJML source code</TooltipContent>
+            <TooltipContent>MJML & Markdown code editor</TooltipContent>
           </Tooltip>
         </div>
 
@@ -370,6 +394,10 @@ export const Toolbar = memo(function Toolbar() {
                   Beta
                 </span>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleImportMarkdown}>
+                <FileText className="w-4 h-4 mr-2" />
+                Import Markdown
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
@@ -385,6 +413,10 @@ export const Toolbar = memo(function Toolbar() {
                 <Copy className="w-4 h-4 mr-2" />
                 Copy HTML
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopyMarkdown}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Markdown
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportMjml}>
                 <FileJson className="w-4 h-4 mr-2" />
                 Download MJML
@@ -392,6 +424,10 @@ export const Toolbar = memo(function Toolbar() {
               <DropdownMenuItem onClick={handleExportHtml}>
                 <FileCode className="w-4 h-4 mr-2" />
                 Download HTML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportMarkdown}>
+                <FileText className="w-4 h-4 mr-2" />
+                Download Markdown
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -426,6 +462,10 @@ export const Toolbar = memo(function Toolbar() {
                   Beta
                 </span>
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleImportMarkdown}>
+                <FileText className="w-4 h-4 mr-2" />
+                Import Markdown
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
@@ -441,6 +481,10 @@ export const Toolbar = memo(function Toolbar() {
                 <Copy className="w-4 h-4 mr-2" />
                 Copy HTML
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopyMarkdown}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Markdown
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportMjml}>
                 <FileJson className="w-4 h-4 mr-2" />
                 Download MJML
@@ -449,6 +493,10 @@ export const Toolbar = memo(function Toolbar() {
                 <FileCode className="w-4 h-4 mr-2" />
                 Download HTML
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportMarkdown}>
+                <FileText className="w-4 h-4 mr-2" />
+                Download Markdown
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -456,7 +504,7 @@ export const Toolbar = memo(function Toolbar() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".mjml,.html,.htm"
+            accept=".mjml,.html,.htm,.md,.markdown"
             onChange={handleFileChange}
             className="hidden"
           />

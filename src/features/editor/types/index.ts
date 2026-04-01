@@ -29,4 +29,4 @@ export type {
 export type { LayoutRegion, LayoutFixedRegion, LayoutSlotRegion, EmailLayout } from "./layout";
 
 // UI types
-export type { EditorMode, PreviewMode, SidebarTab, DragItem } from "./ui";
+export type { EditorMode, CodeLanguage, PreviewMode, SidebarTab, DragItem } from "./ui";

@@ -4,7 +4,8 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { EditorMode, PreviewMode, SidebarTab } from "@/features/editor/types";
+import type { EditorMode, PreviewMode, SidebarTab, CodeLanguage } from "@/features/editor/types";
+import { defaultMarkdown } from "@/features/editor/lib/markdown";
 
 // ============ State Types ============
 
@@ -33,6 +34,13 @@ interface UIState {
   // Mobile panel state
   isSidebarOpen: boolean;
   isPropertiesOpen: boolean;
+
+  // Code editor language
+  codeLanguage: CodeLanguage;
+
+  // Markdown buffer
+  markdownBuffer: string;
+  lastMarkdownConvertTime: number | null;
 }
 
 interface UIActions {
@@ -53,6 +61,9 @@ interface UIActions {
   setPropertiesOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   toggleProperties: () => void;
+  setCodeLanguage: (lang: CodeLanguage) => void;
+  setMarkdownBuffer: (md: string) => void;
+  setLastMarkdownConvertTime: (time: number | null) => void;
 }
 
 type UIStore = UIState & UIActions;
@@ -76,6 +87,9 @@ export const useUIStore = create<UIStore>()(
       canvasWidth: 600,
       isSidebarOpen: false,
       isPropertiesOpen: false,
+      codeLanguage: "mjml",
+      markdownBuffer: defaultMarkdown,
+      lastMarkdownConvertTime: null,
 
       // Actions
       setLeftPanelWidth: (width) => set({ leftPanelWidth: width }),
@@ -96,6 +110,9 @@ export const useUIStore = create<UIStore>()(
       setPropertiesOpen: (open) => set({ isPropertiesOpen: open }),
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       toggleProperties: () => set((state) => ({ isPropertiesOpen: !state.isPropertiesOpen })),
+      setCodeLanguage: (lang) => set({ codeLanguage: lang }),
+      setMarkdownBuffer: (md) => set({ markdownBuffer: md }),
+      setLastMarkdownConvertTime: (time) => set({ lastMarkdownConvertTime: time }),
     }),
     {
       name: "mail-studio-ui-v3",
@@ -103,6 +120,8 @@ export const useUIStore = create<UIStore>()(
         editorMode: state.editorMode,
         previewMode: state.previewMode,
         canvasWidth: state.canvasWidth,
+        codeLanguage: state.codeLanguage,
+        markdownBuffer: state.markdownBuffer,
       }),
     }
   )

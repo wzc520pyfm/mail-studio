@@ -4,12 +4,13 @@
 
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import { Eye, Code2, Copy, Check, Loader2 } from "lucide-react";
 import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { compileDocument } from "@/features/editor/lib/mjml";
+import { renderMarkdownPreview } from "@/features/editor/lib/markdown";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -20,9 +21,31 @@ export function Preview() {
   const headSettings = useEditorStore((s) => s.headSettings);
   const previewMode = useUIStore((s) => s.previewMode);
   const editorMode = useUIStore((s) => s.editorMode);
+  const codeLanguage = useUIStore((s) => s.codeLanguage);
+  const markdownBuffer = useUIStore((s) => s.markdownBuffer);
 
   const [viewTab, setViewTab] = useState<"rendered" | "html">("rendered");
   const [copied, setCopied] = useState(false);
+
+  // Markdown preview with debounce
+  const [markdownHtml, setMarkdownHtml] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const isMarkdownMode = editorMode === "code" && codeLanguage === "markdown";
+
+  useEffect(() => {
+    if (!isMarkdownMode) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      try {
+        const result = renderMarkdownPreview(markdownBuffer);
+        setMarkdownHtml(result.html);
+      } catch {
+        // keep previous output on error
+      }
+    }, 150);
+    return () => clearTimeout(debounceRef.current);
+  }, [markdownBuffer, isMarkdownMode]);
 
   // Compile MJML to HTML using useMemo (derived state)
   const { compiledHtml, errors } = useMemo(() => {
@@ -30,11 +53,14 @@ export function Preview() {
     return { compiledHtml: html, errors: compileErrors };
   }, [document, headSettings]);
 
+  // Use markdown preview HTML when in markdown mode, otherwise compiled MJML HTML
+  const previewHtml = isMarkdownMode ? markdownHtml : compiledHtml;
+
   const handleCopyHtml = useCallback(async () => {
-    await navigator.clipboard.writeText(compiledHtml);
+    await navigator.clipboard.writeText(previewHtml);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [compiledHtml]);
+  }, [previewHtml]);
 
   const frameWidth = previewMode === "desktop" ? "100%" : "375px";
   const frameMaxWidth = previewMode === "desktop" ? "800px" : "375px";
@@ -94,8 +120,8 @@ export function Preview() {
         </div>
       )}
 
-      {/* Error Banner */}
-      {errors.length > 0 && (
+      {/* Error Banner — hide in markdown mode since emailmd handles its own errors */}
+      {!isMarkdownMode && errors.length > 0 && (
         <div className="px-4 py-2 bg-destructive/10 border-b border-destructive/20">
           <p className="text-sm text-destructive">
             {errors.length} compilation error{errors.length > 1 ? "s" : ""}
@@ -110,7 +136,7 @@ export function Preview() {
             height="100%"
             language="html"
             theme="vs-dark"
-            value={compiledHtml}
+            value={previewHtml}
             loading={
               <div className="h-full flex items-center justify-center bg-[#1e1e1e]">
                 <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
@@ -151,7 +177,7 @@ export function Preview() {
 
               {/* HTML Preview */}
               <iframe
-                srcDoc={compiledHtml}
+                srcDoc={previewHtml}
                 className="w-full border-0"
                 style={{
                   height: previewMode === "mobile" ? "600px" : "800px",

@@ -132,7 +132,7 @@ export function TipTapText({ node, isLocked = false }: TipTapTextProps) {
           "min-h-[1.6em] px-2 py-1 rounded",
           isLocked && "cursor-not-allowed",
           "[&_.tiptap-editor]:outline-none",
-          "[&_.tiptap-editor_a]:text-blue-600 [&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer"
+          "[&_.tiptap-editor_a]:underline [&_.tiptap-editor_a]:cursor-pointer"
         )}
         style={editorStyle}
       >

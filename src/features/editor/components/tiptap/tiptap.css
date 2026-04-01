@@ -7,9 +7,67 @@
 }
 
 .tiptap-editor a {
-  color: #2563eb;
+  color: var(--brand-color, #2563eb);
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Heading styles — uses --heading-color CSS variable from theme.
+   Margins match emailmd's <mj-style> exactly. */
+.tiptap-editor h1 {
+  font-size: 2em;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--heading-color, inherit);
+  margin: 0 0 12px 0;
+}
+
+.tiptap-editor h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--heading-color, inherit);
+  margin: 0 0 10px 0;
+}
+
+.tiptap-editor h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--heading-color, inherit);
+  margin: 0 0 8px 0;
+}
+
+/* List styles — margins match emailmd's <mj-style> */
+.tiptap-editor ul {
+  list-style-type: disc;
+  padding-left: 24px;
+  margin: 0 0 8px 0;
+}
+
+.tiptap-editor ol {
+  list-style-type: decimal;
+  padding-left: 24px;
+  margin: 0 0 8px 0;
+}
+
+.tiptap-editor li {
+  margin-bottom: 4px;
+}
+
+.tiptap-editor li p {
+  margin: 0;
+}
+
+/* Blockquote styles — matches emailmd's border-left + padding */
+.tiptap-editor blockquote {
+  border-left: 3px solid var(--brand-color, #6366f1);
+  padding-left: 16px;
+  margin: 0;
+}
+
+.tiptap-editor blockquote p {
+  margin: 0;
 }
 
 .tiptap-editor p.is-editor-empty:first-child::before {

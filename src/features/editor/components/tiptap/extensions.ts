@@ -62,12 +62,8 @@ export function getRichTextExtensions(
 ): Extensions {
   return [
     StarterKit.configure({
-      heading: false,
+      heading: { levels: [1, 2, 3] },
       codeBlock: false,
-      blockquote: false,
-      bulletList: false,
-      orderedList: false,
-      listItem: false,
       horizontalRule: false,
       link: false,
       underline: false,
@@ -80,7 +76,7 @@ export function getRichTextExtensions(
       },
     }),
     TextAlign.configure({
-      types: ["paragraph"],
+      types: ["paragraph", "heading"],
     }),
     TextStyle,
     Color,

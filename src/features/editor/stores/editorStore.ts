@@ -40,6 +40,9 @@ interface EditorState {
 
   // Head settings
   headSettings: HeadSettings;
+
+  // Theme CSS variables for Canvas/Edit mode (set during markdown conversion)
+  themeVars: Record<string, string>;
 }
 
 interface EditorActions {
@@ -64,6 +67,9 @@ interface EditorActions {
   addFont: (font: FontDefinition) => void;
   removeFont: (fontName: string) => void;
   updateFont: (index: number, font: FontDefinition) => void;
+
+  // Theme variables
+  setThemeVars: (vars: Record<string, string>) => void;
 
   // Template
   loadTemplate: (document: EditorNode) => void;
@@ -200,6 +206,7 @@ export const useEditorStore = create<EditorStore>()(
       selectedId: null,
       hoveredId: null,
       headSettings: { ...defaultHeadSettings },
+      themeVars: {},
 
       // Document actions
       setDocument: (document) =>
@@ -486,6 +493,11 @@ export const useEditorStore = create<EditorStore>()(
           state.headSettings.fonts[index] = font;
         }),
 
+      setThemeVars: (vars) =>
+        set((state) => {
+          state.themeVars = vars;
+        }),
+
       loadTemplate: (document) =>
         set((state) => {
           state.document = cloneDocumentWithNewIds(document);
@@ -525,6 +537,9 @@ export const selectHoveredId = (state: EditorStore) => state.hoveredId;
 
 // Select head settings
 export const selectHeadSettings = (state: EditorStore) => state.headSettings;
+
+// Select theme vars
+export const selectThemeVars = (state: EditorStore) => state.themeVars;
 
 // ============ Derived State Hooks ============
 
