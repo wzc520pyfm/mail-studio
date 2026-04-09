@@ -120,32 +120,34 @@ export function Preview() {
               </Button>
             )}
 
-            <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
-              <button
-                className={cn(
-                  "flex items-center justify-center w-7 h-6 rounded transition-colors",
-                  previewMode === "desktop"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setPreviewMode("desktop")}
-                title="Desktop View"
-              >
-                <Monitor className="w-3.5 h-3.5" />
-              </button>
-              <button
-                className={cn(
-                  "flex items-center justify-center w-7 h-6 rounded transition-colors",
-                  previewMode === "mobile"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                onClick={() => setPreviewMode("mobile")}
-                title="Mobile View"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {viewTab === "rendered" && (
+              <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+                <button
+                  className={cn(
+                    "flex items-center justify-center w-7 h-6 rounded transition-colors",
+                    previewMode === "desktop"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setPreviewMode("desktop")}
+                  title="Desktop View"
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  className={cn(
+                    "flex items-center justify-center w-7 h-6 rounded transition-colors",
+                    previewMode === "mobile"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setPreviewMode("mobile")}
+                  title="Mobile View"
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
