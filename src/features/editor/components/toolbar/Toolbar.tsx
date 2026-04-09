@@ -286,9 +286,13 @@ export const Toolbar = memo(function Toolbar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={previewMode === "desktop" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className={cn(
+                    "h-7 w-7",
+                    previewMode === "desktop" &&
+                      "bg-background text-foreground shadow-sm hover:bg-background"
+                  )}
                   onClick={() => setPreviewMode("desktop")}
                 >
                   <Monitor className="w-4 h-4" />
@@ -300,9 +304,13 @@ export const Toolbar = memo(function Toolbar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={previewMode === "mobile" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className={cn(
+                    "h-7 w-7",
+                    previewMode === "mobile" &&
+                      "bg-background text-foreground shadow-sm hover:bg-background"
+                  )}
                   onClick={() => setPreviewMode("mobile")}
                 >
                   <Smartphone className="w-4 h-4" />
@@ -312,8 +320,8 @@ export const Toolbar = memo(function Toolbar() {
             </Tooltip>
           </div>
 
-          {/* Undo/Redo - Always visible */}
-          <div className="flex items-center">
+          {/* Undo/Redo - hidden in preview mode */}
+          <div className={cn("flex items-center", editorMode === "preview" && "hidden")}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

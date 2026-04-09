@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import { Eye, Code2, Copy, Check, Loader2 } from "lucide-react";
+import { Eye, Code2, Copy, Check, Loader2, Monitor, Smartphone } from "lucide-react";
 import { useEditorStore, useUIStore } from "@/features/editor/stores";
 import { compileDocument } from "@/features/editor/lib/mjml";
 import { renderMarkdownPreview } from "@/features/editor/lib/markdown";
@@ -20,6 +20,7 @@ export function Preview() {
   const document = useEditorStore((s) => s.document);
   const headSettings = useEditorStore((s) => s.headSettings);
   const previewMode = useUIStore((s) => s.previewMode);
+  const setPreviewMode = useUIStore((s) => s.setPreviewMode);
   const editorMode = useUIStore((s) => s.editorMode);
   const codeLanguage = useUIStore((s) => s.codeLanguage);
   const markdownBuffer = useUIStore((s) => s.markdownBuffer);
@@ -99,24 +100,53 @@ export function Preview() {
             </button>
           </div>
 
-          {viewTab === "html" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs gap-1.5"
-              onClick={handleCopyHtml}
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" /> Copy
-                </>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {viewTab === "html" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs gap-1.5"
+                onClick={handleCopyHtml}
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" /> Copy
+                  </>
+                )}
+              </Button>
+            )}
+
+            <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+              <button
+                className={cn(
+                  "flex items-center justify-center w-7 h-6 rounded transition-colors",
+                  previewMode === "desktop"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setPreviewMode("desktop")}
+                title="Desktop View"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+              </button>
+              <button
+                className={cn(
+                  "flex items-center justify-center w-7 h-6 rounded transition-colors",
+                  previewMode === "mobile"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setPreviewMode("mobile")}
+                title="Mobile View"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
