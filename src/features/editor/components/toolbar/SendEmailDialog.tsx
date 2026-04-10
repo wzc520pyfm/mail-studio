@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Send,
   Loader2,
@@ -17,6 +17,8 @@ import {
   Zap,
   Inbox,
   Key,
+  X,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +63,7 @@ type PresetKey = keyof typeof SMTP_PRESETS;
 const SMTP_STORAGE_KEY = "mail-studio-smtp-config";
 const SEND_MODE_STORAGE_KEY = "mail-studio-send-mode";
 const RESEND_API_KEY_STORAGE_KEY = "mail-studio-resend-api-key";
+const SAVED_RECIPIENTS_STORAGE_KEY = "mail-studio-saved-recipients";
 
 interface SmtpConfig {
   preset: PresetKey;
@@ -73,7 +76,7 @@ interface SmtpConfig {
 
 interface EmailConfig {
   from: string;
-  to: string;
+  to: string[];
   subject: string;
 }
 
@@ -106,9 +109,14 @@ export function SendEmailDialog() {
   // Email Configuration
   const [email, setEmail] = useState<EmailConfig>({
     from: "",
-    to: "",
+    to: [],
     subject: "Test Email from Mail Studio",
   });
+
+  // Multi-email input state
+  const [toInput, setToInput] = useState("");
+  const [savedRecipients, setSavedRecipients] = useState<string[]>([]);
+  const toInputRef = useRef<HTMLInputElement>(null);
 
   // Load saved config from localStorage
   useEffect(() => {
@@ -125,6 +133,13 @@ export function SendEmailDialog() {
         setResendApiKey(savedResendKey);
       }
 
+      // Load saved recipients
+      const savedRecips = localStorage.getItem(SAVED_RECIPIENTS_STORAGE_KEY);
+      if (savedRecips) {
+        const parsed = JSON.parse(savedRecips) as string[];
+        setSavedRecipients(parsed);
+      }
+
       // Load SMTP config
       const saved = localStorage.getItem(SMTP_STORAGE_KEY);
       if (saved) {
@@ -139,6 +154,16 @@ export function SendEmailDialog() {
     }
   }, []);
 
+  // Save recipients to localStorage
+  const saveRecipients = useCallback((recipients: string[]) => {
+    try {
+      localStorage.setItem(SAVED_RECIPIENTS_STORAGE_KEY, JSON.stringify(recipients));
+      setSavedRecipients(recipients);
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
   // Save config to localStorage
   const saveConfig = useCallback(() => {
     try {
@@ -150,10 +175,62 @@ export function SendEmailDialog() {
         const toSave = { ...smtp, pass: "" }; // Don't save password
         localStorage.setItem(SMTP_STORAGE_KEY, JSON.stringify(toSave));
       }
+      // Persist current recipients to saved list (merge, deduplicate)
+      if (email.to.length > 0) {
+        const merged = Array.from(new Set([...savedRecipients, ...email.to]));
+        saveRecipients(merged);
+      }
     } catch {
       // Ignore storage errors
     }
-  }, [smtp, sendMode, resendApiKey]);
+  }, [smtp, sendMode, resendApiKey, email.to, savedRecipients, saveRecipients]);
+
+  // Add email to the "to" list
+  const addEmail = useCallback((emailAddr: string) => {
+    const trimmed = emailAddr.trim().toLowerCase();
+    if (!trimmed) return;
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return;
+    setEmail((prev) => {
+      if (prev.to.includes(trimmed)) return prev;
+      return { ...prev, to: [...prev.to, trimmed] };
+    });
+    setToInput("");
+  }, []);
+
+  // Remove email from the "to" list
+  const removeEmail = useCallback((emailAddr: string) => {
+    setEmail((prev) => ({
+      ...prev,
+      to: prev.to.filter((e) => e !== emailAddr),
+    }));
+  }, []);
+
+  // Remove a saved recipient permanently
+  const removeSavedRecipient = useCallback(
+    (emailAddr: string) => {
+      const updated = savedRecipients.filter((e) => e !== emailAddr);
+      saveRecipients(updated);
+    },
+    [savedRecipients, saveRecipients]
+  );
+
+  // Handle key events in the "to" input
+  const handleToKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+        e.preventDefault();
+        addEmail(toInput);
+      }
+      if (e.key === "Backspace" && !toInput) {
+        setEmail((prev) => ({
+          ...prev,
+          to: prev.to.slice(0, -1),
+        }));
+      }
+    },
+    [toInput, addEmail]
+  );
 
   // Handle preset change
   const handlePresetChange = useCallback((preset: PresetKey) => {
@@ -186,47 +263,31 @@ export function SendEmailDialog() {
       const { html } = compileDocument(document, headSettings);
 
       // Build request body based on mode
-      let requestBody;
-      if (sendMode === "test") {
-        requestBody = {
-          mode: "test",
-          email: {
-            to: email.to,
-            subject: email.subject,
-            html,
-          },
-        };
-      } else if (sendMode === "resend") {
-        requestBody = {
-          mode: "resend",
-          resendApiKey,
-          email: {
-            from: email.from || undefined,
-            to: email.to,
-            subject: email.subject,
-            html,
-          },
-        };
-      } else {
-        requestBody = {
-          mode: "smtp",
-          smtp: {
-            host: smtp.host,
-            port: smtp.port,
-            secure: smtp.secure,
-            auth: {
-              user: smtp.user,
-              pass: smtp.pass,
-            },
-          },
-          email: {
-            from: email.from,
-            to: email.to,
-            subject: email.subject,
-            html,
-          },
-        };
-      }
+      const toRecipients = email.to.length === 1 ? email.to[0] : email.to;
+
+      const requestBody = {
+        mode: sendMode,
+        ...(sendMode === "resend" ? { resendApiKey } : {}),
+        ...(sendMode === "smtp"
+          ? {
+              smtp: {
+                host: smtp.host,
+                port: smtp.port,
+                secure: smtp.secure,
+                auth: {
+                  user: smtp.user,
+                  pass: smtp.pass,
+                },
+              },
+            }
+          : {}),
+        email: {
+          ...(sendMode !== "test" ? { from: email.from || undefined } : {}),
+          to: toRecipients,
+          subject: email.subject,
+          html,
+        },
+      };
 
       // Send request to API
       const response = await fetch("/api/send-email", {
@@ -255,10 +316,17 @@ export function SendEmailDialog() {
   }, [sendMode, smtp, email, document, headSettings, saveConfig, resendApiKey]);
 
   // Check if form is valid
-  const isTestModeValid = email.to && email.subject;
-  const isResendModeValid = resendApiKey && email.to && email.subject;
+  const hasRecipients = email.to.length > 0;
+  const isTestModeValid = hasRecipients && email.subject;
+  const isResendModeValid = resendApiKey && hasRecipients && email.subject;
   const isSmtpModeValid =
-    smtp.host && smtp.port && smtp.user && smtp.pass && email.from && email.to && email.subject;
+    smtp.host &&
+    smtp.port &&
+    smtp.user &&
+    smtp.pass &&
+    email.from &&
+    hasRecipients &&
+    email.subject;
   const isValid =
     sendMode === "test"
       ? isTestModeValid
@@ -576,24 +644,94 @@ export function SendEmailDialog() {
 
             <div className="grid gap-2">
               <Label htmlFor="to">To</Label>
-              <Input
-                id="to"
-                type="email"
-                placeholder={
-                  sendMode === "test" ? "any@example.com (virtual inbox)" : "recipient@example.com"
-                }
-                value={email.to}
-                onChange={(e) => setEmail((prev) => ({ ...prev, to: e.target.value }))}
-              />
+              <div
+                className="flex flex-wrap items-center gap-1.5 min-h-[36px] w-full rounded-md border border-input bg-transparent px-3 py-1.5 text-sm shadow-xs transition-colors focus-within:ring-1 focus-within:ring-ring cursor-text"
+                onClick={() => toInputRef.current?.focus()}
+              >
+                {email.to.map((addr) => (
+                  <span
+                    key={addr}
+                    className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium"
+                  >
+                    {addr}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeEmail(addr);
+                      }}
+                      className="rounded-full hover:bg-primary/20 p-0.5 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                <input
+                  ref={toInputRef}
+                  id="to"
+                  type="text"
+                  className="flex-1 min-w-[120px] bg-transparent outline-none placeholder:text-muted-foreground text-sm"
+                  placeholder={
+                    email.to.length === 0
+                      ? sendMode === "test"
+                        ? "any@example.com (virtual inbox)"
+                        : "recipient@example.com"
+                      : "Add more..."
+                  }
+                  value={toInput}
+                  onChange={(e) => setToInput(e.target.value)}
+                  onKeyDown={handleToKeyDown}
+                  onBlur={() => {
+                    if (toInput.trim()) addEmail(toInput);
+                  }}
+                />
+              </div>
+              {/* Saved recipients quick-add */}
+              {savedRecipients.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Recent:</span>
+                  {savedRecipients
+                    .filter((r) => !email.to.includes(r))
+                    .slice(0, 8)
+                    .map((addr) => (
+                      <button
+                        key={addr}
+                        type="button"
+                        onClick={() => addEmail(addr)}
+                        className="group inline-flex items-center gap-1 rounded-md border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5 px-2 py-0.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                        {addr}
+                        <span
+                          role="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSavedRecipient(addr);
+                          }}
+                          className="rounded-full hover:bg-destructive/20 hover:text-destructive p-0.5 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Press{" "}
+                <kbd className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono">Enter</kbd> or{" "}
+                <kbd className="px-1 py-0.5 rounded bg-muted text-[10px] font-mono">,</kbd> to add
+                multiple recipients
+              </p>
               {sendMode === "test" && (
                 <p className="text-xs text-muted-foreground">
                   In preview mode, email won&apos;t actually arrive - you&apos;ll get a preview link
                   instead.
                 </p>
               )}
-              {(sendMode === "resend" || sendMode === "smtp") && (
+              {(sendMode === "resend" || sendMode === "smtp") && email.to.length > 0 && (
                 <p className="text-xs text-green-600 dark:text-green-400">
-                  ✓ Email will be delivered to this address
+                  ✓ Email will be delivered to {email.to.length} address
+                  {email.to.length > 1 ? "es" : ""}
                 </p>
               )}
             </div>
@@ -616,7 +754,7 @@ export function SendEmailDialog() {
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span className="text-sm">
                   {realDelivery
-                    ? `Email sent successfully to ${email.to}!`
+                    ? `Email sent successfully to ${email.to.join(", ")}!`
                     : "Email sent successfully!"}
                 </span>
               </div>
@@ -641,8 +779,8 @@ export function SendEmailDialog() {
               {realDelivery && !previewUrl && (
                 <div className="p-3 rounded-md bg-green-500/5 border border-green-500/20">
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    Check your inbox at <strong>{email.to}</strong> to see the email. It may take a
-                    few moments to arrive.
+                    Check your inbox at <strong>{email.to.join(", ")}</strong> to see the email. It
+                    may take a few moments to arrive.
                   </p>
                 </div>
               )}
