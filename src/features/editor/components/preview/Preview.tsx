@@ -63,6 +63,13 @@ export function Preview() {
     setTimeout(() => setCopied(false), 2000);
   }, [previewHtml]);
 
+  const disableResponsive = headSettings.disableResponsive ?? false;
+  // When disableResponsive + mobile: render at 600px and scale down to simulate real client behavior
+  const scaleMobile = disableResponsive && previewMode === "mobile";
+  const mobileWidth = 375;
+  const emailWidth = 600;
+  const scaleRatio = mobileWidth / emailWidth; // 0.625
+
   const frameWidth = previewMode === "desktop" ? "100%" : "375px";
   const frameMaxWidth = previewMode === "desktop" ? "800px" : "375px";
 
@@ -208,15 +215,37 @@ export function Preview() {
               )}
 
               {/* HTML Preview */}
-              <iframe
-                srcDoc={previewHtml}
-                className="w-full border-0"
-                style={{
-                  height: previewMode === "mobile" ? "600px" : "800px",
-                }}
-                title="Email Preview"
-                sandbox="allow-same-origin"
-              />
+              <div
+                style={
+                  scaleMobile
+                    ? {
+                        width: `${mobileWidth}px`,
+                        height: "600px",
+                        overflow: "hidden",
+                      }
+                    : undefined
+                }
+              >
+                <iframe
+                  srcDoc={previewHtml}
+                  className="border-0"
+                  style={
+                    scaleMobile
+                      ? {
+                          width: `${emailWidth}px`,
+                          height: `${600 / scaleRatio}px`,
+                          transform: `scale(${scaleRatio})`,
+                          transformOrigin: "top left",
+                        }
+                      : {
+                          width: "100%",
+                          height: previewMode === "mobile" ? "600px" : "800px",
+                        }
+                  }
+                  title="Email Preview"
+                  sandbox="allow-same-origin"
+                />
+              </div>
 
               {/* Mobile Home Indicator */}
               {previewMode === "mobile" && (

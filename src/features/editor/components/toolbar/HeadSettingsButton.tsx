@@ -9,6 +9,7 @@ import { Settings, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -146,6 +147,22 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
 
             <Separator />
 
+            {/* Disable Responsive / Scale Mode */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="disableResponsive">Disable Responsive (Scale Mode)</Label>
+                <Switch
+                  id="disableResponsive"
+                  checked={headSettings.disableResponsive ?? false}
+                  onCheckedChange={(checked) => updateHeadSettings({ disableResponsive: checked })}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Disable mobile responsive stacking. The email will scale to fit the screen instead
+                of reflowing columns vertically.
+              </p>
+            </div>
+
             {/* Breakpoint */}
             <div className="space-y-2">
               <Label htmlFor="breakpoint">Mobile Breakpoint</Label>
@@ -154,9 +171,12 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
                 value={headSettings.breakpoint || ""}
                 onChange={(e) => updateHeadSettings({ breakpoint: e.target.value })}
                 placeholder="480px"
+                disabled={headSettings.disableResponsive ?? false}
               />
               <p className="text-xs text-muted-foreground">
-                Screen width for mobile layout (default: 480px)
+                {headSettings.disableResponsive
+                  ? "Breakpoint is overridden to 1px in scale mode"
+                  : "Screen width for mobile layout (default: 480px)"}
               </p>
             </div>
 

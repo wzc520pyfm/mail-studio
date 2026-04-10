@@ -128,6 +128,7 @@ export function nodeToMjml(node: EditorNode, indent = 0): string {
 // Generate head content from HeadSettings
 function generateHeadContent(headSettings?: HeadSettings): string {
   const parts: string[] = [];
+  const disableResponsive = headSettings?.disableResponsive ?? false;
 
   // mj-title
   if (headSettings?.title) {
@@ -146,8 +147,10 @@ function generateHeadContent(headSettings?: HeadSettings): string {
     }
   }
 
-  // mj-breakpoint
-  if (headSettings?.breakpoint) {
+  // mj-breakpoint: force 1px when disableResponsive, otherwise use user setting
+  if (disableResponsive) {
+    parts.push(`    <mj-breakpoint width="1px" />`);
+  } else if (headSettings?.breakpoint) {
     parts.push(`    <mj-breakpoint width="${escapeAttr(headSettings.breakpoint)}" />`);
   }
 
@@ -174,6 +177,13 @@ function generateHeadContent(headSettings?: HeadSettings): string {
   parts.push(`    <mj-style>
       ${allStyles}
     </mj-style>`);
+
+  // When disableResponsive, inject viewport meta via mj-raw to enable scaling
+  if (disableResponsive) {
+    parts.push(
+      `    <mj-raw>\n      <meta name="x-apple-disable-message-reformatting" />\n    </mj-raw>`
+    );
+  }
 
   return parts.join("\n");
 }
@@ -205,8 +215,73 @@ export interface MjmlCompileError {
   formattedMessage: string;
 }
 
+// Post-process compiled HTML to disable responsive behavior and enable scaling.
+// 1. Replace viewport meta so real email clients scale the fixed-width layout.
+// 2. Convert section wrapper divs from max-width (responsive) to fixed width.
+// 3. Unwrap @media query rules into plain CSS so email clients that strip
+//    @media blocks (e.g. Gmail) still preserve column widths.
+function applyScaleModePostProcessing(html: string): string {
+  // Replace the MJML default viewport meta with one that enables scaling
+  html = html.replace(
+    /<meta\s+name="viewport"[^>]*>/i,
+    '<meta name="viewport" content="width=600, initial-scale=1" />'
+  );
+
+  // Convert section wrapper max-width to fixed width.
+  // The pattern "margin:0px auto;max-width:XXpx" is unique to MJML section wrappers.
+  html = html.replace(/margin:\s*0px auto;\s*max-width:\s*(\d+px)/g, "margin:0px auto;width:$1");
+
+  // Unwrap MJML-generated @media queries: extract inner CSS rules and
+  // place them as unconditional rules. This ensures column widths like
+  // .mj-column-per-50 { width:50% !important } survive even when email
+  // clients strip @media blocks.
+  // MJML generates: @media only screen and (min-width:Xpx) { ...rules... }
+  html = html.replace(
+    /@media\s+only\s+screen\s+and\s+\(min-width:\s*\d+px\)\s*\{([\s\S]*?\})\s*\}/g,
+    (_match, innerRules: string) => innerRules.trim()
+  );
+
+  // Remove the media attribute from conditional <style> tags.
+  // MJML generates <style media="screen and (min-width:Xpx)"> for Firefox/Thunderbird.
+  // We convert it to an unconditional <style> so the rules always apply.
+  html = html.replace(/<style\s+media="screen and \(min-width:\s*\d+px\)">/g, "<style>");
+
+  // Fix column inline widths: MJML sets inline width:100% as mobile fallback,
+  // relying on @media rules for the actual percentage. Since email clients may
+  // strip <style> blocks, we patch inline width to the real value extracted
+  // from the class name (e.g. mj-column-per-50 → width:50%).
+  html = html.replace(/<div\s[^>]*class="mj-column-per-[^"]*"[^>]*>/g, (tag) => {
+    const classMatch = tag.match(/mj-column-per-(\d+)(?:-(\d+))?/);
+    if (!classMatch) return tag;
+    const pct = classMatch[2] ? `${classMatch[1]}.${classMatch[2]}` : classMatch[1];
+    return tag.replace(/width:100%/, `width:${pct}%`);
+  });
+
+  // Force min-width on <body> and the email wrapper <div> so that email
+  // clients like Apple Mail recognise the fixed-width layout for scaling.
+  const bodyWidthMatch = html.match(/margin:0px auto;width:(\d+)px/);
+  const bodyWidth = bodyWidthMatch ? bodyWidthMatch[1] : "600";
+
+  // Patch <body> inline style
+  html = html.replace(
+    /<body([^>]*?)style="([^"]*)"([^>]*)>/i,
+    `<body$1style="$2;min-width:${bodyWidth}px;"$3>`
+  );
+
+  // Patch the email wrapper div (the one with aria-roledescription="email")
+  html = html.replace(
+    /(<div\s[^>]*aria-roledescription="email"[^>]*style=")([^"]*)(")/,
+    `$1$2min-width:${bodyWidth}px;$3`
+  );
+
+  return html;
+}
+
 // Compile MJML to HTML
-export function compileMjml(mjmlString: string): {
+export function compileMjml(
+  mjmlString: string,
+  options?: { disableResponsive?: boolean }
+): {
   html: string;
   errors: string[];
   compileErrors: MjmlCompileError[];
@@ -219,8 +294,15 @@ export function compileMjml(mjmlString: string): {
       minify: false,
     });
 
+    let html = result.html;
+
+    // Post-process: convert to fixed-width scaling layout
+    if (options?.disableResponsive) {
+      html = applyScaleModePostProcessing(html);
+    }
+
     return {
-      html: result.html,
+      html,
       errors: result.errors?.map((e) => e.formattedMessage) || [],
       compileErrors:
         result.errors?.map((e) => ({
@@ -252,7 +334,9 @@ export function compileDocument(
   headSettings?: HeadSettings
 ): { html: string; mjml: string; errors: string[] } {
   const mjml = generateMjml(document, headSettings);
-  const { html, errors } = compileMjml(mjml);
+  const { html, errors } = compileMjml(mjml, {
+    disableResponsive: headSettings?.disableResponsive,
+  });
   return { html, mjml, errors };
 }
 
@@ -332,7 +416,14 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
       // Parse breakpoint
       const breakpointElement = headElement.querySelector("mj-breakpoint");
       if (breakpointElement) {
-        headSettings.breakpoint = breakpointElement.getAttribute("width") || "";
+        const bpWidth = breakpointElement.getAttribute("width") || "";
+        // Detect disableResponsive: breakpoint of 1px is the marker
+        if (bpWidth === "1px") {
+          headSettings.disableResponsive = true;
+          headSettings.breakpoint = "";
+        } else {
+          headSettings.breakpoint = bpWidth;
+        }
       }
 
       // Parse styles

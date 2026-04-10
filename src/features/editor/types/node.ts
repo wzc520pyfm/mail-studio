@@ -74,6 +74,8 @@ export interface HeadSettings {
   styles?: string;
   breakpoint?: string;
   attributes?: string;
+  /** When true, disable responsive stacking and use viewport scaling instead */
+  disableResponsive?: boolean;
 }
 
 // Template

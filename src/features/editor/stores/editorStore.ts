@@ -28,6 +28,7 @@ const defaultHeadSettings: HeadSettings = {
   fonts: [],
   styles: "",
   breakpoint: "",
+  disableResponsive: false,
 };
 
 // ============ State Types ============
