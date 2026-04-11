@@ -161,6 +161,24 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
                 Disable mobile responsive stacking. The email will scale to fit the screen instead
                 of reflowing columns vertically.
               </p>
+              {(headSettings.disableResponsive ?? false) && (
+                <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-2.5 text-xs text-amber-700 dark:text-amber-400 space-y-1.5">
+                  <p className="font-medium">Compatibility Notes</p>
+                  <p>Works in Apple Mail, QQ Mail, NetEase, and Gmail/Outlook web.</p>
+                  <p>
+                    Gmail, Outlook, and NetEase mobile apps may still reflow content. To fix, use{" "}
+                    <strong>px values</strong> instead of percentages for column widths (e.g.{" "}
+                    <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">
+                      width=&quot;300px&quot;
+                    </code>{" "}
+                    instead of{" "}
+                    <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">
+                      width=&quot;50%&quot;
+                    </code>
+                    ).
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Breakpoint */}
