@@ -236,6 +236,7 @@ export function Preview() {
                           height: `${600 / scaleRatio}px`,
                           transform: `scale(${scaleRatio})`,
                           transformOrigin: "top left",
+                          paddingRight: "24px",
                         }
                       : {
                           width: "100%",
