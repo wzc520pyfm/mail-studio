@@ -265,7 +265,7 @@ function applyScaleModePostProcessing(html: string): string {
   // Patch <body> inline style
   html = html.replace(
     /<body([^>]*?)style="([^"]*)"([^>]*)>/i,
-    `<body$1style="$2;min-width:${bodyWidth}px;"$3>`
+    `<body$1style="$2;width:${bodyWidth}px;min-width:${bodyWidth}px;max-width:${bodyWidth}px;"$3>`
   );
 
   // Patch the email wrapper div (the one with aria-roledescription="email")
