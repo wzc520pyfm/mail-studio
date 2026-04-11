@@ -5,7 +5,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { Settings, Plus, Trash2 } from "lucide-react";
+import { Settings, Plus, Trash2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,7 +150,23 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
             {/* Disable Responsive / Scale Mode */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="disableResponsive">Disable Responsive (Scale Mode)</Label>
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="disableResponsive">Disable Responsive (Scale Mode)</Label>
+                  {(headSettings.disableResponsive ?? false) && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 text-amber-500 cursor-help shrink-0" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[280px] space-y-1 p-3">
+                        <p>Works in Apple Mail, QQ Mail, NetEase, and Gmail/Outlook web.</p>
+                        <p>
+                          Gmail, Outlook, and NetEase mobile apps may still reflow content. To fix,
+                          use px values instead of % for column widths.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
                 <Switch
                   id="disableResponsive"
                   checked={headSettings.disableResponsive ?? false}
@@ -161,24 +177,6 @@ export const HeadSettingsButton = memo(function HeadSettingsButton() {
                 Disable mobile responsive stacking. The email will scale to fit the screen instead
                 of reflowing columns vertically.
               </p>
-              {(headSettings.disableResponsive ?? false) && (
-                <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-2.5 text-xs text-amber-700 dark:text-amber-400 space-y-1.5">
-                  <p className="font-medium">Compatibility Notes</p>
-                  <p>Works in Apple Mail, QQ Mail, NetEase, and Gmail/Outlook web.</p>
-                  <p>
-                    Gmail, Outlook, and NetEase mobile apps may still reflow content. To fix, use{" "}
-                    <strong>px values</strong> instead of percentages for column widths (e.g.{" "}
-                    <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">
-                      width=&quot;300px&quot;
-                    </code>{" "}
-                    instead of{" "}
-                    <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">
-                      width=&quot;50%&quot;
-                    </code>
-                    ).
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Breakpoint */}
