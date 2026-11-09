@@ -372,6 +372,14 @@ export function parseMjml(mjmlString: string): ParseMjmlResult {
       cleanedMjml = mjmlString.replace(/<mj-attributes>[\s\S]*?<\/mj-attributes>/, "");
     }
 
+    // Protect mj-table content: wrap in <table><tbody> so that the HTML parser
+    // (which ignores <tr>/<th>/<td> outside a real <table> context) preserves them.
+    cleanedMjml = cleanedMjml.replace(
+      /<mj-table(\s[^>]*)?>([\s\S]*?)<\/mj-table>/gi,
+      (_match, attrs, content) =>
+        `<mj-table${attrs || ""}><table><tbody>${content}</tbody></table></mj-table>`
+    );
+
     const parser = new DOMParser();
     // Use text/html for better error tolerance
     const doc = parser.parseFromString(cleanedMjml, "text/html");
@@ -475,8 +483,14 @@ function parseElement(element: Element): EditorNode {
 
   // Check if this is a component that should have HTML content (like mj-table, mj-raw)
   if (HTML_CONTENT_TAGS.includes(type)) {
-    // Get inner HTML for these components
-    content = element.innerHTML?.trim();
+    const innerHTML = element.innerHTML?.trim();
+    if (type === "mj-table" && innerHTML) {
+      // Strip the protective <table><tbody> wrapper added during parseMjml preprocessing
+      const tbodyMatch = innerHTML.match(/<tbody>([\s\S]*)<\/tbody>/i);
+      content = tbodyMatch ? tbodyMatch[1].trim() : innerHTML;
+    } else {
+      content = innerHTML || undefined;
+    }
   } else {
     // For regular components, get direct text nodes only
     const textNodes = Array.from(element.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE);
